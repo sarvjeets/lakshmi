@@ -1,3 +1,22 @@
+Notes:
+- Perhaps instead of CLI inside the program, I should allow the main program to be
+called with arguments (will make it easier/standard and I can use existing CLI tools).
+One of the issue is how it would handle whatif commands (temp modification commands).
+
+TODOs:
+- Add CLI commands
+- Add assets that update their value() automatically (funds).
+- Add assets that update their value() automatically (ETFs).
+- Add Treasury bonds (I Bonds, EE Bonds) assets.
+- Add Tax lot support for taxable accounts.
+- Add tracking contributions to Roth and Trad IRA accounts.
+- Special handling for zero balance accounts.
+- Support for importing csv files from Vanguard.
+- What if support.
+
+
+How it should behave:
+
 # Assuming the account is already populated.
 # Version 1
 
