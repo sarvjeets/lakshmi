@@ -13,7 +13,7 @@ TODOs:
 - Special handling for zero balance accounts.
 - Support for importing csv files from Vanguard.
 - What if support.
-
+- Fix and add comments (properly)!
 
 How it should behave:
 

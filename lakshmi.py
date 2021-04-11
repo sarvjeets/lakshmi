@@ -1,3 +1,5 @@
+"""Top level interfaces and definitions for Lakshmi."""
+
 class Asset():
   """Class representing an asset (fund, ETF, cash, etc.)."""
   def __init__(self, class_and_percentage_list):
