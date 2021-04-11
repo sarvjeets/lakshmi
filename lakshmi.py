@@ -1,12 +1,10 @@
 class Asset():
   """Class representing an asset (fund, ETF, cash, etc.)."""
-  def __init__(self, account, class_and_percentage_list):
+  def __init__(self, class_and_percentage_list):
     """
     Argments:
-      account: Which account this asset belongs to.
       class_and_percentage_list: A list of (class_name, ratio). Ratio <= 1.0
     """
-    self.account = account
     self.class_mapping = class_and_percentage_list
 
     total = 0
@@ -23,11 +21,8 @@ class Asset():
   def Name(self):
     raise Exception('Not implemented')
 
-  def ToStrShort(self):
-    return self.account.name + ', ' + self.Name()
-
-  def ToStrLong(self):
-    return self.ToStrShort()
+  def ToStr(self):
+    return self.Name()
 
   
 class Account():
@@ -40,6 +35,14 @@ class Account():
   def __init__(self, name, account_type):
     self.name = name
     self.account_type = account_type
+    self.assets = []
+
+  def AddAsset(self, asset):
+    self.assets.append(asset)
+    return self
+
+  def ToStr(self):
+    return self.name
 
     
 class AssetClass():
@@ -158,55 +161,47 @@ class AssetClass():
 
 class Interface():
   def __init__(self, asset_classes):
-    self.assets = []
+    self.accounts = []
     self.asset_classes = asset_classes.Validate()
     self._leaf_asset_classes = asset_classes.Leaves()
     
   def AddAssetClasses(self, asset_classes):
     self.asset_classes = asset_classes
 
-  def AddAsset(self, asset):
-    self.assets.append(asset)
+  def AddAccount(self, account):
+    for asset in account.assets:
+      for asset_class, unused_percentage in asset.class_mapping:
+        if not asset_class in self._leaf_asset_classes:
+          raise Exception('Unknown or non-leaf asset class: ' + asset_class)
 
-    for asset_class, unused_percentage in asset.class_mapping:
-      if not asset_class in self._leaf_asset_classes:
-        raise Exception('Unknown or non-leaf asset class: ' + asset_class)
+    self.accounts.append(account)
 
   @staticmethod
   def DollarToStr(dollars):
     return '${:,.2f}'.format(dollars)
     
-  def ListAssets(self, everything = False):
-    if not self.assets:
-      return 'No assets.'
-
+  def ListAssets(self):
     return_str_list = []
     total = 0.0
-    for i in range(len(self.assets)):
-      return_str_list.append(str(i + 1) + '. ')
-      asset = self.assets[i]
-      return_str_list.append(
-        (asset.ToStrLong() if everything else asset.ToStrShort()) +
-        ', ')
-      return_str_list.append(self.DollarToStr(asset.Value()) + '\n\n')
-      total += asset.Value()
-    return_str_list.append('Total: ' + self.DollarToStr(total) + '\n')
+
+    for account in self.accounts:
+      for asset in account.assets:
+        return_str_list.append('{}, {}, '.format(account.ToStr(), asset.ToStr()))
+        return_str_list.append('{}\n'.format(self.DollarToStr(asset.Value())))
+        total += asset.Value()
+    return_str_list.append('\nTotal: {}\n'.format(self.DollarToStr(total)))
 
     return ''.join(return_str_list)
 
   def AssetLocation(self):
     account_type_to_value = {}
     total = 0.0
-    
-    for asset in self.assets:
-      account_type = asset.account.account_type
 
-      if account_type not in account_type_to_value:
-        account_type_to_value[account_type] = asset.Value()
-      else:
-        account_type_to_value[account_type] += asset.Value()
-      
-      total += asset.Value()
+    for account in self.accounts:
+      for asset in account.assets:
+        account_type_to_value[account.account_type] = account_type_to_value.get(
+          account.account_type, 0) + asset.Value()
+        total += asset.Value()
 
     return_str_list = []
     for account_type, value in account_type_to_value.items():
@@ -221,14 +216,13 @@ class Interface():
 
     total = 0.0
 
-    for asset in self.assets:
-      for name, ratio in asset.class_mapping:
-        value = ratio * asset.Value()
-        total += value
-        if name not in asset_class_to_value:
-          asset_class_to_value[name] = value
-        else:
-          asset_class_to_value[name] += value
+    for account in self.accounts:
+      for asset in account.assets:
+        for name, ratio in asset.class_mapping:
+          value = ratio * asset.Value()
+          total += value
+          asset_class_to_value[name] = asset_class_to_value.get(
+            name, 0) + value
 
     return_str_list = []
     for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):

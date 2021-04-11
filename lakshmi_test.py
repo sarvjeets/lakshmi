@@ -13,7 +13,7 @@ class LakshmiTest(unittest.TestCase):
 
   def test_EmptyInterface(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('E'))
-    self.assertEqual('No assets.', interface.ListAssets())
+    self.assertEqual('\nTotal: $0.00\n', interface.ListAssets())
 
   def test_OneAssetClass(self):
     asset_class = lakshmi.AssetClass('Equity').Validate()
@@ -58,28 +58,25 @@ class LakshmiTest(unittest.TestCase):
     interface = lakshmi.Interface(lakshmi.AssetClass('Equity'))
 
     # Create a dummy asset.
-    account = lakshmi.Account('Roth IRA', 'Post-tax')
-    asset = self.DummyAsset(account, [('Bad Equity', 1.0)])
+    account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
+      self.DummyAsset([('Bad Equity', 1.0)]))
     self.assertRaisesRegex(Exception, 'Unknown or non-leaf asset class: Bad Equity',
-                           interface.AddAsset, asset)
+                           interface.AddAccount, account)
     
     
   def test_OneDummyAsset(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('Equity'))
 
     # Create a dummy asset.
-    account = lakshmi.Account('401(k)', 'Pre-tax')
-    asset = self.DummyAsset(account, [('Equity', 1.0)])
+    account = lakshmi.Account('401(k)', 'Pre-tax').AddAsset(
+      self.DummyAsset([('Equity', 1.0)]))
 
-    interface.AddAsset(asset)
-    self.assertEqual(1, len(interface.assets))
+    interface.AddAccount(account)
+    self.assertEqual(1, len(interface.accounts))
 
     self.assertEqual(
-      '1. 401(k), Test Asset, $100.00\n\nTotal: $100.00\n',
+      '401(k), Test Asset, $100.00\n\nTotal: $100.00\n',
       interface.ListAssets())
-    self.assertEqual(
-      '1. 401(k), Test Asset, $100.00\n\nTotal: $100.00\n',
-      interface.ListAssets(everything = True))
 
     self.assertEqual(
       'Pre-tax, $100.00, 100%\n', interface.AssetLocation())
@@ -96,12 +93,12 @@ class LakshmiTest(unittest.TestCase):
 
     interface = lakshmi.Interface(asset_class)
 
-    account = lakshmi.Account('Vanguard', 'Taxable')
-    asset = self.DummyAsset(account, [('Equity', 0.6), ('Fixed Income', 0.4)])
+    account = lakshmi.Account('Vanguard', 'Taxable').AddAsset(
+      self.DummyAsset([('Equity', 0.6), ('Fixed Income', 0.4)]))
 
-    interface.AddAsset(asset)
+    interface.AddAccount(account)
     self.assertEqual(
-      '1. Vanguard, Test Asset, $100.00\n\nTotal: $100.00\n',
+      'Vanguard, Test Asset, $100.00\n\nTotal: $100.00\n',
       interface.ListAssets())
 
     self.assertEqual(
@@ -177,4 +174,3 @@ class LakshmiTest(unittest.TestCase):
     
 if __name__ == '__main__':
   unittest.main()
-
