@@ -5,8 +5,6 @@ One of the issue is how it would handle whatif commands (temp modification comma
 
 TODOs:
 - Add CLI commands
-- Add assets that update their value() automatically (funds).
-- Add assets that update their value() automatically (ETFs).
 - Add Treasury bonds (I Bonds, EE Bonds) assets.
 - Add Tax lot support for taxable accounts.
 - Add tracking contributions to Roth and Trad IRA accounts.
@@ -14,6 +12,7 @@ TODOs:
 - Support for importing csv files from Vanguard.
 - What if support.
 - Fix and add comments (properly)!
+- Consider cache using https://pypi.org/project/cache-to-disk/
 
 How it should behave:
 
