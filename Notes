@@ -4,6 +4,7 @@ called with arguments (will make it easier/standard and I can use existing CLI t
 One of the issue is how it would handle whatif commands (temp modification commands).
 
 TODOs:
+- Support for saving and loading Assets
 - Add CLI commands
 - Add Treasury bonds (I Bonds, EE Bonds) assets.
 - Add Tax lot support for taxable accounts.
