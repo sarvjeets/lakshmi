@@ -1,16 +1,11 @@
 #!/usr/bin/python3
 
+import assets
 import lakshmi
+
 import unittest
 
 class LakshmiTest(unittest.TestCase):
-  class DummyAsset(lakshmi.Asset):
-    def Value(self):
-      return 100.0
-
-    def Name(self):
-      return 'Test Asset'
-
   def test_EmptyInterface(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('E'))
     self.assertEqual('\nTotal: $0.00\n', interface.ListAssets())
@@ -29,7 +24,7 @@ class LakshmiTest(unittest.TestCase):
         .AddSubClass(0.2, AssetClass('US')))
     self.assertRaisesRegex(Exception, 'Found duplicate', asset_class.Validate)
 
-  def test_ManyAssetClassBadRatio(self):
+  def test_ManyAssetClassBadRatioSum(self):
     AssetClass = lakshmi.AssetClass
     asset_class = (
       AssetClass('All')
@@ -40,6 +35,30 @@ class LakshmiTest(unittest.TestCase):
         .AddSubClass(0.2, AssetClass('Bonds')))
 
     self.assertRaisesRegex(Exception, 'Sum of sub-classes', asset_class.Validate)
+
+  def test_ManyAssetClassBadRatioNeg(self):
+    AssetClass = lakshmi.AssetClass
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(-0.8,
+                     AssetClass('Equity')
+                       .AddSubClass(0.6, AssetClass('US'))
+                       .AddSubClass(0.4, AssetClass('International')))
+        .AddSubClass(0.2, AssetClass('Bonds')))
+
+    self.assertRaisesRegex(Exception, 'Bad ratio', asset_class.Validate)
+
+  def test_ManyAssetClassBadRatioHigh(self):
+    AssetClass = lakshmi.AssetClass
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(1.5,
+                     AssetClass('Equity')
+                       .AddSubClass(0.6, AssetClass('US'))
+                       .AddSubClass(0.4, AssetClass('International')))
+        .AddSubClass(0.2, AssetClass('Bonds')))
+
+    self.assertRaisesRegex(Exception, 'Bad ratio', asset_class.Validate)
 
   def test_ManyAssetClass(self):
     AssetClass = lakshmi.AssetClass
@@ -59,7 +78,7 @@ class LakshmiTest(unittest.TestCase):
 
     # Create a dummy asset.
     account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
-      self.DummyAsset([('Bad Equity', 1.0)]))
+      assets.SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
     self.assertRaisesRegex(Exception, 'Unknown or non-leaf asset class: Bad Equity',
                            interface.AddAccount, account)
     
@@ -69,7 +88,7 @@ class LakshmiTest(unittest.TestCase):
 
     # Create a dummy asset.
     account = lakshmi.Account('401(k)', 'Pre-tax').AddAsset(
-      self.DummyAsset([('Equity', 1.0)]))
+      assets.SimpleAsset('Test Asset', 100.0, {'Equity': 1.0}))
 
     interface.AddAccount(account)
     self.assertEqual(1, len(interface.accounts))
@@ -94,7 +113,8 @@ class LakshmiTest(unittest.TestCase):
     interface = lakshmi.Interface(asset_class)
 
     account = lakshmi.Account('Vanguard', 'Taxable').AddAsset(
-      self.DummyAsset([('Equity', 0.6), ('Fixed Income', 0.4)]))
+      assets.SimpleAsset('Test Asset', 100.0,
+                         {'Equity': 0.6, 'Fixed Income': 0.4}))
 
     interface.AddAccount(account)
     self.assertEqual(

@@ -2,15 +2,17 @@
 
 class Asset():
   """Class representing an asset (fund, ETF, cash, etc.)."""
-  def __init__(self, class_and_percentage_list):
+  def __init__(self, class2ratio):
     """
     Argments:
-      class_and_percentage_list: A list of (class_name, ratio). Ratio <= 1.0
+      class2ratio: Dict of class_name -> ratio. 0 < Ratio <= 1.0
     """
-    self.class_mapping = class_and_percentage_list
+    self.class2ratio = class2ratio
 
     total = 0
-    for unused_class, ratio in class_and_percentage_list:
+    for ratio in class2ratio.values():
+      if ratio < 0.0 or ratio > 1.0:
+        raise Exception('Bad Class ratio provided to Asset ({})'.format(ratio))
       total += ratio
 
     if abs(total - 1.0) > 1e-6:
@@ -72,6 +74,8 @@ class AssetClass():
     class_names = [self.name]
     total = 0.0
     for asset_class, ratio in self.children:
+      if ratio < 0.0 or ratio > 1.0:
+        raise Exception('Bad ratio provided to Asset Class ({})'.format(ratio))
       total += ratio
       temp_leafs, temp_classes = asset_class._Validate()
       self._leaves.update(temp_leafs)
@@ -172,7 +176,7 @@ class Interface():
 
   def AddAccount(self, account):
     for asset in account.assets:
-      for asset_class, unused_percentage in asset.class_mapping:
+      for asset_class in asset.class2ratio.keys():
         if not asset_class in self._leaf_asset_classes:
           raise Exception('Unknown or non-leaf asset class: ' + asset_class)
 
@@ -220,7 +224,7 @@ class Interface():
 
     for account in self.accounts:
       for asset in account.assets:
-        for name, ratio in asset.class_mapping:
+        for name, ratio in asset.class2ratio.items():
           value = ratio * asset.Value()
           total += value
           asset_class_to_value[name] = asset_class_to_value.get(
