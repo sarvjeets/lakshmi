@@ -6,11 +6,10 @@ import unittest
 
 class TestTicker():
   def __init__(self, name, price):
-    self.info = {'shortName': name, 'regularMarketPrice': price}
+    self.info = {'longName': name, 'regularMarketPrice': price}
 
   def Ticker(self, name):
     return self
-
 
 class AssetsTest(unittest.TestCase):
   def test_BadTicker(self):
@@ -24,6 +23,7 @@ class AssetsTest(unittest.TestCase):
                                ticker_obj=ticker_obj.Ticker)
     self.assertAlmostEqual(100.0, vmmxx.Value())
     self.assertEqual('Vanguard Cash Reserves Federal', vmmxx.Name())
+
 
 if __name__ == '__main__':
   unittest.main()
