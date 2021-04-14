@@ -1,6 +1,14 @@
 """Top level interfaces and definitions for Lakshmi."""
 
-class Asset():
+from abc import ABC, abstractmethod
+
+
+class ValidationError(Exception):
+  """Exception raised when some validation failed."""
+  pass
+
+
+class Asset(ABC):
   """Class representing an asset (fund, ETF, cash, etc.)."""
   def __init__(self, class2ratio):
     """
@@ -12,18 +20,20 @@ class Asset():
     total = 0
     for ratio in class2ratio.values():
       if ratio < 0.0 or ratio > 1.0:
-        raise Exception('Bad Class ratio provided to Asset ({})'.format(ratio))
+        raise ValidationError('Bad Class ratio provided to Asset ({})'.format(ratio))
       total += ratio
 
     if abs(total - 1.0) > 1e-6:
-      raise Exception('Total allocation to classes must be 100% (actual = {}%)'.format(
+      raise ValidationError('Total allocation to classes must be 100% (actual = {}%)'.format(
         round(total*100)))
-    
-  def Value(self):
-    raise Exception('Not implemented')
 
+  @abstractmethod
+  def Value(self):
+    pass
+  
+  @abstractmethod
   def Name(self):
-    raise Exception('Not implemented')
+    pass
 
   def ToStr(self):
     return self.Name()
@@ -75,14 +85,14 @@ class AssetClass():
     total = 0.0
     for asset_class, ratio in self.children:
       if ratio < 0.0 or ratio > 1.0:
-        raise Exception('Bad ratio provided to Asset Class ({})'.format(ratio))
+        raise ValidationError('Bad ratio provided to Asset Class ({})'.format(ratio))
       total += ratio
       temp_leafs, temp_classes = asset_class._Validate()
       self._leaves.update(temp_leafs)
       class_names += temp_classes
 
     if abs(total - 1) > 1e-6:
-      raise Exception('Sum of sub-classes is not 100% (actual: {}%)'.format(total*100))
+      raise ValidationError('Sum of sub-classes is not 100% (actual: {}%)'.format(total*100))
 
     return self._leaves, class_names
 
@@ -91,13 +101,13 @@ class AssetClass():
     duplicates = set([x for x in all_class_names if all_class_names.count(x) > 1])
 
     if duplicates:
-      raise Exception('Found duplicate Asset class(es): ' + str(duplicates))
+      raise ValidationError('Found duplicate Asset class(es): ' + str(duplicates))
 
     return self
 
   def Leaves(self):
     if not self._leaves:
-      raise Exception('Leaves() called on an non-validated asset class')
+      raise ValidationError('Leaves() called on an non-validated asset class')
     
     return self._leaves
 
@@ -108,7 +118,7 @@ class AssetClass():
       money_allocation: A map of leaf_class_name -> money.
     """
     if not self._leaves:
-      raise Exception('Need to validate AssetAllocation before using it.')
+      raise ValidationError('Need to validate AssetAllocation before using it.')
 
     return sum([value for name, value in money_allocation.items()
                 if name in self._leaves])
@@ -178,7 +188,7 @@ class Interface():
     for asset in account.assets:
       for asset_class in asset.class2ratio.keys():
         if not asset_class in self._leaf_asset_classes:
-          raise Exception('Unknown or non-leaf asset class: ' + asset_class)
+          raise ValidationError('Unknown or non-leaf asset class: ' + asset_class)
 
     self.accounts.append(account)
 

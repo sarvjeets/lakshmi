@@ -22,7 +22,8 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.6, AssetClass('US'))
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('US')))
-    self.assertRaisesRegex(Exception, 'Found duplicate', asset_class.Validate)
+    with self.assertRaisesRegex(lakshmi.ValidationError, 'Found duplicate'):
+      asset_class.Validate()
 
   def test_ManyAssetClassBadRatioSum(self):
     AssetClass = lakshmi.AssetClass
@@ -34,7 +35,8 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.5, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    self.assertRaisesRegex(Exception, 'Sum of sub-classes', asset_class.Validate)
+    with self.assertRaisesRegex(lakshmi.ValidationError, 'Sum of sub-classes'):
+      asset_class.Validate()
 
   def test_ManyAssetClassBadRatioNeg(self):
     AssetClass = lakshmi.AssetClass
@@ -46,7 +48,8 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    self.assertRaisesRegex(Exception, 'Bad ratio', asset_class.Validate)
+    with self.assertRaisesRegex(lakshmi.ValidationError, 'Bad ratio'):
+      asset_class.Validate()
 
   def test_ManyAssetClassBadRatioHigh(self):
     AssetClass = lakshmi.AssetClass
@@ -58,7 +61,8 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    self.assertRaisesRegex(Exception, 'Bad ratio', asset_class.Validate)
+    with self.assertRaisesRegex(lakshmi.ValidationError, 'Bad ratio'):
+      asset_class.Validate()
 
   def test_ManyAssetClass(self):
     AssetClass = lakshmi.AssetClass
@@ -79,8 +83,9 @@ class LakshmiTest(unittest.TestCase):
     # Create a dummy asset.
     account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
       assets.SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
-    self.assertRaisesRegex(Exception, 'Unknown or non-leaf asset class: Bad Equity',
-                           interface.AddAccount, account)
+    with self.assertRaisesRegex(lakshmi.ValidationError,
+                                'Unknown or non-leaf asset class: Bad Equity'):
+      interface.AddAccount(account)
     
     
   def test_OneDummyAsset(self):
@@ -138,15 +143,15 @@ class LakshmiTest(unittest.TestCase):
                      .AddSubClass(0.4, AssetClass('Intl')))
         .AddSubClass(0.4, AssetClass('Bonds')))
 
-    self.assertRaisesRegex(Exception, 'Need to validate',
-                           asset_class.ValueMapped, {})
+    with self.assertRaisesRegex(lakshmi.ValidationError, 'Need to validate'):
+      asset_class.ValueMapped({})
 
     asset_class.Validate()
     money_allocation = {'US': 10.0, 'Intl': 20.0, 'Bonds': 40.0, 'Unused': 50.0}
 
-    self.assertEqual(70.0, asset_class.ValueMapped(money_allocation))
-    self.assertEqual(30.0, asset_class.children[0][0].ValueMapped(money_allocation))
-    self.assertEqual(40.0, asset_class.children[1][0].ValueMapped(money_allocation))
+    self.assertAlmostEqual(70.0, asset_class.ValueMapped(money_allocation))
+    self.assertAlmostEqual(30.0, asset_class.children[0][0].ValueMapped(money_allocation))
+    self.assertAlmostEqual(40.0, asset_class.children[1][0].ValueMapped(money_allocation))
 
   def test_ReturnActualAllocationOneAsset(self):
     AssetClass = lakshmi.AssetClass
@@ -157,7 +162,7 @@ class LakshmiTest(unittest.TestCase):
     ret = asset_class.ReturnAllocation(allocation)
     self.assertEqual(1, len(ret))
     self.assertEqual('All', ret[0].name)
-    self.assertEqual(10.0, ret[0].value)
+    self.assertAlmostEqual(10.0, ret[0].value)
     self.assertEqual([], ret[0].children)
 
   def test_ReturnActualAllocationAssetTree(self):
@@ -174,7 +179,7 @@ class LakshmiTest(unittest.TestCase):
 
     self.assertEqual(1, len(ret))
     self.assertEqual('All', ret[0].name)
-    self.assertEqual(70.0, ret[0].value)
+    self.assertAlmostEqual(70.0, ret[0].value)
 
     self.assertEqual(2, len(ret[0].children))
     self.assertEqual('Equity', ret[0].children[0].name)
