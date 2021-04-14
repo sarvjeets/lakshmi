@@ -30,7 +30,7 @@ class Asset(ABC):
   @abstractmethod
   def Value(self):
     pass
-  
+
   @abstractmethod
   def Name(self):
     pass
@@ -38,7 +38,7 @@ class Asset(ABC):
   def ToStr(self):
     return self.Name()
 
-  
+
 class Account():
   """Class representing an account.
 
@@ -58,7 +58,7 @@ class Account():
   def ToStr(self):
     return self.name
 
-    
+
 class AssetClass():
   """(Tree of) Asset classes."""
   def __init__(self, name):
@@ -108,7 +108,7 @@ class AssetClass():
   def Leaves(self):
     if not self._leaves:
       raise ValidationError('Leaves() called on an non-validated asset class')
-    
+
     return self._leaves
 
   def ValueMapped(self, money_allocation):
@@ -123,7 +123,7 @@ class AssetClass():
     return sum([value for name, value in money_allocation.items()
                 if name in self._leaves])
 
-  
+
   class Allocation():
     class Children:
       def __init__(self, name, actual_allocation, desired_allocation,
@@ -132,7 +132,7 @@ class AssetClass():
         self.actual_allocation = actual_allocation
         self.desired_allocation = desired_allocation
         self.value_difference = value_difference
-        
+
     def __init__(self, name, value):
       self.name = name
       self.value = value
@@ -141,7 +141,7 @@ class AssetClass():
     def AddChild(self, name, actual, desired):
       self.children.append(
         self.Children(name, actual, desired, (desired - actual) * self.value))
-      
+
   def ReturnAllocation(self, money_allocation, levels = -1):
     """Returns actual and desired allocation based on how money is allocated.
 
@@ -153,7 +153,7 @@ class AssetClass():
     A list of ActualAllocation objects (for itself and any children classes
     based on levels flag.
     """
-    value = self.ValueMapped(money_allocation)   
+    value = self.ValueMapped(money_allocation)
     actual_alloc = self.Allocation(self.name, value)
 
     if value == 0:
@@ -180,7 +180,7 @@ class Interface():
     self.accounts = []
     self.asset_classes = asset_classes.Validate()
     self._leaf_asset_classes = asset_classes.Leaves()
-    
+
   def AddAssetClasses(self, asset_classes):
     self.asset_classes = asset_classes
 
@@ -195,7 +195,7 @@ class Interface():
   @staticmethod
   def DollarToStr(dollars):
     return '${:,.2f}'.format(dollars)
-    
+
   def ListAssets(self):
     return_str_list = []
     total = 0.0
@@ -226,7 +226,7 @@ class Interface():
       return_str_list.append('{}%\n'.format(round(100*value/total)))
 
     return ''.join(return_str_list)
-      
+
   def AssetAllocation(self, levels = -1):
     asset_class_to_value = {}
 
