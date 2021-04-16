@@ -29,52 +29,58 @@ class SimpleAsset(lakshmi.Asset):
 
 class TickerAsset(lakshmi.Asset):
   """An asset class representing a Ticket whose price can be pulled."""
-  def __init__(self, ticker, shares, class2ratio, ticker_obj=yfinance.Ticker):
+  def __init__(self, ticker, shares, class2ratio):
     self.ticker = ticker
     # Currently, we only pull data once when the object is created.
-    self.yticker = ticker_obj(ticker)
-    if self.yticker.info.get('regularMarketPrice') is None:
-      raise NotFoundError('Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
-        ticker))
-
+    self.yticker = yfinance.Ticker(ticker)
     self.shares = shares
     super().__init__(class2ratio)
 
   def Name(self):
-    return self.yticker.info['longName'].strip()
+    if self.yticker.info.get('longName') is None:
+      raise NotFoundError('Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
+        self.ticker))
+    return self.yticker.info['longName']
 
   def Value(self):
+    if self.yticker.info.get('regularMarketPrice') is None:
+      raise NotFoundError('Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
+        self.ticker))
     return self.shares * self.yticker.info['regularMarketPrice']
+
 
 class VanguardFund(lakshmi.Asset):
   """An asset class representing Vanguard trust fund represented by an ID."""
-  def __init__(self, fund_id, shares, class2ratio, requests_get=requests.get):
+  def __init__(self, fund_id, shares, class2ratio):
     self.fund_id = fund_id
     self.shares = shares
+    self.name = None
+    self.price = None
     super().__init__(class2ratio)
-    headers = {'Referer': 'https://vanguard.com/'}
-    url = 'https://api.vanguard.com/rs/ire/01/pe/fund/{}/{}.json'
-
-    req = requests_get(url.format(fund_id, 'profile'), headers=headers)
-    req.raise_for_status()  # Raise if error
-    self.name = req.json()['fundProfile']['longName']
-
-    req = requests_get(url.format(fund_id, 'price'), headers=headers)
-    req.raise_for_status()  # Raise if error
-    self.price = float(req.json()['currentPrice']['dailyPrice']['regular']['price'])
 
   def Name(self):
+    if self.name is None:
+      headers = {'Referer': 'https://vanguard.com/'}
+      req = requests.get(
+        'https://api.vanguard.com/rs/ire/01/pe/fund/{}/profile.json'.format(self.fund_id),
+        headers={'Referer': 'https://vanguard.com/'})
+      req.raise_for_status()  # Raise if error
+      self.name = req.json()['fundProfile']['longName']
     return self.name
 
   def Value(self):
+    if self.price is None:
+      headers = {'Referer': 'https://vanguard.com/'}
+      req = requests.get(
+        'https://api.vanguard.com/rs/ire/01/pe/fund/{}/price.json'.format(self.fund_id),
+        headers={'Referer': 'https://vanguard.com/'})
+      req.raise_for_status()  # Raise if error
+      self.price = float(req.json()['currentPrice']['dailyPrice']['regular']['price'])
     return self.shares * self.price
 
 
 class _TresuryBonds(lakshmi.Asset):
   def __init__(self, series, class2ratio):
-    if series != 'EE' and series != 'I':
-      raise lakshmi.ValidationError('Only I and EE series bonds are supported')
-
     self.series = series
     super().__init__(class2ratio)
     self.value = 0
@@ -88,15 +94,15 @@ class _TresuryBonds(lakshmi.Asset):
   def _GetBondInfo(self, issue_date, denom):
     scale = denom / 1000  # TD website doesn't support some denominations for electronic bonds.
     if self.series == 'EE':
-      ## EE Bonds returned are half the value (I guess TD website assumes paper bonds)
+      # EE Bonds returned are half the value (I guess TD website assumes paper bonds)
       scale *= 2
 
     data = {
-      "RedemptionDate" : datetime.datetime.now().strftime('%m/%Y'),
-      "Series" : self.series,
-      "Denomination" : '1000',
-      "IssueDate" : issue_date,
-      "btnAdd.x" : "CALCULATE"
+      'RedemptionDate' : datetime.datetime.now().strftime('%m/%Y'),
+      'Series' : self.series,
+      'Denomination' : '1000',
+      'IssueDate' : issue_date,
+      'btnAdd.x' : 'CALCULATE'
     };
 
     req = requests.post('http://www.treasurydirect.gov/BC/SBCPrice', data=data)
