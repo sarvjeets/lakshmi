@@ -106,6 +106,52 @@ class AssetsTest(unittest.TestCase):
     self.assertEqual('1.88%', ibonds.ListBonds()[0][2])
     self.assertAlmostEqual(10156.0, ibonds.ListBonds()[0][3])
 
+  @patch('datetime.datetime')
+  @patch('requests.post')
+  def test_EEBonds(self, MockPost, MockDate):
+    MockReq = MagicMock()
+    MockReq.text = """Stuff
+    <td>More stuff</td>
+<div id="bogus">
+<td class="lft">NA</td>
+<td class="se">EE</td>
+<td>$1,000</td>
+<td>03/2020</td>
+<td>05/2021</td>
+<td>03/2050</td>
+<td>$500.00</td>
+<td>$0.40</td>
+<td>0.10%</td>
+<td><strong>$500.40</strong></td>
+<td class="nt"><a href="#nte">P5</a></td>
+<td class="rgt"><input class="linkbutton" type="submit" name="btnDel0.x" value="REMOVE" /></td>
+</tr>
+... and more stuff
+"""
+    MockPost.return_value = MockReq
+    MockDate.now.strftime.return_value = '04/2021'
+
+    eebonds = assets.EEBonds({'All': 1.0})
+    eebonds.AddBond('03/2020', 10000)
+
+    MockPost.asset_called_once_with(
+      'http://www.treasurydirect.gov/BC/SBCPrice',
+      data = {
+        'RedemptionDate' : '04/2021',
+        'Series' : 'EE',
+        'Denomination' : '500',
+        'IssueDate' : '03/2020',
+        'btnAdd.x' : 'CALCULATE'})
+
+    self.assertEqual('EE Bonds', eebonds.Name())
+    self.assertAlmostEqual(10008.0, eebonds.Value())
+    self.assertEqual(1, len(eebonds.ListBonds()))
+    self.assertEqual(4, len(eebonds.ListBonds()[0]))
+    self.assertEqual('03/2020', eebonds.ListBonds()[0][0])
+    self.assertEqual(10000, eebonds.ListBonds()[0][1])
+    self.assertEqual('0.10%', eebonds.ListBonds()[0][2])
+    self.assertAlmostEqual(10008.0, eebonds.ListBonds()[0][3])
+
 
 if __name__ == '__main__':
   unittest.main()
