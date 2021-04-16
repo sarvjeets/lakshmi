@@ -6,7 +6,6 @@ One of the issue is how it would handle whatif commands (temp modification comma
 TODOs:
 - Support for saving and loading Assets
 - Add CLI commands
-- Add Treasury bonds (I Bonds, EE Bonds) assets.
 - Add Tax lot support for taxable accounts.
 - Add tracking contributions to Roth and Trad IRA accounts.
 - Special handling for zero balance accounts.
