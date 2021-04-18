@@ -12,7 +12,6 @@ TODOs:
 - Support for importing csv files from Vanguard.
 - What if support.
 - Fix and add comments (properly)!
-- Consider cache using https://pypi.org/project/cache-to-disk/
 
 How it should behave:
 

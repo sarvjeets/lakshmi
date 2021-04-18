@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
 import assets
-from lakshmi import ValidationError
 import unittest
 from unittest.mock import MagicMock, patch
-
+import cache
 
 class AssetsTest(unittest.TestCase):
+  def setUp(self):
+    cache.CACHE_DIR = None  # Disable caching.
+
   @patch('yfinance.Ticker')
   def test_BadTicker(self, MockTicker):
     bad_ticker = MagicMock()

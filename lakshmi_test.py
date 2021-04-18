@@ -73,9 +73,8 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.6, AssetClass('US'))
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
-    
-    self.assertEqual({'US', 'International', 'Bonds'}, asset_class.Leaves())
 
+    self.assertEqual({'US', 'International', 'Bonds'}, asset_class.Leaves())
 
   def test_DummyAssetWithBadAsset(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('Equity'))
@@ -86,8 +85,7 @@ class LakshmiTest(unittest.TestCase):
     with self.assertRaisesRegex(lakshmi.ValidationError,
                                 'Unknown or non-leaf asset class: Bad Equity'):
       interface.AddAccount(account)
-    
-    
+
   def test_OneDummyAsset(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('Equity'))
 
@@ -195,7 +193,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual(5, len(asset_class.ReturnAllocation(allocation, levels = 2)))
     self.assertEqual(5, len(asset_class.ReturnAllocation(allocation)))
     self.assertEqual(5, len(asset_class.ReturnAllocation(allocation, levels = 5)))
-    
-    
+
+
 if __name__ == '__main__':
   unittest.main()
