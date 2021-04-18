@@ -191,6 +191,7 @@ class Interface():
           raise ValidationError('Unknown or non-leaf asset class: ' + asset_class)
 
     self.accounts.append(account)
+    return self
 
   @staticmethod
   def DollarToStr(dollars):

@@ -90,6 +90,7 @@ class _TresuryBonds(lakshmi.Asset):
     rate, bond_value = self._GetBondInfo(issue_date, denom)
     self.value += bond_value
     self.bonds.append([issue_date, denom, rate, bond_value])
+    return self
 
   def _GetBondInfo(self, issue_date, denom):
     scale = denom / 1000  # TD website doesn't support some denominations for electronic bonds.
