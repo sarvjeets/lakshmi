@@ -181,9 +181,6 @@ class Interface():
     self.asset_classes = asset_classes.Validate()
     self._leaf_asset_classes = asset_classes.Leaves()
 
-  def AddAssetClasses(self, asset_classes):
-    self.asset_classes = asset_classes
-
   def AddAccount(self, account):
     for asset in account.assets:
       for asset_class in asset.class2ratio.keys():
