@@ -1,6 +1,7 @@
 """Top level interfaces and definitions for Lakshmi."""
 
 from abc import ABC, abstractmethod
+from tabulate import tabulate
 
 
 class ValidationError(Exception):
@@ -40,13 +41,13 @@ class Asset(ABC):
 
 
 class Account():
-  """Class representing an account.
-
-  Arguments:
-    name: Printable name for this account.
-    type: Type of this account (TODO: Ideally an enum or class).
-  """
+  """Class representing an account."""
   def __init__(self, name, account_type):
+    """
+    Arguments:
+      name: Printable name for this account.
+      account_type: Type of this account (TODO: Ideally an enum or class).
+    """
     self.name = name
     self.account_type = account_type
     self.assets = []
@@ -128,6 +129,7 @@ class AssetClass():
     class Children:
       def __init__(self, name, actual_allocation, desired_allocation, value,
                    value_difference):
+        # TODO: Many of these parameters are not used anymore.
         self.name = name
         self.actual_allocation = actual_allocation
         self.desired_allocation = desired_allocation
@@ -199,36 +201,38 @@ class Interface():
   def DollarToStr(dollars):
     return '${:,.2f}'.format(dollars)
 
-  def AssetsAsList(self):
-    """Returns a tuple of (all the assets as tuples, total value)."""
-    return_list = []
+  def TotalValue(self):
+    """Returns total of all assets added."""
     total = 0.0
+    for account in self.accounts:
+      for asset in account.assets:
+        total += asset.Value()
+    return total
 
+  def AssetsAsList(self):
+    """Returns all the assets as list."""
+    return_list = []
     for account in self.accounts:
       for asset in account.assets:
         return_list.append([account.ToStr(),
                             asset.ToStr(),
                             self.DollarToStr(asset.Value())])
-        total += asset.Value()
-
-    return return_list, self.DollarToStr(total)
+    return return_list
 
   def Assets(self):
-    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
     return_str_list = []
-    total = 0.0
-
-    for account in self.accounts:
-      for asset in account.assets:
-        return_str_list.append('{}, {}, '.format(account.ToStr(), asset.ToStr()))
-        return_str_list.append('{}\n'.format(self.DollarToStr(asset.Value())))
-        total += asset.Value()
-    return_str_list.append('\nTotal: {}\n'.format(self.DollarToStr(total)))
-
+    asset_list = self.AssetsAsList()
+    if asset_list:
+      return_str_list.append(
+        tabulate(self.AssetsAsList(),
+                 headers = ['Account', 'Asset', 'Value'],
+                 colalign = ('left', 'left', 'right')))
+    return_str_list.append(
+      '\n\nTotal: {}\n'.format(self.DollarToStr(self.TotalValue())))
     return ''.join(return_str_list)
 
   def AssetLocationAsList(self):
-    """Rerturns asset location as a list of [account_type, value]."""
+    """Rerturns asset location as a list of [account_type, value, percentage]."""
     account_type_to_value = {}
     total = 0.0
 
@@ -246,23 +250,10 @@ class Interface():
     return return_list
 
   def AssetLocation(self):
-    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
-    account_type_to_value = {}
-    total = 0.0
-
-    for account in self.accounts:
-      for asset in account.assets:
-        account_type_to_value[account.account_type] = account_type_to_value.get(
-          account.account_type, 0) + asset.Value()
-        total += asset.Value()
-
-    return_str_list = []
-    for account_type, value in account_type_to_value.items():
-      return_str_list.append(account_type + ', ')
-      return_str_list.append(self.DollarToStr(value)+ ', ')
-      return_str_list.append('{}%\n'.format(round(100*value/total)))
-
-    return ''.join(return_str_list)
+    return tabulate(
+      self.AssetLocationAsList(),
+      headers = ['Account Type', 'Value', '%'],
+      colalign = ('left', 'right', 'right')) + '\n'
 
   def AssetAllocationAsList(self, levels = -1):
     asset_class_to_value = {}
@@ -279,7 +270,7 @@ class Interface():
       if not alloc.children:
         continue
 
-      return_list.append([alloc.name + ':'])
+      return_list.append(['-\n{}:'.format(alloc.name)])
       for child in alloc.children:
         return_list.append([child.name,
                             '{}%'.format(round(100*child.actual_allocation)),
@@ -291,29 +282,7 @@ class Interface():
     return return_list
 
   def AssetAllocation(self, levels = -1):
-    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
-    asset_class_to_value = {}
-    total = 0.0
-
-    for account in self.accounts:
-      for asset in account.assets:
-        for name, ratio in asset.class2ratio.items():
-          value = ratio * asset.Value()
-          total += value
-          asset_class_to_value[name] = asset_class_to_value.get(
-            name, 0) + value
-
-    return_str_list = []
-    for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
-      return_str_list += '{}: {}\n'.format(alloc.name, self.DollarToStr(alloc.value))
-      for child in alloc.children:
-        return_str_list += '{}: {}% ({}%), {}{}\n'.format(
-          child.name,
-          format(round(100*child.actual_allocation)),
-          format(round(100*child.desired_allocation)),
-          '-' if child.value_difference < 0 else '+',
-          self.DollarToStr(abs(child.value_difference)))
-      return_str_list += '\n'
-
-    return_str_list.pop()
-    return ''.join(return_str_list)
+    return tabulate(
+      self.AssetAllocationAsList(levels),
+      headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Delta'],
+      colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'

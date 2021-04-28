@@ -7,9 +7,10 @@ A hobby project for investing. Inspired by my time spent on bogleheads.org.
 
 ## Installation
 
-This projects uses yfinance to pull asset prices for Tickers. Install it using:
+Install the required dependencies of this project using:
 ```
 pip install yfinance --upgrade --no-cache-dir
+TABULATE_INSTALL=lib-only pip install tabulate
 ```
 
 TODO(sarvjeet): Add more installation instructions.

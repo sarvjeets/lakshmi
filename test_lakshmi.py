@@ -8,10 +8,9 @@ import unittest
 class LakshmiTest(unittest.TestCase):
   def test_EmptyInterface(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('E'))
-    asset_list, total = interface.AssetsAsList()
-    self.assertListEqual([], asset_list)
-    self.assertEqual("$0.00", total)
-    self.assertEqual('\nTotal: $0.00\n', interface.Assets())
+    self.assertListEqual([], interface.AssetsAsList())
+    self.assertAlmostEqual(0, interface.TotalValue())
+    self.assertEqual('\n\nTotal: $0.00\n', interface.Assets())
 
   def test_OneAssetClass(self):
     asset_class = lakshmi.AssetClass('Equity').Validate()
@@ -99,21 +98,14 @@ class LakshmiTest(unittest.TestCase):
     interface.AddAccount(account)
     self.assertEqual(1, len(interface.accounts))
 
-    asset_list, total = interface.AssetsAsList()
-    self.assertListEqual([['401(k)', 'Test Asset', '$100.00']], asset_list)
-    self.assertEqual('$100.00', total)
-    self.assertEqual(
-      '401(k), Test Asset, $100.00\n\nTotal: $100.00\n',
-      interface.Assets())
+    self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
+                         interface.AssetsAsList())
+    self.assertAlmostEqual(100.0, interface.TotalValue())
 
     self.assertListEqual([['Pre-tax', '$100.00', '100%']],
                          interface.AssetLocationAsList())
-    self.assertEqual(
-      'Pre-tax, $100.00, 100%\n', interface.AssetLocation())
 
     self.assertListEqual([], interface.AssetAllocationAsList())
-    self.assertEqual(
-      'Equity: $100.00\n', interface.AssetAllocation())
 
   def test_OneDummyAssetTwoClass(self):
     AssetClass = lakshmi.AssetClass
@@ -129,29 +121,18 @@ class LakshmiTest(unittest.TestCase):
                          {'Equity': 0.6, 'Fixed Income': 0.4}))
 
     interface.AddAccount(account)
-    asset_list, total = interface.AssetsAsList()
     self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
-                         asset_list)
-    self.assertEqual('$100.00', total)
-    self.assertEqual(
-      'Vanguard, Test Asset, $100.00\n\nTotal: $100.00\n',
-      interface.Assets())
+                         interface.AssetsAsList())
+    self.assertAlmostEqual(100.0, interface.TotalValue())
 
     self.assertListEqual([['Taxable', '$100.00', '100%']],
                          interface.AssetLocationAsList())
-    self.assertEqual(
-      'Taxable, $100.00, 100%\n', interface.AssetLocation())
 
     self.assertListEqual(
-      [['All:'],
+      [['-\nAll:'],
        ['Equity', '60%', '50%', '$60.00', '-$10.00'],
        ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
       interface.AssetAllocationAsList())
-
-    self.assertEqual(
-      'All: $100.00\nEquity: 60% (50%), -$10.00\nFixed Income: 40% (50%), +$10.00\n\n'
-      'Equity: $60.00\n\nFixed Income: $40.00\n',
-      interface.AssetAllocation())
 
   def test_ValueMapped(self):
     AssetClass = lakshmi.AssetClass
