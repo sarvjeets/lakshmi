@@ -126,11 +126,12 @@ class AssetClass():
 
   class Allocation():
     class Children:
-      def __init__(self, name, actual_allocation, desired_allocation,
+      def __init__(self, name, actual_allocation, desired_allocation, value,
                    value_difference):
         self.name = name
         self.actual_allocation = actual_allocation
         self.desired_allocation = desired_allocation
+        self.value = value
         self.value_difference = value_difference
 
     def __init__(self, name, value):
@@ -140,7 +141,11 @@ class AssetClass():
 
     def AddChild(self, name, actual, desired):
       self.children.append(
-        self.Children(name, actual, desired, (desired - actual) * self.value))
+        self.Children(name,
+                      actual,
+                      desired,
+                      actual * self.value,
+                      (desired - actual) * self.value))
 
   def ReturnAllocation(self, money_allocation, levels = -1):
     """Returns actual and desired allocation based on how money is allocated.
@@ -194,7 +199,22 @@ class Interface():
   def DollarToStr(dollars):
     return '${:,.2f}'.format(dollars)
 
-  def ListAssets(self):
+  def AssetsAsList(self):
+    """Returns a tuple of (all the assets as tuples, total value)."""
+    return_list = []
+    total = 0.0
+
+    for account in self.accounts:
+      for asset in account.assets:
+        return_list.append([account.ToStr(),
+                            asset.ToStr(),
+                            self.DollarToStr(asset.Value())])
+        total += asset.Value()
+
+    return return_list, self.DollarToStr(total)
+
+  def Assets(self):
+    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
     return_str_list = []
     total = 0.0
 
@@ -207,7 +227,26 @@ class Interface():
 
     return ''.join(return_str_list)
 
+  def AssetLocationAsList(self):
+    """Rerturns asset location as a list of [account_type, value]."""
+    account_type_to_value = {}
+    total = 0.0
+
+    for account in self.accounts:
+      for asset in account.assets:
+        account_type_to_value[account.account_type] = account_type_to_value.get(
+          account.account_type, 0) + asset.Value()
+        total += asset.Value()
+
+    return_list = []
+    for account_type, value in account_type_to_value.items():
+      return_list.append([account_type,
+                          self.DollarToStr(value),
+                          '{}%'.format(round(100*value/total))])
+    return return_list
+
   def AssetLocation(self):
+    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
     account_type_to_value = {}
     total = 0.0
 
@@ -225,9 +264,35 @@ class Interface():
 
     return ''.join(return_str_list)
 
-  def AssetAllocation(self, levels = -1):
+  def AssetAllocationAsList(self, levels = -1):
     asset_class_to_value = {}
 
+    for account in self.accounts:
+      for asset in account.assets:
+        for name, ratio in asset.class2ratio.items():
+          value = ratio * asset.Value()
+          asset_class_to_value[name] = asset_class_to_value.get(
+            name, 0) + ratio * asset.Value()
+
+    return_list = []
+    for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
+      if not alloc.children:
+        continue
+
+      return_list.append([alloc.name + ':'])
+      for child in alloc.children:
+        return_list.append([child.name,
+                            '{}%'.format(round(100*child.actual_allocation)),
+                            '{}%'.format(round(100*child.desired_allocation)),
+                            self.DollarToStr(child.value),
+                            '{}{}'.format(
+                              '-' if child.value_difference < 0 else '+',
+                              self.DollarToStr(abs(child.value_difference)))])
+    return return_list
+
+  def AssetAllocation(self, levels = -1):
+    # TODO(sarvjeet): Fix me (change to tabular + use previous function)
+    asset_class_to_value = {}
     total = 0.0
 
     for account in self.accounts:
