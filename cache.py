@@ -4,12 +4,15 @@ import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+# Inspired by https://pypi.org/project/cache-to-disk/
+
 # If this is None, caching is disabled.
 CACHE_DIR = os.path.join(os.getcwd(), '.lakshmicache')
 
 class Cacheable(ABC):
   @abstractmethod
-  def Key(self):
+  def CacheKey(self):
+    """Unique string value used as key for caching."""
     pass
 
 def get_file_age(filename):
@@ -28,7 +31,7 @@ def cache(days):
 
       key = '{}_{}_{}.pkl'.format(days,
                                   func.__qualname__,
-                                  class_obj.Key())
+                                  class_obj.CacheKey())
       filename = os.path.join(CACHE_DIR, key)
 
       if os.path.exists(filename):

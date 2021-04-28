@@ -38,7 +38,7 @@ class TickerAsset(lakshmi.Asset, Cacheable):
     self.shares = shares
     super().__init__(class2ratio)
 
-  def Key(self):
+  def CacheKey(self):
     return self.ticker
 
   @cache(1)
@@ -66,7 +66,7 @@ class VanguardFund(lakshmi.Asset, Cacheable):
     self.shares = shares
     super().__init__(class2ratio)
 
-  def Key(self):
+  def CacheKey(self):
     return str(self.fund_id)
 
   @cache(365)  # Name changes are very rare.
@@ -98,7 +98,7 @@ class _TreasuryBonds(lakshmi.Asset):
       self.denom = denom
       self.redemption_date = redemption_date
 
-    def Key(self):
+    def CacheKey(self):
       return '{}_{}_{}_{}'.format(
         self.series,
         self.issue_date.replace('/', '.'),
