@@ -161,6 +161,25 @@ class LakshmiTest(unittest.TestCase):
        ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
       interface.AssetAllocationAsList())
 
+  def test_InterfaceStringMethods(self):
+    # This test doesn't do much except that the string methods
+    # "compile". In any case, they don't have much logic in them
+    # by design.
+    AssetClass = lakshmi.AssetClass
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(0.5, AssetClass('Equity'))
+        .AddSubClass(0.5, AssetClass('Fixed Income')))
+    interface = lakshmi.Interface(asset_class)
+    account = lakshmi.Account('Vanguard', 'Taxable').AddAsset(
+      assets.SimpleAsset('Test Asset', 100.0,
+                         {'Equity': 0.6, 'Fixed Income': 0.4}))
+    interface.AddAccount(account)
+
+    self.assertIsInstance(interface.AssetsAsStr(), str)
+    self.assertIsInstance(interface.AssetLocationAsStr(), str)
+    self.assertIsInstance(interface.AssetAllocationAsStr(), str)
+
   def test_MultipleAccountsAndAssets(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('All'))
     asset_class_map = {'All': 1.0}
