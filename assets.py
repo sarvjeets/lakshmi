@@ -28,6 +28,9 @@ class SimpleAsset(lakshmi.Asset):
   def Name(self):
     return self.name
 
+  def ShortName(self):
+    return self.name
+
 
 class TickerAsset(lakshmi.Asset, Cacheable):
   """An asset class representing a Ticket whose price can be pulled."""
@@ -47,6 +50,9 @@ class TickerAsset(lakshmi.Asset, Cacheable):
       raise NotFoundError('Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
         self.ticker))
     return self.yticker.info['longName']
+
+  def ShortName(self):
+    return self.ticker
 
   def Value(self):
     return self.shares * self.Price()
@@ -76,6 +82,9 @@ class VanguardFund(lakshmi.Asset, Cacheable):
       headers={'Referer': 'https://vanguard.com/'})
     req.raise_for_status()  # Raise if error
     return req.json()['fundProfile']['longName']
+
+  def ShortName(self):
+    return str(self.fund_id)
 
   @cache(1)
   def Price(self):
@@ -173,9 +182,16 @@ class IBonds(_TreasuryBonds):
   def Name(self):
     return 'I Bonds'
 
+  def ShortName(self):
+    return self.Name()
+
+
 class EEBonds(_TreasuryBonds):
   def __init__(self, class2ratio):
     super().__init__('EE', class2ratio)
 
   def Name(self):
     return 'EE Bonds'
+
+  def ShortName(self):
+    return self.Name()

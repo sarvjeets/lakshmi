@@ -16,6 +16,7 @@ class Asset(ABC):
     Argments:
       class2ratio: Dict of class_name -> ratio. 0 < Ratio <= 1.0
     """
+    self._delta = 0
     self.class2ratio = class2ratio
 
     total = 0
@@ -25,19 +26,27 @@ class Asset(ABC):
       total += ratio
 
     if abs(total - 1.0) > 1e-6:
-      raise ValidationError('Total allocation to classes must be 100% (actual = {}%)'.format(
-        round(total*100)))
+      raise ValidationError(
+        'Total allocation to classes must be 100% (actual = {}%)'.format(
+          round(total*100)))
 
   @abstractmethod
   def Value(self):
     pass
 
+  def WhatIf(self, delta):
+    self._delta = delta
+
+  def AdjustedValue(self):
+    return self.Value() + self._delta
+
   @abstractmethod
   def Name(self):
     pass
 
-  def ToStr(self):
-    return self.Name()
+  @abstractmethod
+  def ShortName(self):
+    pass
 
 
 class Account():
@@ -48,16 +57,32 @@ class Account():
       name: Printable name for this account.
       account_type: Type of this account (TODO: Ideally an enum or class).
     """
-    self.name = name
+    self._name = name
     self.account_type = account_type
-    self.assets = []
+    self._assets = {}
+    self._cash = 0
 
   def AddAsset(self, asset):
-    self.assets.append(asset)
+    if asset.ShortName() in self._assets:
+      raise ValidationError('Attempting to add duplicate Asset: ' +
+                            asset.ShortName())
+    self._assets[asset.ShortName()] = asset
     return self
 
-  def ToStr(self):
-    return self.name
+  def Assets(self):
+    return self._assets.values()
+
+  def GetAsset(self, short_name):
+    return self._assets[short_name]
+
+  def Name(self):
+    return self._name
+
+  def AddCash(self, delta):
+    self._cash += delta
+
+  def AvailableCash(self):
+    return self._cash
 
 
 class AssetClass():
@@ -184,42 +209,94 @@ class AssetClass():
 
 class Interface():
   def __init__(self, asset_classes):
-    self.accounts = []
+    self._accounts = {}
     self.asset_classes = asset_classes.Validate()
     self._leaf_asset_classes = asset_classes.Leaves()
 
   def AddAccount(self, account):
-    for asset in account.assets:
+    for asset in account.Assets():
       for asset_class in asset.class2ratio.keys():
         if not asset_class in self._leaf_asset_classes:
           raise ValidationError('Unknown or non-leaf asset class: ' + asset_class)
 
-    self.accounts.append(account)
+    if account.Name() in self._accounts:
+      raise ValidationError('Attempting to add duplicate account: ' + account.Name())
+
+    self._accounts[account.Name()] = account
     return self
 
+  def Accounts(self):
+    return self._accounts.values()
+
+  def GetAccount(self, name):
+    return self._accounts[name]
+
+  def WhatIf(self, account_name, asset_name, delta):
+    """Runs a whatif scenario if asset_name in account_name is changed by delta."""
+    account = self.GetAccount(account_name)
+    asset = account.GetAsset(asset_name)
+    asset.WhatIf(delta)
+    # We take the money out of account.
+    account.AddCash(-delta)
+
+  def WhatIfAddCash(self, account_name, cash_delta):
+    self.GetAccount(account_name).AddCash(cash_delta)
+
+  def WhatIfsAsList(self):
+    account_whatifs = []
+    asset_whatifs = []
+
+    for account in self.Accounts():
+      if account.AvailableCash() != 0.0:
+        account_whatifs.append(
+          [account.Name(),
+           self.DollarToStr(account.AvailableCash(), delta=True)])
+      for asset in account.Assets():
+        delta = asset.AdjustedValue() - asset.Value()
+        if delta != 0.0:
+          asset_whatifs.append(
+            [account.Name(),
+             asset.Name(),
+             self.DollarToStr(delta, delta=True)])
+
+    return account_whatifs, asset_whatifs
+
+  def ResetWhatIfs(self):
+    for account in self.Accounts():
+      account.AddCash(-account.AvailableCash())
+      for asset in account.Assets():
+        asset.WhatIf(0)
+
   @staticmethod
-  def DollarToStr(dollars):
-    return '${:,.2f}'.format(dollars)
+  def DollarToStr(dollars, delta=False):
+    if not delta:
+      return '${:,.2f}'.format(dollars)
+    else:
+      return '{}${:,.2f}'.format(
+        '-' if dollars < 0 else '+',
+        abs(dollars))
 
   def TotalValue(self):
     """Returns total of all assets added."""
     total = 0.0
-    for account in self.accounts:
-      for asset in account.assets:
-        total += asset.Value()
+    for account in self.Accounts():
+      total += account.AvailableCash()
+      for asset in account.Assets():
+        total += asset.AdjustedValue()
     return total
 
   def AssetsAsList(self):
     """Returns all the assets as list."""
     return_list = []
-    for account in self.accounts:
-      for asset in account.assets:
-        return_list.append([account.ToStr(),
-                            asset.ToStr(),
-                            self.DollarToStr(asset.Value())])
+    for account in self.Accounts():
+      for asset in account.Assets():
+        return_list.append(
+          [account.Name(),
+           asset.Name(),
+           self.DollarToStr(asset.AdjustedValue())])
     return return_list
 
-  def Assets(self):
+  def AssetsAsStr(self):
     return_str_list = []
     asset_list = self.AssetsAsList()
     if asset_list:
@@ -236,11 +313,14 @@ class Interface():
     account_type_to_value = {}
     total = 0.0
 
-    for account in self.accounts:
-      for asset in account.assets:
+    for account in self.Accounts():
+      account_type_to_value[account.account_type] = account_type_to_value.get(
+        account.account_type, 0) + account.AvailableCash()
+      total += account.AvailableCash()
+      for asset in account.Assets():
         account_type_to_value[account.account_type] = account_type_to_value.get(
-          account.account_type, 0) + asset.Value()
-        total += asset.Value()
+          account.account_type, 0) + asset.AdjustedValue()
+        total += asset.AdjustedValue()
 
     return_list = []
     for account_type, value in account_type_to_value.items():
@@ -249,7 +329,7 @@ class Interface():
                           '{}%'.format(round(100*value/total))])
     return return_list
 
-  def AssetLocation(self):
+  def AssetLocationAsStr(self):
     return tabulate(
       self.AssetLocationAsList(),
       headers = ['Account Type', 'Value', '%'],
@@ -258,12 +338,11 @@ class Interface():
   def AssetAllocationAsList(self, levels = -1):
     asset_class_to_value = {}
 
-    for account in self.accounts:
-      for asset in account.assets:
+    for account in self.Accounts():
+      for asset in account.Assets():
         for name, ratio in asset.class2ratio.items():
-          value = ratio * asset.Value()
           asset_class_to_value[name] = asset_class_to_value.get(
-            name, 0) + ratio * asset.Value()
+            name, 0) + ratio * asset.AdjustedValue()
 
     return_list = []
     for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
@@ -276,12 +355,10 @@ class Interface():
                             '{}%'.format(round(100*child.actual_allocation)),
                             '{}%'.format(round(100*child.desired_allocation)),
                             self.DollarToStr(child.value),
-                            '{}{}'.format(
-                              '-' if child.value_difference < 0 else '+',
-                              self.DollarToStr(abs(child.value_difference)))])
+                            self.DollarToStr(child.value_difference, delta=True)])
     return return_list
 
-  def AssetAllocation(self, levels = -1):
+  def AssetAllocationAsStr(self, levels = -1):
     return tabulate(
       self.AssetAllocationAsList(levels),
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Delta'],

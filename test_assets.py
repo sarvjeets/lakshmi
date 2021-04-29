@@ -34,6 +34,7 @@ class AssetsTest(unittest.TestCase):
     vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
     self.assertAlmostEqual(100.0, vmmxx.Value())
     self.assertEqual('Vanguard Cash Reserves Federal', vmmxx.Name())
+    self.assertEqual('VMMXX', vmmxx.ShortName())
 
     MockTicker.assert_called_once_with('VMMXX')
 
@@ -46,6 +47,7 @@ class AssetsTest(unittest.TestCase):
     fund = assets.VanguardFund(7555, 10, {'All': 1.0})
     self.assertEqual('Vanguard Institutional Total Bond Market Index Trust',
                      fund.Name())
+    self.assertEqual('7555', fund.ShortName())
     MockGet.assert_called_once_with(
       'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
       headers={'Referer': 'https://vanguard.com/'})
@@ -100,6 +102,7 @@ class AssetsTest(unittest.TestCase):
         'btnAdd.x' : 'CALCULATE'})
 
     self.assertEqual('I Bonds', ibonds.Name())
+    self.assertEqual('I Bonds', ibonds.ShortName())
     self.assertAlmostEqual(10156.0, ibonds.Value())
     self.assertEqual(1, len(ibonds.ListBonds()))
     self.assertEqual(4, len(ibonds.ListBonds()[0]))
@@ -146,6 +149,7 @@ class AssetsTest(unittest.TestCase):
         'btnAdd.x' : 'CALCULATE'})
 
     self.assertEqual('EE Bonds', eebonds.Name())
+    self.assertEqual('EE Bonds', eebonds.ShortName())
     self.assertAlmostEqual(10008.0, eebonds.Value())
     self.assertEqual(1, len(eebonds.ListBonds()))
     self.assertEqual(4, len(eebonds.ListBonds()[0]))
