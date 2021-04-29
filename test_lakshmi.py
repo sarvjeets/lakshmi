@@ -131,7 +131,7 @@ class LakshmiTest(unittest.TestCase):
     asset.WhatIf(-10.0)
     self.assertAlmostEqual(100, asset.Value())
     self.assertAlmostEqual(90, asset.AdjustedValue())
-    asset.WhatIf(0)
+    asset.WhatIf(10)
     self.assertAlmostEqual(100, asset.AdjustedValue())
 
   def test_OneDummyAssetTwoClass(self):
@@ -282,6 +282,22 @@ class LakshmiTest(unittest.TestCase):
     account_whatifs, asset_whatifs = interface.WhatIfsAsList()
     self.assertListEqual([], account_whatifs)
     self.assertListEqual([], asset_whatifs)
+
+  def test_WhatIfsDoubleAdd(self):
+    interface = lakshmi.Interface(lakshmi.AssetClass('All'))
+
+    asset = assets.SimpleAsset('Asset', 100.0, {'All': 1.0})
+    account = lakshmi.Account('Account', 'Taxable')
+    interface.AddAccount(account.AddAsset(asset))
+
+    interface.WhatIf('Account', 'Asset', 20)
+    interface.WhatIf('Account', 'Asset', 30)
+    self.assertAlmostEqual(150, asset.AdjustedValue())
+    self.assertAlmostEqual(-50, account.AvailableCash())
+    self.assertAlmostEqual(100, interface.TotalValue())
+    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    self.assertListEqual([['Account', '-$50.00']], account_whatifs)
+    self.assertListEqual([['Account', 'Asset', '+$50.00']], asset_whatifs)
 
   def test_ValueMapped(self):
     AssetClass = lakshmi.AssetClass

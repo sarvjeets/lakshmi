@@ -35,7 +35,7 @@ class Asset(ABC):
     pass
 
   def WhatIf(self, delta):
-    self._delta = delta
+    self._delta += delta
 
   def AdjustedValue(self):
     return self.Value() + self._delta
@@ -265,7 +265,7 @@ class Interface():
     for account in self.Accounts():
       account.AddCash(-account.AvailableCash())
       for asset in account.Assets():
-        asset.WhatIf(0)
+        asset.WhatIf(asset.Value() - asset.AdjustedValue())
 
   @staticmethod
   def DollarToStr(dollars, delta=False):
