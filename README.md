@@ -3,7 +3,7 @@
 ## Introduction
 TODO(sarvjeet)
 
-A hobby project for investing. Inspired by my time spent on bogleheads.org.
+A hobby project for investing. Inspired by all the time I spent on bogleheads.org.
 
 ## Installation
 
