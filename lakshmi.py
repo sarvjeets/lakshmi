@@ -297,16 +297,15 @@ class Interface():
     return return_list
 
   def AssetsAsStr(self):
-    return_str_list = []
     asset_list = self.Assets()
-    if asset_list:
-      return_str_list.append(
-        tabulate(asset_list,
-                 headers = ['Account', 'Asset', 'Value'],
-                 colalign = ('left', 'left', 'right')))
-    return_str_list.append(
+    if not asset_list:
+      return ''
+
+    return (
+      tabulate(asset_list,
+               headers = ['Account', 'Asset', 'Value'],
+               colalign = ('left', 'left', 'right')) +
       '\n\nTotal: {}\n'.format(self.DollarToStr(self.TotalValue())))
-    return ''.join(return_str_list)
 
   def AssetLocation(self):
     """Returns asset location as a list of [account_type, value, percentage]."""
@@ -330,8 +329,11 @@ class Interface():
     return return_list
 
   def AssetLocationAsStr(self):
+    asset_location = self.AssetLocation()
+    if not asset_location:
+      return ''
     return tabulate(
-      self.AssetLocation(),
+      asset_location,
       headers = ['Account Type', 'Value', '%'],
       colalign = ('left', 'right', 'right')) + '\n'
 
@@ -359,7 +361,11 @@ class Interface():
     return return_list
 
   def AssetAllocationAsStr(self, levels = -1):
+    asset_allocation = self.AssetAllocation(levels)
+    if not asset_allocation:
+      return ''
+
     return tabulate(
-      self.AssetAllocation(levels),
+      asset_allocation,
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Delta'],
       colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'

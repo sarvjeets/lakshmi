@@ -10,7 +10,12 @@ class LakshmiTest(unittest.TestCase):
     interface = lakshmi.Interface(lakshmi.AssetClass('E'))
     self.assertListEqual([], interface.Assets())
     self.assertAlmostEqual(0, interface.TotalValue())
-    self.assertEqual('\n\nTotal: $0.00\n', interface.AssetsAsStr())
+    self.assertListEqual([], interface.Assets())
+    self.assertEqual('', interface.AssetsAsStr())
+    self.assertListEqual([], interface.AssetLocation())
+    self.assertEqual('', interface.AssetLocationAsStr())
+    self.assertListEqual([], interface.AssetAllocation())
+    self.assertEqual('', interface.AssetAllocationAsStr())
 
   def test_OneAssetClass(self):
     asset_class = lakshmi.AssetClass('Equity').Validate()
