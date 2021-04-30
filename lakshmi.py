@@ -337,7 +337,7 @@ class Interface():
       headers = ['Account Type', 'Value', '%'],
       colalign = ('left', 'right', 'right')) + '\n'
 
-  def AssetAllocation(self, levels = -1):
+  def AssetAllocationTree(self, levels = -1):
     asset_class_to_value = {}
 
     for account in self.Accounts():
@@ -356,16 +356,15 @@ class Interface():
         return_list.append([child.name,
                             '{}%'.format(round(100*child.actual_allocation)),
                             '{}%'.format(round(100*child.desired_allocation)),
-                            self.DollarToStr(child.value),
-                            self.DollarToStr(child.value_difference, delta=True)])
+                            self.DollarToStr(child.value)])
     return return_list
 
   def AssetAllocationAsStr(self, levels = -1):
-    asset_allocation = self.AssetAllocation(levels)
+    asset_allocation = self.AssetAllocationTree(levels)
     if not asset_allocation:
       return ''
 
     return tabulate(
       asset_allocation,
-      headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Delta'],
-      colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'
+      headers = ['Class', 'Actual%', 'Desired%', 'Value'],
+      colalign = ('left', 'right', 'right', 'right')) + '\n'

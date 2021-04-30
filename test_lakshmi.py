@@ -14,7 +14,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('', interface.AssetsAsStr())
     self.assertListEqual([], interface.AssetLocation())
     self.assertEqual('', interface.AssetLocationAsStr())
-    self.assertListEqual([], interface.AssetAllocation())
+    self.assertListEqual([], interface.AssetAllocationTree())
     self.assertEqual('', interface.AssetAllocationAsStr())
 
   def test_OneAssetClass(self):
@@ -128,7 +128,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual([['Pre-tax', '$100.00', '100%']],
                          interface.AssetLocation())
 
-    self.assertListEqual([], interface.AssetAllocation())
+    self.assertListEqual([], interface.AssetAllocationTree())
 
   def test_AssetWhatIf(self):
     asset = assets.SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
@@ -162,9 +162,9 @@ class LakshmiTest(unittest.TestCase):
 
     self.assertListEqual(
       [['-\nAll:'],
-       ['Equity', '60%', '50%', '$60.00', '-$10.00'],
-       ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
-      interface.AssetAllocation())
+       ['Equity', '60%', '50%', '$60.00'],
+       ['Fixed Income', '40%', '50%', '$40.00']],
+      interface.AssetAllocationTree())
 
   def test_InterfaceStringMethods(self):
     # This test doesn't do much except that the string methods
@@ -265,9 +265,9 @@ class LakshmiTest(unittest.TestCase):
 
     self.assertListEqual(
       [['-\nAll:'],
-       ['Equity', '60%', '60%', '$120.00', '+$0.00'],
-       ['Bonds', '40%', '40%', '$80.00', '+$0.00']],
-      interface.AssetAllocation())
+       ['Equity', '60%', '60%', '$120.00'],
+       ['Bonds', '40%', '40%', '$80.00']],
+      interface.AssetAllocationTree())
 
     interface.WhatIfAddCash('Account 1', 30)
     self.assertAlmostEqual(30, account1.AvailableCash())
