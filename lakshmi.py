@@ -242,7 +242,7 @@ class Interface():
   def WhatIfAddCash(self, account_name, cash_delta):
     self.GetAccount(account_name).AddCash(cash_delta)
 
-  def WhatIfsAsList(self):
+  def GetWhatIfs(self):
     account_whatifs = []
     asset_whatifs = []
 
@@ -285,7 +285,7 @@ class Interface():
         total += asset.AdjustedValue()
     return total
 
-  def AssetsAsList(self):
+  def Assets(self):
     """Returns all the assets as list."""
     return_list = []
     for account in self.Accounts():
@@ -298,18 +298,18 @@ class Interface():
 
   def AssetsAsStr(self):
     return_str_list = []
-    asset_list = self.AssetsAsList()
+    asset_list = self.Assets()
     if asset_list:
       return_str_list.append(
-        tabulate(self.AssetsAsList(),
+        tabulate(asset_list,
                  headers = ['Account', 'Asset', 'Value'],
                  colalign = ('left', 'left', 'right')))
     return_str_list.append(
       '\n\nTotal: {}\n'.format(self.DollarToStr(self.TotalValue())))
     return ''.join(return_str_list)
 
-  def AssetLocationAsList(self):
-    """Rerturns asset location as a list of [account_type, value, percentage]."""
+  def AssetLocation(self):
+    """Returns asset location as a list of [account_type, value, percentage]."""
     account_type_to_value = {}
     total = 0.0
 
@@ -331,11 +331,11 @@ class Interface():
 
   def AssetLocationAsStr(self):
     return tabulate(
-      self.AssetLocationAsList(),
+      self.AssetLocation(),
       headers = ['Account Type', 'Value', '%'],
       colalign = ('left', 'right', 'right')) + '\n'
 
-  def AssetAllocationAsList(self, levels = -1):
+  def AssetAllocation(self, levels = -1):
     asset_class_to_value = {}
 
     for account in self.Accounts():
@@ -360,6 +360,6 @@ class Interface():
 
   def AssetAllocationAsStr(self, levels = -1):
     return tabulate(
-      self.AssetAllocationAsList(levels),
+      self.AssetAllocation(levels),
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Delta'],
       colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'

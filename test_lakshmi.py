@@ -8,7 +8,7 @@ import unittest
 class LakshmiTest(unittest.TestCase):
   def test_EmptyInterface(self):
     interface = lakshmi.Interface(lakshmi.AssetClass('E'))
-    self.assertListEqual([], interface.AssetsAsList())
+    self.assertListEqual([], interface.Assets())
     self.assertAlmostEqual(0, interface.TotalValue())
     self.assertEqual('\n\nTotal: $0.00\n', interface.AssetsAsStr())
 
@@ -117,13 +117,13 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual(1, len(interface.Accounts()))
 
     self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
-                         interface.AssetsAsList())
+                         interface.Assets())
     self.assertAlmostEqual(100.0, interface.TotalValue())
 
     self.assertListEqual([['Pre-tax', '$100.00', '100%']],
-                         interface.AssetLocationAsList())
+                         interface.AssetLocation())
 
-    self.assertListEqual([], interface.AssetAllocationAsList())
+    self.assertListEqual([], interface.AssetAllocation())
 
   def test_AssetWhatIf(self):
     asset = assets.SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
@@ -149,17 +149,17 @@ class LakshmiTest(unittest.TestCase):
 
     interface.AddAccount(account)
     self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
-                         interface.AssetsAsList())
+                         interface.Assets())
     self.assertAlmostEqual(100.0, interface.TotalValue())
 
     self.assertListEqual([['Taxable', '$100.00', '100%']],
-                         interface.AssetLocationAsList())
+                         interface.AssetLocation())
 
     self.assertListEqual(
       [['-\nAll:'],
        ['Equity', '60%', '50%', '$60.00', '-$10.00'],
        ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
-      interface.AssetAllocationAsList())
+      interface.AssetAllocation())
 
   def test_InterfaceStringMethods(self):
     # This test doesn't do much except that the string methods
@@ -214,7 +214,7 @@ class LakshmiTest(unittest.TestCase):
        ['Account 1', 'Asset 2', '$200.00'],
        ['Account 2', 'Asset 1', '$300.00'],
        ['Account 2', 'Asset 2', '$400.00']],
-      interface.AssetsAsList())
+      interface.Assets())
 
   def test_WhatIfs(self):
     AssetClass = lakshmi.AssetClass
@@ -228,7 +228,7 @@ class LakshmiTest(unittest.TestCase):
     account2 = lakshmi.Account('Account 2', 'Pre-tax')
     interface.AddAccount(account1).AddAccount(account2)
 
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([], account_whatifs)
     self.assertListEqual([], asset_whatifs)
 
@@ -236,7 +236,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(80, asset2.AdjustedValue())
     self.assertAlmostEqual(20, account1.AvailableCash())
     self.assertAlmostEqual(200, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([['Account 1', '+$20.00']], account_whatifs)
     self.assertListEqual(
       [['Account 1', 'Asset 2', '-$20.00']],
@@ -246,7 +246,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(120, asset1.AdjustedValue())
     self.assertAlmostEqual(0, account1.AvailableCash())
     self.assertAlmostEqual(200, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([], account_whatifs)
     self.assertListEqual(
       [['Account 1', 'Asset 1', '+$20.00'],
@@ -256,18 +256,18 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual(
       [['Account 1', 'Asset 1', '$120.00'],
        ['Account 1', 'Asset 2', '$80.00']],
-      interface.AssetsAsList())
+      interface.Assets())
 
     self.assertListEqual(
       [['-\nAll:'],
        ['Equity', '60%', '60%', '$120.00', '+$0.00'],
        ['Bonds', '40%', '40%', '$80.00', '+$0.00']],
-      interface.AssetAllocationAsList())
+      interface.AssetAllocation())
 
     interface.WhatIfAddCash('Account 1', 30)
     self.assertAlmostEqual(30, account1.AvailableCash())
     self.assertAlmostEqual(230, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([['Account 1', '+$30.00']], account_whatifs)
     self.assertListEqual(
       [['Account 1', 'Asset 1', '+$20.00'],
@@ -277,7 +277,7 @@ class LakshmiTest(unittest.TestCase):
     interface.WhatIfAddCash('Account 2', 460)
     self.assertAlmostEqual(460, account2.AvailableCash())
     self.assertAlmostEqual(690, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual(
       [['Account 1', '+$30.00'],
        ['Account 2', '+$460.00']],
@@ -290,7 +290,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual(
       [['Taxable', '$230.00', '33%'],
        ['Pre-tax', '$460.00', '67%']],
-      interface.AssetLocationAsList())
+      interface.AssetLocation())
 
     interface.ResetWhatIfs()
     self.assertAlmostEqual(100, asset1.AdjustedValue())
@@ -298,7 +298,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(0, account1.AvailableCash())
     self.assertAlmostEqual(0, account2.AvailableCash())
     self.assertAlmostEqual(200, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([], account_whatifs)
     self.assertListEqual([], asset_whatifs)
 
@@ -314,7 +314,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(150, asset.AdjustedValue())
     self.assertAlmostEqual(-50, account.AvailableCash())
     self.assertAlmostEqual(100, interface.TotalValue())
-    account_whatifs, asset_whatifs = interface.WhatIfsAsList()
+    account_whatifs, asset_whatifs = interface.GetWhatIfs()
     self.assertListEqual([['Account', '-$50.00']], account_whatifs)
     self.assertListEqual([['Account', 'Asset', '+$50.00']], asset_whatifs)
 
