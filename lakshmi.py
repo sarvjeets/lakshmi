@@ -131,10 +131,28 @@ class AssetClass():
 
     return self
 
-  def Leaves(self):
+  def _Check(self):
     if not self._leaves:
-      raise ValidationError('Leaves() called on an non-validated asset class')
+      raise ValidationError('Need to validate AssetAllocation before using it.')
 
+  def FindAssetClass(self, asset_class_name):
+    """Returns a tuple of object representing asset_class_name and its desired ratio.
+
+    Returns None if asset_class_name is not found."""
+    self._Check()
+
+    if self.name == asset_class_name:
+      return self, 1.0
+
+    for asset_class, ratio in self.children:
+      ret_value = asset_class.FindAssetClass(asset_class_name)
+      if ret_value:
+        return ret_value[0], ret_value[1] * ratio
+
+    return None
+
+  def Leaves(self):
+    self._Check()
     return self._leaves
 
   def ValueMapped(self, money_allocation):
@@ -143,9 +161,7 @@ class AssetClass():
     Arguments:
       money_allocation: A map of leaf_class_name -> money.
     """
-    if not self._leaves:
-      raise ValidationError('Need to validate AssetAllocation before using it.')
-
+    self._Check()
     return sum([value for name, value in money_allocation.items()
                 if name in self._leaves])
 
@@ -207,7 +223,7 @@ class AssetClass():
 
     return ret_val
 
-class Interface():
+class Portfolio():
   def __init__(self, asset_classes):
     self._accounts = {}
     self.asset_classes = asset_classes.Validate()
@@ -337,7 +353,7 @@ class Interface():
       headers = ['Account Type', 'Value', '%'],
       colalign = ('left', 'right', 'right')) + '\n'
 
-  def AssetAllocationTree(self, levels = -1):
+  def AssetAllocationTree(self, levels=-1):
     asset_class_to_value = {}
 
     for account in self.Accounts():
@@ -359,7 +375,7 @@ class Interface():
                             self.DollarToStr(child.value)])
     return return_list
 
-  def AssetAllocationAsStr(self, levels = -1):
+  def AssetAllocationTreeAsStr(self, levels=-1):
     asset_allocation = self.AssetAllocationTree(levels)
     if not asset_allocation:
       return ''
