@@ -93,6 +93,13 @@ class AssetClass():
     # Populated when _Validate is called.
     self._leaves = None
 
+  def Copy(self):
+    """Returns a copy of this AssetClass and its sub-classes."""
+    ret_val = AssetClass(self.name)
+    for child, ratio in self.children:
+      ret_val.AddSubClass(ratio, child.Copy())
+    return ret_val
+
   def AddSubClass(self, ratio, asset_class):
     self.children.append((asset_class, ratio))
     # Leaves is not upto date now, need validation again.
@@ -170,7 +177,6 @@ class AssetClass():
     class Children:
       def __init__(self, name, actual_allocation, desired_allocation, value,
                    value_difference):
-        # TODO: Many of these parameters are not used anymore.
         self.name = name
         self.actual_allocation = actual_allocation
         self.desired_allocation = desired_allocation
@@ -353,7 +359,7 @@ class Portfolio():
       headers = ['Account Type', 'Value', '%'],
       colalign = ('left', 'right', 'right')) + '\n'
 
-  def AssetAllocationTree(self, levels=-1):
+  def _GetAssetClassToValue(self):
     asset_class_to_value = {}
 
     for account in self.Accounts():
@@ -362,6 +368,10 @@ class Portfolio():
           asset_class_to_value[name] = asset_class_to_value.get(
             name, 0) + ratio * asset.AdjustedValue()
 
+    return asset_class_to_value
+
+  def AssetAllocationTree(self, levels=-1):
+    asset_class_to_value = self._GetAssetClassToValue()
     return_list = []
     for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
       if not alloc.children:
@@ -384,3 +394,41 @@ class Portfolio():
       asset_allocation,
       headers = ['Class', 'Actual%', 'Desired%', 'Value'],
       colalign = ('left', 'right', 'right', 'right')) + '\n'
+
+  def AssetAllocation(self, asset_class_list):
+    asset_class_to_value = self._GetAssetClassToValue()
+
+    asset_class_ratio = map(self.asset_classes.FindAssetClass,
+                            asset_class_list)
+
+    flat_asset_class = AssetClass('Root')
+    for asset_class, ratio in asset_class_ratio:
+      flat_asset_class.AddSubClass(ratio, asset_class)
+
+    try:
+      flat_asset_class.Validate()
+    except ValidationError:
+      raise ValidationError(
+        'AssetAllocation called with overlapping Asset Classes or ' +
+        'Asset Classes which does not cover the full tree.')
+
+    alloc = flat_asset_class.ReturnAllocation(asset_class_to_value, 0)[0]
+    return_list = []
+    for child in alloc.children:
+      return_list.append(
+        [child.name,
+         '{}%'.format(round(100*child.actual_allocation)),
+         '{}%'.format(round(100*child.desired_allocation)),
+         self.DollarToStr(child.value),
+         self.DollarToStr(child.value_difference, delta=True)])
+    return return_list
+
+  def AssetAllocationAsStr(self, asset_class_list):
+    asset_allocation = self.AssetAllocation(asset_class_list)
+    if not asset_allocation:
+      return ''
+
+    return tabulate(
+      asset_allocation,
+      headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
+      colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'

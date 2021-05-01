@@ -99,6 +99,20 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('Bonds', ret_class.name)
     self.assertAlmostEqual(0.2, ratio)
 
+  def test_AssetClassCopy(self):
+    AssetClass = lakshmi.AssetClass
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(0.8,
+                     AssetClass('Equity')
+                       .AddSubClass(0.6, AssetClass('US'))
+                       .AddSubClass(0.4, AssetClass('International')))
+        .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+
+    asset_class2 = asset_class.Copy().Validate()
+    asset_class2.name = 'Changed'
+    self.assertEqual('All', asset_class.name)
+
   def test_ValueMapped(self):
     AssetClass = lakshmi.AssetClass
     asset_class = (
@@ -118,10 +132,9 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(30.0, asset_class.children[0][0].ValueMapped(money_allocation))
     self.assertAlmostEqual(40.0, asset_class.children[1][0].ValueMapped(money_allocation))
 
-  def test_DummyAssetWithBadAsset(self):
+  def test_BadAsset(self):
     portfolio = lakshmi.Portfolio(lakshmi.AssetClass('Equity'))
 
-    # Create a dummy asset.
     account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
       assets.SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
     with self.assertRaisesRegex(lakshmi.ValidationError,
@@ -146,7 +159,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('Test Asset', asset.Name())
     self.assertAlmostEqual(100.0, asset.Value())
 
-  def test_OneDummyAsset(self):
+  def test_OneAsset(self):
     portfolio = lakshmi.Portfolio(lakshmi.AssetClass('Equity'))
 
     # Create a dummy asset.
@@ -174,7 +187,7 @@ class LakshmiTest(unittest.TestCase):
     asset.WhatIf(10)
     self.assertAlmostEqual(100, asset.AdjustedValue())
 
-  def test_OneDummyAssetTwoClass(self):
+  def test_OneAssetTwoClass(self):
     AssetClass = lakshmi.AssetClass
     asset_class = (
       AssetClass('All')
@@ -201,6 +214,38 @@ class LakshmiTest(unittest.TestCase):
        ['Fixed Income', '40%', '50%', '$40.00']],
       portfolio.AssetAllocationTree())
 
+  def test_FlatAssetAllocation(self):
+    AssetClass = lakshmi.AssetClass
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(0.8,
+                     AssetClass('Equity')
+                       .AddSubClass(0.6, AssetClass('US'))
+                       .AddSubClass(0.4, AssetClass('Intl')))
+        .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+    portfolio = lakshmi.Portfolio(asset_class)
+    Asset = assets.SimpleAsset
+    portfolio.AddAccount(
+      lakshmi.Account('Account', 'Taxable')
+      .AddAsset(Asset('US Asset', 60.0, {'US': 1.0}))
+      .AddAsset(Asset('Intl Asset', 30.0, {'Intl': 1.0}))
+      .AddAsset(Asset('Bond Asset', 10.0, {'Bonds': 1.0})))
+
+    with self.assertRaisesRegex(lakshmi.ValidationError,
+                                'AssetAllocation called with'):
+      portfolio.AssetAllocation(['Equity', 'Intl'])
+
+    self.assertListEqual(
+      [['US', '60%', '48%', '$60.00', '-$12.00'],
+       ['Intl', '30%', '32%', '$30.00', '+$2.00'],
+       ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
+      portfolio.AssetAllocation(['US', 'Intl', 'Bonds']))
+
+    self.assertListEqual(
+      [['Equity', '90%', '80%', '$90.00', '-$10.00'],
+       ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
+      portfolio.AssetAllocation(['Equity', 'Bonds']))
+
   def test_PortfolioStringMethods(self):
     # This test doesn't do much except that the string methods
     # "compile". In any case, they don't have much logic in them
@@ -219,6 +264,8 @@ class LakshmiTest(unittest.TestCase):
     self.assertIsInstance(portfolio.AssetsAsStr(), str)
     self.assertIsInstance(portfolio.AssetLocationAsStr(), str)
     self.assertIsInstance(portfolio.AssetAllocationTreeAsStr(), str)
+    self.assertIsInstance(portfolio.AssetAllocationAsStr(
+      ['Equity', 'Fixed Income']), str)
 
   def test_MultipleAccountsAndAssets(self):
     portfolio = lakshmi.Portfolio(lakshmi.AssetClass('All'))
