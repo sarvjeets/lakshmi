@@ -48,6 +48,29 @@ class TableTest(unittest.TestCase):
       t.StrList())
     self.assertGreater(len(t.String()), 0)
 
+  def testMismatchedNumCols(self):
+    with self.assertRaises(AssertionError):
+      t = table.Table(2, headers = ['1'])
+    with self.assertRaises(AssertionError):
+      t = table.Table(2, headers = ['1', '2', '3'])
+    with self.assertRaises(AssertionError):
+      t = table.Table(2, coltypes = ['str'])
+    with self.assertRaises(AssertionError):
+      t = table.Table(2, headers = ['str', 'str', 'str'])
+
+  def testTooManyCols(self):
+    t = table.Table(2)
+    with self.assertRaises(AssertionError):
+      t.AddRow(['1', '2', '3'])
+    with self.assertRaises(AssertionError):
+      t.SetRows([['a', 'b'],
+                 ['1', '2', '3']])
+
+  def testTooFewCols(self):
+    t = table.Table(2)
+    t.AddRow(['1'])
+    t.SetRows([['1', '2'], ['1'], ['a']])
+
 
 if __name__ == '__main__':
   unittest.main()
