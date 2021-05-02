@@ -1,7 +1,7 @@
 """Top level interfaces and definitions for Lakshmi."""
 
 from abc import ABC, abstractmethod
-from tabulate import tabulate
+from table import Table
 
 
 class ValidationError(Exception):
@@ -222,7 +222,8 @@ class AssetClass():
     if levels == 0:
       return ret_val
 
-    levels = (levels - 1) if levels > 0 else levels
+    if levels > 0:
+      levels -= 1
 
     for asset_class, unused_ratio in self.children:
       ret_val += asset_class.ReturnAllocation(money_allocation, levels)
@@ -265,21 +266,22 @@ class Portfolio():
     self.GetAccount(account_name).AddCash(cash_delta)
 
   def GetWhatIfs(self):
-    account_whatifs = []
-    asset_whatifs = []
+    account_whatifs = Table(
+      2,
+      headers=['Account', 'Cash'],
+      coltypes = [None, 'delta_dollars'])
+    asset_whatifs = Table(
+      3,
+      headers = ['Account', 'Asset', 'Delta'],
+      coltypes = [None, None, 'delta_dollars'])
 
     for account in self.Accounts():
       if account.AvailableCash() != 0.0:
-        account_whatifs.append(
-          [account.Name(),
-           self.DollarToStr(account.AvailableCash(), delta=True)])
+        account_whatifs.AddRow([account.Name(), account.AvailableCash()])
       for asset in account.Assets():
         delta = asset.AdjustedValue() - asset.Value()
         if delta != 0.0:
-          asset_whatifs.append(
-            [account.Name(),
-             asset.Name(),
-             self.DollarToStr(delta, delta=True)])
+          asset_whatifs.AddRow([account.Name(), asset.Name(), delta])
 
     return account_whatifs, asset_whatifs
 
@@ -288,15 +290,6 @@ class Portfolio():
       account.AddCash(-account.AvailableCash())
       for asset in account.Assets():
         asset.WhatIf(asset.Value() - asset.AdjustedValue())
-
-  @staticmethod
-  def DollarToStr(dollars, delta=False):
-    if not delta:
-      return '${:,.2f}'.format(dollars)
-    else:
-      return '{}${:,.2f}'.format(
-        '-' if dollars < 0 else '+',
-        abs(dollars))
 
   def TotalValue(self):
     """Returns total of all assets added."""
@@ -308,26 +301,17 @@ class Portfolio():
     return total
 
   def Assets(self):
-    """Returns all the assets as list."""
-    return_list = []
+    """Returns all the assets."""
+    table = Table(3,
+                  headers = ['Account', 'Asset', 'Value'],
+                  coltypes = [None, None, 'dollars'])
     for account in self.Accounts():
       for asset in account.Assets():
-        return_list.append(
+        table.AddRow(
           [account.Name(),
            asset.Name(),
-           self.DollarToStr(asset.AdjustedValue())])
-    return return_list
-
-  def AssetsAsStr(self):
-    asset_list = self.Assets()
-    if not asset_list:
-      return ''
-
-    return (
-      tabulate(asset_list,
-               headers = ['Account', 'Asset', 'Value'],
-               colalign = ('left', 'left', 'right')) +
-      '\n\nTotal: {}\n'.format(self.DollarToStr(self.TotalValue())))
+           asset.AdjustedValue()])
+    return table
 
   def AssetLocation(self):
     """Returns asset location as a list of [account_type, value, percentage]."""
@@ -343,21 +327,12 @@ class Portfolio():
           account.account_type, 0) + asset.AdjustedValue()
         total += asset.AdjustedValue()
 
-    return_list = []
+    table = Table(3,
+                  headers = ['Account Type', 'Value', '%'],
+                  coltypes = [None, 'dollars', 'percentage'])
     for account_type, value in account_type_to_value.items():
-      return_list.append([account_type,
-                          self.DollarToStr(value),
-                          '{}%'.format(round(100*value/total))])
-    return return_list
-
-  def AssetLocationAsStr(self):
-    asset_location = self.AssetLocation()
-    if not asset_location:
-      return ''
-    return tabulate(
-      asset_location,
-      headers = ['Account Type', 'Value', '%'],
-      colalign = ('left', 'right', 'right')) + '\n'
+      table.AddRow([account_type, value, value/total])
+    return table
 
   def _GetAssetClassToValue(self):
     asset_class_to_value = {}
@@ -372,28 +347,20 @@ class Portfolio():
 
   def AssetAllocationTree(self, levels=-1):
     asset_class_to_value = self._GetAssetClassToValue()
-    return_list = []
+    table = Table(4,
+                  headers = ['Class', 'Actual%', 'Desired%', 'Value'],
+                  coltypes = [None, 'percentage', 'percentage', 'dollars'])
     for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
       if not alloc.children:
         continue
 
-      return_list.append(['-\n{}:'.format(alloc.name)])
+      table.AddRow(['-\n{}:'.format(alloc.name)])
       for child in alloc.children:
-        return_list.append([child.name,
-                            '{}%'.format(round(100*child.actual_allocation)),
-                            '{}%'.format(round(100*child.desired_allocation)),
-                            self.DollarToStr(child.value)])
-    return return_list
-
-  def AssetAllocationTreeAsStr(self, levels=-1):
-    asset_allocation = self.AssetAllocationTree(levels)
-    if not asset_allocation:
-      return ''
-
-    return tabulate(
-      asset_allocation,
-      headers = ['Class', 'Actual%', 'Desired%', 'Value'],
-      colalign = ('left', 'right', 'right', 'right')) + '\n'
+        table.AddRow([child.name,
+                      child.actual_allocation,
+                      child.desired_allocation,
+                      child.value])
+    return table
 
   def AssetAllocation(self, asset_class_list):
     asset_class_to_value = self._GetAssetClassToValue()
@@ -413,22 +380,15 @@ class Portfolio():
         'Asset Classes which does not cover the full tree.')
 
     alloc = flat_asset_class.ReturnAllocation(asset_class_to_value, 0)[0]
-    return_list = []
-    for child in alloc.children:
-      return_list.append(
-        [child.name,
-         '{}%'.format(round(100*child.actual_allocation)),
-         '{}%'.format(round(100*child.desired_allocation)),
-         self.DollarToStr(child.value),
-         self.DollarToStr(child.value_difference, delta=True)])
-    return return_list
-
-  def AssetAllocationAsStr(self, asset_class_list):
-    asset_allocation = self.AssetAllocation(asset_class_list)
-    if not asset_allocation:
-      return ''
-
-    return tabulate(
-      asset_allocation,
+    table = Table(
+      5,
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
-      colalign = ('left', 'right', 'right', 'right', 'right')) + '\n'
+      coltypes = [None, 'percentage', 'percentage', 'dollars', 'delta_dollars'])
+    for child in alloc.children:
+      table.AddRow(
+        [child.name,
+         child.actual_allocation,
+         child.desired_allocation,
+         child.value,
+         child.value_difference])
+    return table

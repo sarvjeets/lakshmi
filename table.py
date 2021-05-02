@@ -22,6 +22,7 @@ class Table():
   def AddRow(self, row):
     assert len(row) <= self._numcols
     self._rows.append(row)
+    return self
 
   def SetRows(self, rows):
     assert max(map(len, rows)) <= self._numcols

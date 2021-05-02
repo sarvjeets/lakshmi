@@ -1,27 +1,25 @@
 #!/usr/bin/python3
 
-import assets
-import lakshmi
+from assets import SimpleAsset
+from lakshmi import Account, AssetClass, Portfolio, ValidationError
 
 import unittest
 
 class LakshmiTest(unittest.TestCase):
-  def test_EmptyPortfolio(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('E'))
-    self.assertListEqual([], portfolio.Assets())
+  def testEmptyPortfolio(self):
+    portfolio = Portfolio(AssetClass('E'))
     self.assertAlmostEqual(0, portfolio.TotalValue())
-    self.assertListEqual([], portfolio.Assets())
-    self.assertEqual('', portfolio.AssetsAsStr())
-    self.assertListEqual([], portfolio.AssetLocation())
-    self.assertEqual('', portfolio.AssetLocationAsStr())
-    self.assertListEqual([], portfolio.AssetAllocationTree())
-    self.assertEqual('', portfolio.AssetAllocationTreeAsStr())
+    self.assertListEqual([], portfolio.Assets().List())
+    self.assertEqual('', portfolio.Assets().String())
+    self.assertListEqual([], portfolio.AssetLocation().List())
+    self.assertEqual('', portfolio.AssetLocation().String())
+    self.assertListEqual([], portfolio.AssetAllocationTree().List())
+    self.assertEqual('', portfolio.AssetAllocationTree().String())
 
-  def test_OneAssetClass(self):
-    asset_class = lakshmi.AssetClass('Equity').Validate()
+  def testOneAssetClass(self):
+    asset_class = AssetClass('Equity').Validate()
 
-  def test_ManyAssetClassDuplicate(self):
-    AssetClass = lakshmi.AssetClass
+  def testManyAssetClassDuplicate(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.8,
@@ -29,11 +27,10 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.6, AssetClass('US'))
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('US')))
-    with self.assertRaisesRegex(lakshmi.ValidationError, 'Found duplicate'):
+    with self.assertRaisesRegex(ValidationError, 'Found duplicate'):
       asset_class.Validate()
 
-  def test_ManyAssetClassBadRatioSum(self):
-    AssetClass = lakshmi.AssetClass
+  def testManyAssetClassBadRatioSum(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.8,
@@ -42,11 +39,10 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.5, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(lakshmi.ValidationError, 'Sum of sub-classes'):
+    with self.assertRaisesRegex(ValidationError, 'Sum of sub-classes'):
       asset_class.Validate()
 
-  def test_ManyAssetClassBadRatioNeg(self):
-    AssetClass = lakshmi.AssetClass
+  def testManyAssetClassBadRatioNeg(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(-0.8,
@@ -55,11 +51,10 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(lakshmi.ValidationError, 'Bad ratio'):
+    with self.assertRaisesRegex(ValidationError, 'Bad ratio'):
       asset_class.Validate()
 
-  def test_ManyAssetClassBadRatioHigh(self):
-    AssetClass = lakshmi.AssetClass
+  def testManyAssetClassBadRatioHigh(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(1.5,
@@ -68,11 +63,10 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(lakshmi.ValidationError, 'Bad ratio'):
+    with self.assertRaisesRegex(ValidationError, 'Bad ratio'):
       asset_class.Validate()
 
-  def test_ManyAssetClass(self):
-    AssetClass = lakshmi.AssetClass
+  def testManyAssetClass(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.8,
@@ -99,8 +93,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('Bonds', ret_class.name)
     self.assertAlmostEqual(0.2, ratio)
 
-  def test_AssetClassCopy(self):
-    AssetClass = lakshmi.AssetClass
+  def testAssetClassCopy(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.8,
@@ -113,8 +106,7 @@ class LakshmiTest(unittest.TestCase):
     asset_class2.name = 'Changed'
     self.assertEqual('All', asset_class.name)
 
-  def test_ValueMapped(self):
-    AssetClass = lakshmi.AssetClass
+  def testValueMapped(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.6, AssetClass('Equity')
@@ -122,64 +114,56 @@ class LakshmiTest(unittest.TestCase):
                      .AddSubClass(0.4, AssetClass('Intl')))
         .AddSubClass(0.4, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(lakshmi.ValidationError, 'Need to validate'):
+    with self.assertRaisesRegex(ValidationError, 'Need to validate'):
       asset_class.ValueMapped({})
 
     asset_class.Validate()
     money_allocation = {'US': 10.0, 'Intl': 20.0, 'Bonds': 40.0, 'Unused': 50.0}
 
     self.assertAlmostEqual(70.0, asset_class.ValueMapped(money_allocation))
-    self.assertAlmostEqual(30.0, asset_class.children[0][0].ValueMapped(money_allocation))
-    self.assertAlmostEqual(40.0, asset_class.children[1][0].ValueMapped(money_allocation))
+    self.assertAlmostEqual(30.0,
+                           asset_class.children[0][0].ValueMapped(money_allocation))
+    self.assertAlmostEqual(40.0,
+                           asset_class.children[1][0].ValueMapped(money_allocation))
 
-  def test_BadAsset(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('Equity'))
-
-    account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
-    with self.assertRaisesRegex(lakshmi.ValidationError,
+  def testBadAsset(self):
+    portfolio = Portfolio(AssetClass('Equity'))
+    account = Account('Roth IRA', 'Post-tax').AddAsset(
+      SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
+    with self.assertRaisesRegex(ValidationError,
                                 'Unknown or non-leaf asset class: Bad Equity'):
       portfolio.AddAccount(account)
 
-  def test_DuplicateAccount(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('All'))
-    account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
+  def testDuplicateAccount(self):
+    portfolio = Portfolio(AssetClass('All'))
+    account = Account('Roth IRA', 'Post-tax').AddAsset(
+      SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
     portfolio.AddAccount(account)
-    with self.assertRaisesRegex(lakshmi.ValidationError,
-                                'Attempting to add'):
+    with self.assertRaisesRegex(ValidationError, 'Attempting to add'):
       portfolio.AddAccount(account)
 
-  def test_GetAssetFromAccount(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('All'))
-    account = lakshmi.Account('Roth IRA', 'Post-tax').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
-    portfolio.AddAccount(account)
+  def testGetAssetFromAccount(self):
+    account = Account('Roth IRA', 'Post-tax').AddAsset(
+      SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
     asset = account.GetAsset('Test Asset')
     self.assertEqual('Test Asset', asset.Name())
     self.assertAlmostEqual(100.0, asset.Value())
 
-  def test_OneAsset(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('Equity'))
+  def testOneAsset(self):
+    portfolio = Portfolio(AssetClass('Equity')).AddAccount(
+      Account('401(k)', 'Pre-tax').AddAsset(
+        SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})))
 
-    # Create a dummy asset.
-    account = lakshmi.Account('401(k)', 'Pre-tax').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0, {'Equity': 1.0}))
-
-    portfolio.AddAccount(account)
     self.assertEqual(1, len(portfolio.Accounts()))
-
     self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
-                         portfolio.Assets())
+                         portfolio.Assets().StrList())
     self.assertAlmostEqual(100.0, portfolio.TotalValue())
-
     self.assertListEqual([['Pre-tax', '$100.00', '100%']],
-                         portfolio.AssetLocation())
+                         portfolio.AssetLocation().StrList())
+    self.assertListEqual([], portfolio.AssetAllocationTree().List())
 
-    self.assertListEqual([], portfolio.AssetAllocationTree())
-
-  def test_AssetWhatIf(self):
-    asset = assets.SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
+  def testAssetWhatIf(self):
+    asset = SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
     self.assertAlmostEqual(100, asset.AdjustedValue())
     asset.WhatIf(-10.0)
     self.assertAlmostEqual(100, asset.Value())
@@ -187,51 +171,41 @@ class LakshmiTest(unittest.TestCase):
     asset.WhatIf(10)
     self.assertAlmostEqual(100, asset.AdjustedValue())
 
-  def test_OneAssetTwoClass(self):
-    AssetClass = lakshmi.AssetClass
-    asset_class = (
+  def testOneAssetTwoClass(self):
+    portfolio = Portfolio(
       AssetClass('All')
-        .AddSubClass(0.5, AssetClass('Equity'))
-        .AddSubClass(0.5, AssetClass('Fixed Income')))
+      .AddSubClass(0.5, AssetClass('Equity'))
+      .AddSubClass(0.5, AssetClass('Fixed Income'))).AddAccount(
+        Account('Vanguard', 'Taxable').AddAsset(
+          SimpleAsset('Test Asset', 100.0,
+                      {'Equity': 0.6, 'Fixed Income': 0.4})))
 
-    portfolio = lakshmi.Portfolio(asset_class)
-
-    account = lakshmi.Account('Vanguard', 'Taxable').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0,
-                         {'Equity': 0.6, 'Fixed Income': 0.4}))
-
-    portfolio.AddAccount(account)
     self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
-                         portfolio.Assets())
+                         portfolio.Assets().StrList())
     self.assertAlmostEqual(100.0, portfolio.TotalValue())
-
     self.assertListEqual([['Taxable', '$100.00', '100%']],
-                         portfolio.AssetLocation())
+                         portfolio.AssetLocation().StrList())
 
     self.assertListEqual(
       [['-\nAll:'],
        ['Equity', '60%', '50%', '$60.00'],
        ['Fixed Income', '40%', '50%', '$40.00']],
-      portfolio.AssetAllocationTree())
+      portfolio.AssetAllocationTree().StrList())
 
-  def test_FlatAssetAllocation(self):
-    AssetClass = lakshmi.AssetClass
-    asset_class = (
+  def testFlatAssetAllocation(self):
+    portfolio = Portfolio(
       AssetClass('All')
-        .AddSubClass(0.8,
-                     AssetClass('Equity')
-                       .AddSubClass(0.6, AssetClass('US'))
-                       .AddSubClass(0.4, AssetClass('Intl')))
-        .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
-    portfolio = lakshmi.Portfolio(asset_class)
-    Asset = assets.SimpleAsset
-    portfolio.AddAccount(
-      lakshmi.Account('Account', 'Taxable')
-      .AddAsset(Asset('US Asset', 60.0, {'US': 1.0}))
-      .AddAsset(Asset('Intl Asset', 30.0, {'Intl': 1.0}))
-      .AddAsset(Asset('Bond Asset', 10.0, {'Bonds': 1.0})))
+      .AddSubClass(0.8,
+                   AssetClass('Equity')
+                   .AddSubClass(0.6, AssetClass('US'))
+                   .AddSubClass(0.4, AssetClass('Intl')))
+      .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
+        Account('Account', 'Taxable')
+        .AddAsset(SimpleAsset('US Asset', 60.0, {'US': 1.0}))
+        .AddAsset(SimpleAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+        .AddAsset(SimpleAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
-    with self.assertRaisesRegex(lakshmi.ValidationError,
+    with self.assertRaisesRegex(ValidationError,
                                 'AssetAllocation called with'):
       portfolio.AssetAllocation(['Equity', 'Intl'])
 
@@ -239,47 +213,24 @@ class LakshmiTest(unittest.TestCase):
       [['US', '60%', '48%', '$60.00', '-$12.00'],
        ['Intl', '30%', '32%', '$30.00', '+$2.00'],
        ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
-      portfolio.AssetAllocation(['US', 'Intl', 'Bonds']))
-
+      portfolio.AssetAllocation(['US', 'Intl', 'Bonds']).StrList())
     self.assertListEqual(
       [['Equity', '90%', '80%', '$90.00', '-$10.00'],
        ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
-      portfolio.AssetAllocation(['Equity', 'Bonds']))
+      portfolio.AssetAllocation(['Equity', 'Bonds']).StrList())
 
-  def test_PortfolioStringMethods(self):
-    # This test doesn't do much except that the string methods
-    # "compile". In any case, they don't have much logic in them
-    # by design.
-    AssetClass = lakshmi.AssetClass
-    asset_class = (
-      AssetClass('All')
-        .AddSubClass(0.5, AssetClass('Equity'))
-        .AddSubClass(0.5, AssetClass('Fixed Income')))
-    portfolio = lakshmi.Portfolio(asset_class)
-    account = lakshmi.Account('Vanguard', 'Taxable').AddAsset(
-      assets.SimpleAsset('Test Asset', 100.0,
-                         {'Equity': 0.6, 'Fixed Income': 0.4}))
-    portfolio.AddAccount(account)
-
-    self.assertIsInstance(portfolio.AssetsAsStr(), str)
-    self.assertIsInstance(portfolio.AssetLocationAsStr(), str)
-    self.assertIsInstance(portfolio.AssetAllocationTreeAsStr(), str)
-    self.assertIsInstance(portfolio.AssetAllocationAsStr(
-      ['Equity', 'Fixed Income']), str)
-
-  def test_MultipleAccountsAndAssets(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('All'))
+  def testMultipleAccountsAndAssets(self):
+    portfolio = Portfolio(AssetClass('All'))
     asset_class_map = {'All': 1.0}
-
     (portfolio
      .AddAccount(
-       lakshmi.Account('Account 1', 'Taxable')
-       .AddAsset(assets.SimpleAsset('Asset 1', 100.0, asset_class_map))
-       .AddAsset(assets.SimpleAsset('Asset 2', 200.0, asset_class_map)))
+       Account('Account 1', 'Taxable')
+       .AddAsset(SimpleAsset('Asset 1', 100.0, asset_class_map))
+       .AddAsset(SimpleAsset('Asset 2', 200.0, asset_class_map)))
      .AddAccount(
-       lakshmi.Account('Account 2', 'Roth IRA')
-       .AddAsset(assets.SimpleAsset('Asset 1', 300.0, asset_class_map))
-       .AddAsset(assets.SimpleAsset('Asset 2', 400.0, asset_class_map))))
+       Account('Account 2', 'Roth IRA')
+       .AddAsset(SimpleAsset('Asset 1', 300.0, asset_class_map))
+       .AddAsset(SimpleAsset('Asset 2', 400.0, asset_class_map))))
 
     self.assertAlmostEqual(1000.0, portfolio.TotalValue())
     self.assertEqual('Account 1', portfolio.GetAccount('Account 1').Name())
@@ -301,65 +252,64 @@ class LakshmiTest(unittest.TestCase):
        ['Account 1', 'Asset 2', '$200.00'],
        ['Account 2', 'Asset 1', '$300.00'],
        ['Account 2', 'Asset 2', '$400.00']],
-      portfolio.Assets())
+      portfolio.Assets().StrList())
 
-  def test_WhatIfs(self):
-    AssetClass = lakshmi.AssetClass
-    portfolio = lakshmi.Portfolio(AssetClass('All')
-                                  .AddSubClass(0.6, AssetClass('Equity'))
-                                  .AddSubClass(0.4, AssetClass('Bonds')))
-    asset1 = assets.SimpleAsset('Asset 1', 100.0, {'Equity': 1.0})
-    asset2 = assets.SimpleAsset('Asset 2', 100.0, {'Bonds': 1.0})
-    account1 = lakshmi.Account('Account 1', 'Taxable')
+  def testWhatIfs(self):
+    portfolio = Portfolio(AssetClass('All')
+                          .AddSubClass(0.6, AssetClass('Equity'))
+                          .AddSubClass(0.4, AssetClass('Bonds')))
+    asset1 = SimpleAsset('Asset 1', 100.0, {'Equity': 1.0})
+    asset2 = SimpleAsset('Asset 2', 100.0, {'Bonds': 1.0})
+    account1 = Account('Account 1', 'Taxable')
     account1.AddAsset(asset1).AddAsset(asset2)
-    account2 = lakshmi.Account('Account 2', 'Pre-tax')
+    account2 = Account('Account 2', 'Pre-tax')
     portfolio.AddAccount(account1).AddAccount(account2)
 
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([], account_whatifs)
-    self.assertListEqual([], asset_whatifs)
+    self.assertListEqual([], account_whatifs.List())
+    self.assertListEqual([], asset_whatifs.List())
 
     portfolio.WhatIf('Account 1', 'Asset 2', -20)
     self.assertAlmostEqual(80, asset2.AdjustedValue())
     self.assertAlmostEqual(20, account1.AvailableCash())
     self.assertAlmostEqual(200, portfolio.TotalValue())
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([['Account 1', '+$20.00']], account_whatifs)
-    self.assertListEqual(
-      [['Account 1', 'Asset 2', '-$20.00']],
-      asset_whatifs)
+    self.assertListEqual([['Account 1', '+$20.00']],
+                         account_whatifs.StrList())
+    self.assertListEqual([['Account 1', 'Asset 2', '-$20.00']],
+                         asset_whatifs.StrList())
 
     portfolio.WhatIf('Account 1', 'Asset 1', 20)
     self.assertAlmostEqual(120, asset1.AdjustedValue())
     self.assertAlmostEqual(0, account1.AvailableCash())
     self.assertAlmostEqual(200, portfolio.TotalValue())
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([], account_whatifs)
+    self.assertListEqual([], account_whatifs.StrList())
     self.assertListEqual(
       [['Account 1', 'Asset 1', '+$20.00'],
        ['Account 1', 'Asset 2', '-$20.00']],
-      asset_whatifs)
+      asset_whatifs.StrList())
 
     self.assertListEqual(
       [['Account 1', 'Asset 1', '$120.00'],
        ['Account 1', 'Asset 2', '$80.00']],
-      portfolio.Assets())
+      portfolio.Assets().StrList())
 
     self.assertListEqual(
       [['-\nAll:'],
        ['Equity', '60%', '60%', '$120.00'],
        ['Bonds', '40%', '40%', '$80.00']],
-      portfolio.AssetAllocationTree())
+      portfolio.AssetAllocationTree().StrList())
 
     portfolio.WhatIfAddCash('Account 1', 30)
     self.assertAlmostEqual(30, account1.AvailableCash())
     self.assertAlmostEqual(230, portfolio.TotalValue())
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([['Account 1', '+$30.00']], account_whatifs)
+    self.assertListEqual([['Account 1', '+$30.00']], account_whatifs.StrList())
     self.assertListEqual(
       [['Account 1', 'Asset 1', '+$20.00'],
        ['Account 1', 'Asset 2', '-$20.00']],
-      asset_whatifs)
+      asset_whatifs.StrList())
 
     portfolio.WhatIfAddCash('Account 2', 460)
     self.assertAlmostEqual(460, account2.AvailableCash())
@@ -368,16 +318,16 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual(
       [['Account 1', '+$30.00'],
        ['Account 2', '+$460.00']],
-      account_whatifs)
+      account_whatifs.StrList())
     self.assertListEqual(
       [['Account 1', 'Asset 1', '+$20.00'],
        ['Account 1', 'Asset 2', '-$20.00']],
-      asset_whatifs)
+      asset_whatifs.StrList())
 
     self.assertListEqual(
       [['Taxable', '$230.00', '33%'],
        ['Pre-tax', '$460.00', '67%']],
-      portfolio.AssetLocation())
+      portfolio.AssetLocation().StrList())
 
     portfolio.ResetWhatIfs()
     self.assertAlmostEqual(100, asset1.AdjustedValue())
@@ -386,14 +336,14 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(0, account2.AvailableCash())
     self.assertAlmostEqual(200, portfolio.TotalValue())
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([], account_whatifs)
-    self.assertListEqual([], asset_whatifs)
+    self.assertListEqual([], account_whatifs.StrList())
+    self.assertListEqual([], asset_whatifs.StrList())
 
-  def test_WhatIfsDoubleAdd(self):
-    portfolio = lakshmi.Portfolio(lakshmi.AssetClass('All'))
+  def testWhatIfsDoubleAdd(self):
+    portfolio = Portfolio(AssetClass('All'))
 
-    asset = assets.SimpleAsset('Asset', 100.0, {'All': 1.0})
-    account = lakshmi.Account('Account', 'Taxable')
+    asset = SimpleAsset('Asset', 100.0, {'All': 1.0})
+    account = Account('Account', 'Taxable')
     portfolio.AddAccount(account.AddAsset(asset))
 
     portfolio.WhatIf('Account', 'Asset', 20)
@@ -402,13 +352,11 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(-50, account.AvailableCash())
     self.assertAlmostEqual(100, portfolio.TotalValue())
     account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-    self.assertListEqual([['Account', '-$50.00']], account_whatifs)
-    self.assertListEqual([['Account', 'Asset', '+$50.00']], asset_whatifs)
+    self.assertListEqual([['Account', '-$50.00']], account_whatifs.StrList())
+    self.assertListEqual([['Account', 'Asset', '+$50.00']], asset_whatifs.StrList())
 
-  def test_ReturnActualAllocationOneAsset(self):
-    AssetClass = lakshmi.AssetClass
+  def testReturnActualAllocationOneAsset(self):
     asset_class = AssetClass('All').Validate()
-
     allocation = {'All': 10.0}
 
     ret = asset_class.ReturnAllocation(allocation)
@@ -417,8 +365,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertAlmostEqual(10.0, ret[0].value)
     self.assertEqual([], ret[0].children)
 
-  def test_ReturnActualAllocationAssetTree(self):
-    AssetClass = lakshmi.AssetClass
+  def testReturnActualAllocationAssetTree(self):
     asset_class = (
       AssetClass('All')
         .AddSubClass(0.6, AssetClass('Equity')
