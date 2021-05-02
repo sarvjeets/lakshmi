@@ -10,7 +10,7 @@ class AssetsTest(unittest.TestCase):
     cache.CACHE_DIR = None  # Disable caching.
 
   @patch('yfinance.Ticker')
-  def test_BadTicker(self, MockTicker):
+  def testBadTicker(self, MockTicker):
     bad_ticker = MagicMock()
     bad_ticker.info = {}
     MockTicker.return_value = bad_ticker
@@ -25,7 +25,7 @@ class AssetsTest(unittest.TestCase):
     MockTicker.assert_called_once_with('bad')
 
   @patch('yfinance.Ticker')
-  def test_GoodTicker(self, MockTicker):
+  def testGoodTicker(self, MockTicker):
     ticker = MagicMock()
     ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
                    'regularMarketPrice': 1.0}
@@ -39,7 +39,7 @@ class AssetsTest(unittest.TestCase):
     MockTicker.assert_called_once_with('VMMXX')
 
   @patch('requests.get')
-  def test_VanguardFundsName(self, MockGet):
+  def testVanguardFundsName(self, MockGet):
     MockReq = MagicMock()
     MockReq.json.return_value = {"fundProfile":{"fundId":"1884","citFundId":"7555","instrumentId":27075102,"shortName":"Inst Tot Bd Mkt Ix Tr","longName":"Vanguard Institutional Total Bond Market Index Trust","inceptionDate":"2016-06-24T00:00:00-04:00","newspaperAbbreviation":"VanTBdMIxInsSel     ","style":"Bond Funds","type":"Bond Funds","category":"Intermediate-Term Bond","customizedStyle":"Bond - Inter-term Investment","fixedIncomeInvestmentStyleId":"2","fixedIncomeInvestmentStyleName":"Intermediate-term Treasury","secDesignation":"","maximumYearlyInvestment":"","expenseRatio":"0.0100","expenseRatioAsOfDate":"2020-04-28T00:00:00-04:00","isInternalFund":True,"isExternalFund":False,"isMutualFund":True,"isETF":False,"isVLIP":False,"isVVAP":False,"is529":False,"hasAssociatedInvestorFund":True,"hasMoreThan1ShareClass":True,"isPESite":True,"fundFact":{"isActiveFund":True,"isClosed":False,"isClosedToNewInvestors":False,"isFundOfFunds":False,"isMSCIIndexedFund":False,"isIndex":True,"isLoadFund":False,"isMoneyMarket":False,"isBond":True,"isBalanced":False,"isStock":False,"isInternational":False,"isMarketNeutralFund":False,"isInternationalStockFund":False,"isInternationalBalancedFund":False,"isDomesticStockFund":False,"isTaxable":True,"isTaxExempt":False,"isTaxManaged":False,"isTaxableBondFund":True,"isTaxExemptBondFund":False,"isTaxExemptMoneyMarketFund":False,"isTaxSensitiveFund":True,"isSpecialtyStockFund":False,"isHybridFund":False,"isGlobal":False,"isManagedPayoutFund":False,"isGNMAFund":False,"isInvestorShare":False,"isAdmiralShare":False,"isInstitutionalShare":False,"isAdmiralFund":False,"isStableValueFund":False,"isCompanyStockFund":False,"isREITFund":False,"isVariableInsuranceFund":False,"isComingledTrustFund":False,"isConvertibleFund":False,"isAssetAllocationFund":False,"isStateMunicipalBond":False,"isNationalMunicipalBond":False,"isQualifiedOnly":False,"isPreciousMetalsFund":False,"mIsVIPSFund":False,"isSectorSpecific":False,"hasOtherIndex":False,"isTargetRetirementFund":False,"isRetirementSavingsTrustFund":False,"isNon40ActFund":True,"isUnfundedFund":False,"isCreditSuisseFund":False,"isKaiserFund":False,"isFundAccessFund":False,"isFundTransferableToVGI":False,"hasTransactionFee":False,"isNTFFund":False,"hasMoreThan1ShareClass":False,"isOpenToFlagship":False,"isOpenToFlagshipPlus":False,"isCitFund":True,"isAcctType15Fund":False,"isEtfOfEtfs":False,"isStandaloneEtf":False},"associatedFundIds":{"investorFundId":"0084","admiralFundId":"0584","etfFundId":"0928","institutionalFundId":"0222","institutionalPlusFundId":"0850"},"fundCategory":{"customizedHighCategoryName":"Bond - Inter-term Investment","high":{"type":"HIGH","id":3,"name":"Bond Funds"},"mid":{"type":"MID","id":31,"name":"Bond Funds"},"low":{"type":"LOW","id":3105,"name":"Intermediate-Term Bond"}},"largeTransactionAmount":25000000,"qualifiedTransactionAmount":50000000,"minimumInitialInvestment":3.0E9,"signalFundFlag":False},"historicalReturn":{"percent":"8.85","startDate":"1972-12-31T00:00:00-05:00","endDate":"2011-12-31T00:00:00-05:00"}}
     MockGet.return_value = MockReq
@@ -53,7 +53,7 @@ class AssetsTest(unittest.TestCase):
       headers={'Referer': 'https://vanguard.com/'})
 
   @patch('requests.get')
-  def test_VanguardFundsValue(self, MockGet):
+  def testVanguardFundsValue(self, MockGet):
     MockReq = MagicMock()
     MockReq.json.return_value = {"currentPrice":{"yield":{"hasDisclaimer":False},"dailyPrice":{"regular":{"asOfDate":"2021-04-15T00:00:00-04:00","price":"116.66","priceChangeAmount":"0.52","priceChangePct":"0.45","currOrPrmlFlag":"CURR","currOrPrmlValue":"Price"}},"highLow":{"regular":{"highDate":"2020-08-06T00:00:00-04:00","highPrice":"120.210000","lowDate":"2021-03-18T00:00:00-04:00","lowPrice":"114.970000","spreadPrice":"5.240000","spreadPct":"4.56","hasMultipleHighDates":False,"hasMultipleLowDates":False,"highDates":[{}],"lowDates":[{}]}}},"historicalPrice":{"isMultiYears":False,"nav":[{"item":[{"asOfDate":"2021-04-15T00:00:00-04:00","price":"116.66"},{"asOfDate":"2021-04-14T00:00:00-04:00","price":"116.14"},{"asOfDate":"2021-04-13T00:00:00-04:00","price":"116.24"},{"asOfDate":"2021-04-12T00:00:00-04:00","price":"115.93"},{"asOfDate":"2021-04-09T00:00:00-04:00","price":"116.01"},{"asOfDate":"2021-04-08T00:00:00-04:00","price":"116.11"},{"asOfDate":"2021-04-07T00:00:00-04:00","price":"115.90"},{"asOfDate":"2021-04-06T00:00:00-04:00","price":"115.99"},{"asOfDate":"2021-04-05T00:00:00-04:00","price":"115.67"},{"asOfDate":"2021-04-01T00:00:00-04:00","price":"115.86"}]}],"marketPrice":[{}]}}
     MockGet.return_value = MockReq
@@ -66,7 +66,7 @@ class AssetsTest(unittest.TestCase):
 
   @patch('datetime.datetime')
   @patch('requests.post')
-  def test_IBonds(self, MockPost, MockDate):
+  def testIBonds(self, MockPost, MockDate):
     MockReq = MagicMock()
     MockReq.text = """Stuff
     <td>More stuff</td>
@@ -113,7 +113,7 @@ class AssetsTest(unittest.TestCase):
 
   @patch('datetime.datetime')
   @patch('requests.post')
-  def test_EEBonds(self, MockPost, MockDate):
+  def testEEBonds(self, MockPost, MockDate):
     MockReq = MagicMock()
     MockReq.text = """Stuff
     <td>More stuff</td>
