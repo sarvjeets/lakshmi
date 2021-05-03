@@ -42,11 +42,11 @@ class Table():
   def StrList(self):
     coltype2func = {
       None: lambda x: x,
-      'str': lambda x: str(x),
-      'dollars': lambda x: '${:,.2f}'.format(x),
+      'str': lambda x: str(x) if x else x,
+      'dollars': lambda x: '${:,.2f}'.format(x) if x else x,
       'delta_dollars': lambda x: '{}${:,.2f}'.format(
-        '-' if x < 0 else '+', abs(x)),
-      'percentage': lambda x: '{}%'.format(round(100*x)),
+        '-' if x < 0 else '+', abs(x)) if x else x,
+      'percentage': lambda x: '{}%'.format(round(100*x)) if x else x,
     }
 
     ret_list = []

@@ -346,11 +346,10 @@ class Portfolio():
     return asset_class_to_value
 
   def AssetAllocationTree(self, levels=-1):
-    asset_class_to_value = self._GetAssetClassToValue()
     table = Table(4,
                   headers = ['Class', 'Actual%', 'Desired%', 'Value'],
                   coltypes = [None, 'percentage', 'percentage', 'dollars'])
-    for alloc in self.asset_classes.ReturnAllocation(asset_class_to_value, levels):
+    for alloc in self.asset_classes.ReturnAllocation(self._GetAssetClassToValue(), levels):
       if not alloc.children:
         continue
 
@@ -362,12 +361,55 @@ class Portfolio():
                       child.value])
     return table
 
-  def AssetAllocation(self, asset_class_list):
-    asset_class_to_value = self._GetAssetClassToValue()
+  def AssetAllocationCompact(self):
+    """Prints a 'compact' version of AA (Authors' favorite way of viewing his AA)."""
+    def FindIndex(class_name, ret_list):
+      # We assume ret_list has atleast one entry.
+      names_list = [row[-3] for row in ret_list]
+      return names_list.index(class_name)
 
+    ret_list = []
+    for alloc in self.asset_classes.ReturnAllocation(self._GetAssetClassToValue()):
+      if not alloc.children:
+        continue
+
+      if not ret_list:
+        for child in alloc.children:
+          ret_list.append([child.name, child.actual_allocation, child.desired_allocation])
+      else:  # Parent is already in ret_list
+        index = FindIndex(alloc.name, ret_list)
+        # We know that here is atleast one child.
+        for i in range(len(alloc.children) - 1):
+          # Make room for rest of the children by inserting empty extra rows of the
+          # same size as the parent's row
+          ret_list.insert(index + 1, [''] * len(ret_list[index]))
+        for i in range(len(alloc.children)):
+          ret_list[index + i].extend(
+           [alloc.children[i].name,
+            alloc.children[i].actual_allocation,
+            alloc.children[i].desired_allocation])
+
+    # By this time ret_list has all the AA tree.
+    # Add Leaf node AA at the end.
+    cols = max(map(len, ret_list))
+    leaf_aa = self.AssetAllocation(self.asset_classes.Leaves())
+    for leaf_row in leaf_aa.List(): # Format: Class, A%, D%, Value, Diff
+      ret_list_row = ret_list[FindIndex(leaf_row[0], ret_list)]
+      ret_list_row.extend([''] * (cols - len(ret_list_row)))
+      ret_list_row.extend(leaf_row[1:])
+
+    # All done, now build the table.
+    t = Table(
+      cols + 4,
+      headers = ['Class', 'A%', 'D%'] * int(cols/3) + leaf_aa.Headers()[1:],
+      coltypes = [None, 'percentage', 'percentage'] * int(cols/3) + [
+        'percentage', 'percentage', 'dollars', 'delta_dollars'])
+    t.SetRows(ret_list)
+    return t
+
+  def AssetAllocation(self, asset_class_list):
     asset_class_ratio = map(self.asset_classes.FindAssetClass,
                             asset_class_list)
-
     flat_asset_class = AssetClass('Root')
     for asset_class, ratio in asset_class_ratio:
       flat_asset_class.AddSubClass(ratio, asset_class)
@@ -379,7 +421,7 @@ class Portfolio():
         'AssetAllocation called with overlapping Asset Classes or ' +
         'Asset Classes which does not cover the full tree.')
 
-    alloc = flat_asset_class.ReturnAllocation(asset_class_to_value, 0)[0]
+    alloc = flat_asset_class.ReturnAllocation(self._GetAssetClassToValue(), 0)[0]
     table = Table(
       5,
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
