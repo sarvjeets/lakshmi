@@ -42,6 +42,7 @@ class Table():
   def StrList(self):
     coltype2func = {
       None: lambda x: x,
+      'str': lambda x: str(x) if x != '' else '',
       'dollars': lambda x: '${:,.2f}'.format(x) if x != '' else '',
       'delta_dollars': lambda x: '{}${:,.2f}'.format(
         '-' if x < 0 else '+', abs(x)) if x != '' else '',
