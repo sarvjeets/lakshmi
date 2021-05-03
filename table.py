@@ -4,7 +4,7 @@ from tabulate import tabulate
 
 class Table():
   def __init__(self, numcols, headers=(), coltypes=None):
-    assert numcols > 0
+    assert numcols >= 0
     self._numcols = numcols
 
     if headers:
@@ -42,11 +42,10 @@ class Table():
   def StrList(self):
     coltype2func = {
       None: lambda x: x,
-      'str': lambda x: str(x),
-      'dollars': lambda x: '${:,.2f}'.format(x),
+      'dollars': lambda x: '${:,.2f}'.format(x) if x != '' else '',
       'delta_dollars': lambda x: '{}${:,.2f}'.format(
-        '-' if x < 0 else '+', abs(x)),
-      'percentage': lambda x: '{}%'.format(round(100*x)),
+        '-' if x < 0 else '+', abs(x)) if x != '' else '',
+      'percentage': lambda x: '{}%'.format(round(100*x)) if x != '' else x,
     }
 
     ret_list = []

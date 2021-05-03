@@ -10,11 +10,10 @@ class LakshmiTest(unittest.TestCase):
     portfolio = Portfolio(AssetClass('E'))
     self.assertAlmostEqual(0, portfolio.TotalValue())
     self.assertListEqual([], portfolio.Assets().List())
-    self.assertEqual('', portfolio.Assets().String())
     self.assertListEqual([], portfolio.AssetLocation().List())
-    self.assertEqual('', portfolio.AssetLocation().String())
     self.assertListEqual([], portfolio.AssetAllocationTree().List())
-    self.assertEqual('', portfolio.AssetAllocationTree().String())
+    self.assertListEqual([], portfolio.AssetAllocation([]).List())
+    self.assertListEqual([], portfolio.AssetAllocationCompact().List())
 
   def testOneAssetClass(self):
     asset_class = AssetClass('Equity').Validate()
@@ -161,6 +160,11 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual([['Pre-tax', '$100.00', '100%']],
                          portfolio.AssetLocation().StrList())
     self.assertListEqual([], portfolio.AssetAllocationTree().List())
+    self.assertListEqual(
+      [['Equity', '100%', '100%', '$100.00', '+$0.00']],
+      portfolio.AssetAllocation(['Equity']).StrList())
+    self.assertListEqual([], portfolio.AssetAllocationTree().List())
+    self.assertListEqual([], portfolio.AssetAllocationCompact().List())
 
   def testAssetWhatIf(self):
     asset = SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
@@ -191,6 +195,14 @@ class LakshmiTest(unittest.TestCase):
        ['Equity', '60%', '50%', '$60.00'],
        ['Fixed Income', '40%', '50%', '$40.00']],
       portfolio.AssetAllocationTree().StrList())
+    self.assertListEqual(
+      [['Equity', '60%', '50%', '$60.00', '-$10.00'],
+       ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
+      portfolio.AssetAllocation(['Equity', 'Fixed Income']).StrList())
+    self.assertListEqual(
+      [['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
+       ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
+      portfolio.AssetAllocationCompact().StrList())
 
   def testFlatAssetAllocation(self):
     portfolio = Portfolio(
@@ -218,6 +230,25 @@ class LakshmiTest(unittest.TestCase):
       [['Equity', '90%', '80%', '$90.00', '-$10.00'],
        ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
       portfolio.AssetAllocation(['Equity', 'Bonds']).StrList())
+
+  def testAssetAllocationCompact(self):
+    portfolio = Portfolio(
+      AssetClass('All')
+      .AddSubClass(0.8,
+                   AssetClass('Equity')
+                   .AddSubClass(0.6, AssetClass('US'))
+                   .AddSubClass(0.4, AssetClass('Intl')))
+      .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
+        Account('Account', 'Taxable')
+        .AddAsset(SimpleAsset('US Asset', 60.0, {'US': 1.0}))
+        .AddAsset(SimpleAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+        .AddAsset(SimpleAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
+
+    self.assertListEqual(
+      [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%', '$60.00', '-$12.00'],
+       ['',       '',    '',  'Intl', '33%', '40%', '30%', '32%', '$30.00', '+$2.00'],
+       ['Bonds', '10%', '20%', '',    '',    '',    '10%', '20%','$10.00', '+$10.00']],
+      portfolio.AssetAllocationCompact().StrList())
 
   def testMultipleAccountsAndAssets(self):
     portfolio = Portfolio(AssetClass('All'))
