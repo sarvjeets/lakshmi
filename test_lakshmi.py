@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from assets import SimpleAsset
+from assets import ManualAsset
 from lakshmi import Account, AssetClass, Portfolio, ValidationError
 
 import unittest
@@ -128,7 +128,7 @@ class LakshmiTest(unittest.TestCase):
   def testBadAsset(self):
     portfolio = Portfolio(AssetClass('Equity'))
     account = Account('Roth IRA', 'Post-tax').AddAsset(
-      SimpleAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
+      ManualAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
     with self.assertRaisesRegex(ValidationError,
                                 'Unknown or non-leaf asset class: Bad Equity'):
       portfolio.AddAccount(account)
@@ -136,14 +136,14 @@ class LakshmiTest(unittest.TestCase):
   def testDuplicateAccount(self):
     portfolio = Portfolio(AssetClass('All'))
     account = Account('Roth IRA', 'Post-tax').AddAsset(
-      SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
+      ManualAsset('Test Asset', 100.0, {'All': 1.0}))
     portfolio.AddAccount(account)
     with self.assertRaisesRegex(ValidationError, 'Attempting to add'):
       portfolio.AddAccount(account)
 
   def testGetAssetFromAccount(self):
     account = Account('Roth IRA', 'Post-tax').AddAsset(
-      SimpleAsset('Test Asset', 100.0, {'All': 1.0}))
+      ManualAsset('Test Asset', 100.0, {'All': 1.0}))
     asset = account.GetAsset('Test Asset')
     self.assertEqual('Test Asset', asset.Name())
     self.assertAlmostEqual(100.0, asset.Value())
@@ -151,7 +151,7 @@ class LakshmiTest(unittest.TestCase):
   def testOneAsset(self):
     portfolio = Portfolio(AssetClass('Equity')).AddAccount(
       Account('401(k)', 'Pre-tax').AddAsset(
-        SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})))
+        ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
 
     self.assertEqual(1, len(portfolio.Accounts()))
     self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
@@ -167,7 +167,7 @@ class LakshmiTest(unittest.TestCase):
     self.assertListEqual([], portfolio.AssetAllocationCompact().List())
 
   def testAssetWhatIf(self):
-    asset = SimpleAsset('Test Asset', 100.0, {'Equity': 1.0})
+    asset = ManualAsset('Test Asset', 100.0, {'Equity': 1.0})
     self.assertAlmostEqual(100, asset.AdjustedValue())
     asset.WhatIf(-10.0)
     self.assertAlmostEqual(100, asset.Value())
@@ -181,7 +181,7 @@ class LakshmiTest(unittest.TestCase):
       .AddSubClass(0.5, AssetClass('Equity'))
       .AddSubClass(0.5, AssetClass('Fixed Income'))).AddAccount(
         Account('Vanguard', 'Taxable').AddAsset(
-          SimpleAsset('Test Asset', 100.0,
+          ManualAsset('Test Asset', 100.0,
                       {'Equity': 0.6, 'Fixed Income': 0.4})))
 
     self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
@@ -213,9 +213,9 @@ class LakshmiTest(unittest.TestCase):
                    .AddSubClass(0.4, AssetClass('Intl')))
       .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
         Account('Account', 'Taxable')
-        .AddAsset(SimpleAsset('US Asset', 60.0, {'US': 1.0}))
-        .AddAsset(SimpleAsset('Intl Asset', 30.0, {'Intl': 1.0}))
-        .AddAsset(SimpleAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
+        .AddAsset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
+        .AddAsset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+        .AddAsset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
     with self.assertRaisesRegex(ValidationError,
                                 'AssetAllocation called with'):
@@ -240,9 +240,9 @@ class LakshmiTest(unittest.TestCase):
                    .AddSubClass(0.4, AssetClass('Intl')))
       .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
         Account('Account', 'Taxable')
-        .AddAsset(SimpleAsset('US Asset', 60.0, {'US': 1.0}))
-        .AddAsset(SimpleAsset('Intl Asset', 30.0, {'Intl': 1.0}))
-        .AddAsset(SimpleAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
+        .AddAsset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
+        .AddAsset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+        .AddAsset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
     self.assertListEqual(
       [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%', '$60.00', '-$12.00'],
@@ -256,12 +256,12 @@ class LakshmiTest(unittest.TestCase):
     (portfolio
      .AddAccount(
        Account('Account 1', 'Taxable')
-       .AddAsset(SimpleAsset('Asset 1', 100.0, asset_class_map))
-       .AddAsset(SimpleAsset('Asset 2', 200.0, asset_class_map)))
+       .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
+       .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
      .AddAccount(
        Account('Account 2', 'Roth IRA')
-       .AddAsset(SimpleAsset('Asset 1', 300.0, asset_class_map))
-       .AddAsset(SimpleAsset('Asset 2', 400.0, asset_class_map))))
+       .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
+       .AddAsset(ManualAsset('Asset 2', 400.0, asset_class_map))))
 
     self.assertAlmostEqual(1000.0, portfolio.TotalValue())
     self.assertEqual('Account 1', portfolio.GetAccount('Account 1').Name())
@@ -289,8 +289,8 @@ class LakshmiTest(unittest.TestCase):
     portfolio = Portfolio(AssetClass('All')
                           .AddSubClass(0.6, AssetClass('Equity'))
                           .AddSubClass(0.4, AssetClass('Bonds')))
-    asset1 = SimpleAsset('Asset 1', 100.0, {'Equity': 1.0})
-    asset2 = SimpleAsset('Asset 2', 100.0, {'Bonds': 1.0})
+    asset1 = ManualAsset('Asset 1', 100.0, {'Equity': 1.0})
+    asset2 = ManualAsset('Asset 2', 100.0, {'Bonds': 1.0})
     account1 = Account('Account 1', 'Taxable')
     account1.AddAsset(asset1).AddAsset(asset2)
     account2 = Account('Account 2', 'Pre-tax')
@@ -373,7 +373,7 @@ class LakshmiTest(unittest.TestCase):
   def testWhatIfsDoubleAdd(self):
     portfolio = Portfolio(AssetClass('All'))
 
-    asset = SimpleAsset('Asset', 100.0, {'All': 1.0})
+    asset = ManualAsset('Asset', 100.0, {'All': 1.0})
     account = Account('Account', 'Taxable')
     portfolio.AddAccount(account.AddAsset(asset))
 

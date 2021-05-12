@@ -16,7 +16,7 @@ class NotFoundError(Exception):
   pass
 
 
-class SimpleAsset(lakshmi.Asset):
+class ManualAsset(lakshmi.Asset):
   def __init__(self, name, value, class2ratio):
     self.name = name
     self.value = value
