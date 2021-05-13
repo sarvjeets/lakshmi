@@ -3,6 +3,7 @@
 All these assets should implement the lakshmi.Asset top-level interface.
 """
 
+from abc import abstractmethod
 import datetime
 import lakshmi
 import re
@@ -31,15 +32,37 @@ class ManualAsset(lakshmi.Asset):
   def ShortName(self):
     return self.name
 
+class TradedAsset(lakshmi.Asset):
+  """An abstract class representing an asset with units and per unit price."""
+  def __init__(self, shares, class2ratio):
+    self.shares = shares
+    self.tax_lots = None
+    super().__init__(class2ratio)
 
-class TickerAsset(lakshmi.Asset, Cacheable):
-  """An asset class representing a Ticket whose price can be pulled."""
+  def SetLots(self, tax_lots_list):
+    sum_lots = sum([t.quantity for t in tax_lots_list])
+    if abs(sum_lots - self.shares) > 1e-6:
+      raise lakshmi.ValidationError('Lots provided should sum up to ' +
+                                    str(self.shares))
+    self.tax_lots = tax_lots_list
+
+  def Value(self):
+    return self.shares * self.Price()
+
+  # This class inherits abstract methods Name & ShortName from lakshmi.Asset.
+
+  @abstractmethod
+  def Price(self):
+    pass
+
+
+class TickerAsset(TradedAsset, Cacheable):
+  """An asset class representing a Ticker whose price can be pulled."""
   def __init__(self, ticker, shares, class2ratio):
     self.ticker = ticker
     # Currently, we only pull data once when the object is created.
     self.yticker = yfinance.Ticker(ticker)
-    self.shares = shares
-    super().__init__(class2ratio)
+    super().__init__(shares, class2ratio)
 
   def CacheKey(self):
     return self.ticker
@@ -54,9 +77,6 @@ class TickerAsset(lakshmi.Asset, Cacheable):
   def ShortName(self):
     return self.ticker
 
-  def Value(self):
-    return self.shares * self.Price()
-
   @cache(1)
   def Price(self):
     if self.yticker.info.get('regularMarketPrice') is None:
@@ -64,20 +84,12 @@ class TickerAsset(lakshmi.Asset, Cacheable):
         self.ticker))
     return self.yticker.info['regularMarketPrice']
 
-  def SetLots(self, tax_lots_list):
-    sum_lots = sum([t.quantity for t in tax_lots_list])
-    if abs(sum_lots - self.shares) > 1e-6:
-      raise lakshmi.ValidationError('Lots provided should sum up to ' +
-                                    str(self.shares))
-    self.tax_lots = tax_lots_list
 
-
-class VanguardFund(lakshmi.Asset, Cacheable):
-  """An asset class representing Vanguard trust fund represented by an ID."""
+class VanguardFund(TradedAsset, Cacheable):
+  """An asset class representing Vanguard trust fund represented by a numeric ID."""
   def __init__(self, fund_id, shares, class2ratio):
     self.fund_id = fund_id
-    self.shares = shares
-    super().__init__(class2ratio)
+    super().__init__(shares, class2ratio)
 
   def CacheKey(self):
     return str(self.fund_id)
@@ -100,16 +112,6 @@ class VanguardFund(lakshmi.Asset, Cacheable):
       headers={'Referer': 'https://vanguard.com/'})
     req.raise_for_status()  # Raise if error
     return float(req.json()['currentPrice']['dailyPrice']['regular']['price'])
-
-  def Value(self):
-    return self.shares * self.Price()
-
-  def SetLots(self, tax_lots_list):
-    sum_lots = sum([t.quantity for t in tax_lots_list])
-    if abs(sum_lots - self.shares) > 1e-6:
-      raise lakshmi.ValidationError('Lots provided should sum up to ' +
-                                    str(self.shares))
-    self.tax_lots = tax_lots_list
 
 
 class _TreasuryBonds(lakshmi.Asset):

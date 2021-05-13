@@ -18,8 +18,6 @@ class Asset(ABC):
     """
     self._delta = 0
     self.class2ratio = class2ratio
-    # Assets which support Tax lots should provide a SetTaxLots method to set this.
-    self.tax_lots = None
 
     total = 0
     for ratio in class2ratio.values():
@@ -32,15 +30,15 @@ class Asset(ABC):
         'Total allocation to classes must be 100% (actual = {}%)'.format(
           round(total*100)))
 
-  @abstractmethod
-  def Value(self):
-    pass
-
   def WhatIf(self, delta):
     self._delta += delta
 
   def AdjustedValue(self):
     return self.Value() + self._delta
+
+  @abstractmethod
+  def Value(self):
+    pass
 
   @abstractmethod
   def Name(self):
@@ -49,9 +47,6 @@ class Asset(ABC):
   @abstractmethod
   def ShortName(self):
     pass
-
-  def SetLots(self, tax_lots_list):
-    assert False, 'Setting lots is not supported for this asset.'
 
 
 class TaxLot:
