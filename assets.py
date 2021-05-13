@@ -64,6 +64,13 @@ class TickerAsset(lakshmi.Asset, Cacheable):
         self.ticker))
     return self.yticker.info['regularMarketPrice']
 
+  def SetLots(self, tax_lots_list):
+    sum_lots = sum([t.quantity for t in tax_lots_list])
+    if abs(sum_lots - self.shares) > 1e-6:
+      raise lakshmi.ValidationError('Lots provided should sum up to ' +
+                                    str(self.shares))
+    self.tax_lots = tax_lots_list
+
 
 class VanguardFund(lakshmi.Asset, Cacheable):
   """An asset class representing Vanguard trust fund represented by an ID."""
@@ -96,6 +103,13 @@ class VanguardFund(lakshmi.Asset, Cacheable):
 
   def Value(self):
     return self.shares * self.Price()
+
+  def SetLots(self, tax_lots_list):
+    sum_lots = sum([t.quantity for t in tax_lots_list])
+    if abs(sum_lots - self.shares) > 1e-6:
+      raise lakshmi.ValidationError('Lots provided should sum up to ' +
+                                    str(self.shares))
+    self.tax_lots = tax_lots_list
 
 
 class _TreasuryBonds(lakshmi.Asset):

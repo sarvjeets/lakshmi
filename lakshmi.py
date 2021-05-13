@@ -18,6 +18,8 @@ class Asset(ABC):
     """
     self._delta = 0
     self.class2ratio = class2ratio
+    # Assets which support Tax lots should provide a SetTaxLots method to set this.
+    self.tax_lots = None
 
     total = 0
     for ratio in class2ratio.values():
@@ -48,8 +50,19 @@ class Asset(ABC):
   def ShortName(self):
     pass
 
+  def SetLots(self, tax_lots_list):
+    assert False, 'Setting lots is not supported for this asset.'
 
-class Account():
+
+class TaxLot:
+  """Class to represent a single tax lot for an Asset."""
+  def __init__(self, quantity, unit_cost, date):
+    self.quantity = quantity
+    self.unit_cost = unit_cost
+    self.date = date
+
+
+class Account:
   """Class representing an account."""
   def __init__(self, name, account_type):
     """
@@ -85,7 +98,7 @@ class Account():
     return self._cash
 
 
-class AssetClass():
+class AssetClass:
   """(Tree of) Asset classes."""
   def __init__(self, name):
     self.name = name
@@ -173,7 +186,7 @@ class AssetClass():
                 if name in self._leaves])
 
 
-  class Allocation():
+  class Allocation:
     class Children:
       def __init__(self, name, actual_allocation, desired_allocation, value,
                    value_difference):
@@ -230,7 +243,7 @@ class AssetClass():
 
     return ret_val
 
-class Portfolio():
+class Portfolio:
   def __init__(self, asset_classes):
     self._accounts = {}
     self.asset_classes = asset_classes.Validate()
