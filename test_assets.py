@@ -180,6 +180,20 @@ class AssetsTest(unittest.TestCase):
     self.assertEqual('0.10%', eebonds.ListBonds()[0][2])
     self.assertAlmostEqual(10008.0, eebonds.ListBonds()[0][3])
 
+  def testDictManualAsset(self):
+    manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
+    manual_asset = assets.FromDict(assets.ToDict(manual_asset))
+    self.assertEqual('Cash', manual_asset.Name())
+    self.assertAlmostEqual(100.5, manual_asset.Value())
+    self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
+
+  def testDictManualAssetZeroValue(self):
+    manual_asset = assets.ManualAsset('Cash', 0, {'Fixed Income': 1.0})
+    manual_asset = assets.FromDict(assets.ToDict(manual_asset))
+    self.assertEqual('Cash', manual_asset.Name())
+    self.assertAlmostEqual(0, manual_asset.Value())
+    self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
+
 
 if __name__ == '__main__':
   unittest.main()

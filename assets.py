@@ -4,17 +4,26 @@ All these assets should implement the lakshmi.Asset top-level interface.
 """
 
 from abc import abstractmethod
+from cache import cache, Cacheable
 import datetime
 import lakshmi
 import re
 import requests
 import yfinance
 
-from cache import cache, Cacheable
+
+def ToDict(asset):
+  return {asset.__class__.__name__ : asset.ToDict()}
 
 
-class NotFoundError(Exception):
-  pass
+def FromDict(d):
+  keys = list(d.keys())
+  assert len(keys) == 1
+  class_name = keys[0]
+
+  return {
+    'ManualAsset': ManualAsset.FromDict(d[class_name]),
+    }[class_name]
 
 
 class ManualAsset(lakshmi.Asset):
@@ -22,6 +31,18 @@ class ManualAsset(lakshmi.Asset):
     self.name = name
     self.value = value
     super().__init__(class2ratio)
+
+  def ToDict(self):
+    return {'Name': self.name,
+            'Value': self.value,
+            'Asset Mapping': self.class2ratio}
+
+  @classmethod
+  def FromDict(cls, d):
+    assert len(d) <= 3
+    return ManualAsset(d['Name'],
+                       d.get('Value', 0),
+                       d['Asset Mapping'])
 
   def Value(self):
     return self.value
@@ -65,11 +86,14 @@ class TradedAsset(lakshmi.Asset):
     pass
 
 
+class NotFoundError(Exception):
+  pass
+
+
 class TickerAsset(TradedAsset, Cacheable):
   """An asset class representing a Ticker whose price can be pulled."""
   def __init__(self, ticker, shares, class2ratio):
     self.ticker = ticker
-    # Currently, we only pull data once when the object is created.
     self.yticker = yfinance.Ticker(ticker)
     super().__init__(shares, class2ratio)
 
