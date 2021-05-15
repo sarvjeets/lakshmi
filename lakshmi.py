@@ -46,7 +46,7 @@ class Asset(ABC):
     This method for non-abstract Asset classes is a factory method.
     This method for abstract Asset classes decodes non-constructor data (if any).
     """
-    self.WhatIf(d.get('What if', 0))
+    self.WhatIf(d.pop('What if', 0))
     return self
 
   def WhatIf(self, delta):

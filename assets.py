@@ -21,18 +21,13 @@ def FromDict(d):
   assert len(keys) == 1
   class_name = keys[0]
 
-  if class_name == 'ManualAsset':
-    return ManualAsset.FromDict(d[class_name])
-  if class_name == 'TickerAsset':
-    return TickerAsset.FromDict(d[class_name])
-  if class_name == 'VanguardFund':
-    return VanguardFund.FromDict(d[class_name])
-  if class_name == 'IBonds':
-    return IBonds.FromDict(d[class_name])
-  if class_name == 'EEBonds':
-    return EEBonds.FromDict(d[class_name])
+  classes = [ManualAsset, TickerAsset, VanguardFund, IBonds, EEBonds]
+  for c in classes:
+    if c.__name__ == class_name:
+      return c.FromDict(d.pop(class_name))
 
   assert False, 'Class {} not found.'.format(class_name)
+
 
 class ManualAsset(lakshmi.Asset):
   def __init__(self, name, value, class2ratio):
@@ -49,10 +44,11 @@ class ManualAsset(lakshmi.Asset):
 
   @classmethod
   def FromDict(cls, d):
-    ret_obj = ManualAsset(d['Name'],
-                          d.get('Value', 0),
-                          d['Asset Mapping'])
+    ret_obj = ManualAsset(d.pop('Name'),
+                          d.pop('Value', 0),
+                          d.pop('Asset Mapping'))
     lakshmi.Asset.FromDict(ret_obj, d)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
   def Value(self):
@@ -85,8 +81,9 @@ class TaxLot:
 
   @classmethod
   def FromDict(cls, d):
-    assert len(d) == 3
-    return TaxLot(d['Date'], d['Quantity'], d['Unit Cost'])
+    ret_obj = TaxLot(d.pop('Date'), d.pop('Quantity'), d.pop('Unit Cost'))
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+    return ret_obj
 
 
 class TradedAsset(lakshmi.Asset):
@@ -107,7 +104,7 @@ class TradedAsset(lakshmi.Asset):
     super().FromDict(d)
     if 'Tax Lots' not in d:
       return
-    tax_lots_list = [TaxLot.FromDict(lot_dict) for lot_dict in d['Tax Lots']]
+    tax_lots_list = [TaxLot.FromDict(lot_dict) for lot_dict in d.pop('Tax Lots')]
     self.SetLots(tax_lots_list)
     return self
 
@@ -148,8 +145,9 @@ class TickerAsset(TradedAsset, Cacheable):
 
   @classmethod
   def FromDict(cls, d):
-    ret_obj = TickerAsset(d['Ticker'], d['Shares'], d['Asset Mapping'])
+    ret_obj = TickerAsset(d.pop('Ticker'), d.pop('Shares'), d.pop('Asset Mapping'))
     TradedAsset.FromDict(ret_obj, d)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
   def CacheKey(self):
@@ -188,8 +186,9 @@ class VanguardFund(TradedAsset, Cacheable):
 
   @classmethod
   def FromDict(cls, d):
-    ret_obj = VanguardFund(d['Fund Id'], d['Shares'], d['Asset Mapping'])
+    ret_obj = VanguardFund(d.pop('Fund Id'), d.pop('Shares'), d.pop('Asset Mapping'))
     TradedAsset.FromDict(ret_obj, d)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
   def CacheKey(self):
@@ -280,8 +279,9 @@ class _TreasuryBonds(lakshmi.Asset):
     return d
 
   def FromDict(self, d):
-    for bond in d['Bonds']:
-      self.AddBond(bond['Issue Date'], bond['Denomination'])
+    for bond in d.pop('Bonds'):
+      self.AddBond(bond.pop('Issue Date'), bond.pop('Denomination'))
+      assert len(bond) == 0, 'Extra attributes found: ' + str(list(bond.keys()))
     lakshmi.Asset.FromDict(self, d)
     return self
 
@@ -313,8 +313,9 @@ class IBonds(_TreasuryBonds):
 
   @classmethod
   def FromDict(cls, d):
-    ret_obj = IBonds(d['Asset Mapping'])
+    ret_obj = IBonds(d.pop('Asset Mapping'))
     _TreasuryBonds.FromDict(ret_obj, d)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
   def Name(self):
@@ -335,8 +336,9 @@ class EEBonds(_TreasuryBonds):
 
   @classmethod
   def FromDict(cls, d):
-    ret_obj = EEBonds(d['Asset Mapping'])
+    ret_obj = EEBonds(d.pop('Asset Mapping'))
     _TreasuryBonds.FromDict(ret_obj, d)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
   def Name(self):
