@@ -49,14 +49,6 @@ class Asset(ABC):
     pass
 
 
-class TaxLot:
-  """Class to represent a single tax lot for an Asset."""
-  def __init__(self, quantity, unit_cost, date):
-    self.quantity = quantity
-    self.unit_cost = unit_cost
-    self.date = date
-
-
 class Account:
   """Class representing an account."""
   def __init__(self, name, account_type):

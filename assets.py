@@ -32,6 +32,15 @@ class ManualAsset(lakshmi.Asset):
   def ShortName(self):
     return self.name
 
+
+class TaxLot:
+  """Class to represent a single tax lot for an Asset."""
+  def __init__(self, quantity, unit_cost, date):
+    self.quantity = quantity
+    self.unit_cost = unit_cost
+    self.date = date
+
+
 class TradedAsset(lakshmi.Asset):
   """An abstract class representing an asset with units and per unit price."""
   def __init__(self, shares, class2ratio):
