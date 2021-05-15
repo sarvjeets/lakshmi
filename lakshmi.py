@@ -30,6 +30,25 @@ class Asset(ABC):
         'Total allocation to classes must be 100% (actual = {}%)'.format(
           round(total*100)))
 
+  def ToDict(self):
+    """Encodes this class into a dictionary.
+
+    This method for non-abstract Asset classes encodes all data.
+    This method for abstract Asset classes only encodes non-constructor data.
+    """
+    if self._delta != 0:
+      return {'What if': self._delta}
+    return dict()
+
+  def FromDict(self, d):
+    """Reverse of ToDict.
+
+    This method for non-abstract Asset classes is a factory method.
+    This method for abstract Asset classes decodes non-constructor data (if any).
+    """
+    self.WhatIf(d.get('What if', 0))
+    return self
+
   def WhatIf(self, delta):
     self._delta += delta
 

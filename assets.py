@@ -21,10 +21,18 @@ def FromDict(d):
   assert len(keys) == 1
   class_name = keys[0]
 
-  return {
-    'ManualAsset': ManualAsset.FromDict(d[class_name]),
-    }[class_name]
+  if class_name == 'ManualAsset':
+    return ManualAsset.FromDict(d[class_name])
+  if class_name == 'TickerAsset':
+    return TickerAsset.FromDict(d[class_name])
+  if class_name == 'VanguardFund':
+    return VanguardFund.FromDict(d[class_name])
+  if class_name == 'IBonds':
+    return IBonds.FromDict(d[class_name])
+  if class_name == 'EEBonds':
+    return EEBonds.FromDict(d[class_name])
 
+  assert False, 'Class {} not found.'.format(class_name)
 
 class ManualAsset(lakshmi.Asset):
   def __init__(self, name, value, class2ratio):
@@ -33,16 +41,19 @@ class ManualAsset(lakshmi.Asset):
     super().__init__(class2ratio)
 
   def ToDict(self):
-    return {'Name': self.name,
-            'Value': self.value,
-            'Asset Mapping': self.class2ratio}
+    d = {'Name': self.name,
+         'Value': self.value,
+         'Asset Mapping': self.class2ratio}
+    d.update(super().ToDict())
+    return d
 
   @classmethod
   def FromDict(cls, d):
-    assert len(d) <= 3
-    return ManualAsset(d['Name'],
-                       d.get('Value', 0),
-                       d['Asset Mapping'])
+    ret_obj = ManualAsset(d['Name'],
+                          d.get('Value', 0),
+                          d['Asset Mapping'])
+    lakshmi.Asset.FromDict(ret_obj, d)
+    return ret_obj
 
   def Value(self):
     return self.value
@@ -56,10 +67,26 @@ class ManualAsset(lakshmi.Asset):
 
 class TaxLot:
   """Class to represent a single tax lot for an Asset."""
-  def __init__(self, quantity, unit_cost, date):
+  def __init__(self, date, quantity, unit_cost):
+    # Do some sanity check.
+    date_pattern = re.compile('\d{4}/\d{2}/\d{2}')
+    if not date_pattern.match(date):
+      raise lakshmi.ValidationError(
+        'Tax lot dates should be in format YYYY/MM/DD')
+
+    self.date = date
     self.quantity = quantity
     self.unit_cost = unit_cost
-    self.date = date
+
+  def ToDict(self):
+    return {'Date': self.date,
+            'Quantity': self.quantity,
+            'Unit Cost': self.unit_cost}
+
+  @classmethod
+  def FromDict(cls, d):
+    assert len(d) == 3
+    return TaxLot(d['Date'], d['Quantity'], d['Unit Cost'])
 
 
 class TradedAsset(lakshmi.Asset):
@@ -68,6 +95,21 @@ class TradedAsset(lakshmi.Asset):
     self.shares = shares
     self.tax_lots = None
     super().__init__(class2ratio)
+
+  def ToDict(self):
+    d = dict()
+    if self.tax_lots:
+      d.update({'Tax Lots': [lot.ToDict() for lot in self.tax_lots]})
+    d.update(super().ToDict())
+    return d
+
+  def FromDict(self, d):
+    super().FromDict(d)
+    if 'Tax Lots' not in d:
+      return
+    tax_lots_list = [TaxLot.FromDict(lot_dict) for lot_dict in d['Tax Lots']]
+    self.SetLots(tax_lots_list)
+    return self
 
   def SetLots(self, tax_lots_list):
     sum_lots = sum([t.quantity for t in tax_lots_list])
@@ -97,6 +139,19 @@ class TickerAsset(TradedAsset, Cacheable):
     self.yticker = yfinance.Ticker(ticker)
     super().__init__(shares, class2ratio)
 
+  def ToDict(self):
+    d = {'Ticker': self.ticker,
+         'Shares': self.shares,
+         'Asset Mapping': self.class2ratio}
+    d.update(super().ToDict())
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = TickerAsset(d['Ticker'], d['Shares'], d['Asset Mapping'])
+    TradedAsset.FromDict(ret_obj, d)
+    return ret_obj
+
   def CacheKey(self):
     return self.ticker
 
@@ -124,6 +179,19 @@ class VanguardFund(TradedAsset, Cacheable):
     self.fund_id = fund_id
     super().__init__(shares, class2ratio)
 
+  def ToDict(self):
+    d = {'Fund Id': self.fund_id,
+         'Shares': self.shares,
+         'Asset Mapping': self.class2ratio}
+    d.update(super().ToDict())
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = VanguardFund(d['Fund Id'], d['Shares'], d['Asset Mapping'])
+    TradedAsset.FromDict(ret_obj, d)
+    return ret_obj
+
   def CacheKey(self):
     return str(self.fund_id)
 
@@ -150,11 +218,11 @@ class VanguardFund(TradedAsset, Cacheable):
 class _TreasuryBonds(lakshmi.Asset):
   class Bond(Cacheable):
     """A class representing individual I or EE Bond."""
-    def __init__(self, series, issue_date, denom, redemption_date):
+    def __init__(self, series, issue_date, denom):
       self.series = series
       self.issue_date = issue_date
       self.denom = denom
-      self.redemption_date = redemption_date
+      self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 
     def CacheKey(self):
       return '{}_{}_{}_{}'.format(
@@ -181,7 +249,6 @@ class _TreasuryBonds(lakshmi.Asset):
       req = requests.post('http://www.treasurydirect.gov/BC/SBCPrice', data=data)
       req.raise_for_status()
 
-      # float(re.sub('\n|<[^>]+>', '', re.findall('\n<td>.*</td>', r.text)[7]))
       ret_vals = re.findall('\n<td>.*</td>', req.text)
       rate = re.sub('\n|<[^>]+>', '', ret_vals[6])
       value = float(re.sub('\n|\$|,|<[^>]+>', '', ret_vals[7]))
@@ -202,13 +269,24 @@ class _TreasuryBonds(lakshmi.Asset):
   def __init__(self, series, class2ratio):
     self.series = series
     super().__init__(class2ratio)
-    self.value = 0
     self.bonds = []
-    self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
+
+  def ToDict(self):
+    d = {}
+    d['Bonds'] = []
+    for bond in self.bonds:
+      d['Bonds'].append({'Issue Date': bond.issue_date, 'Denomination': bond.denom})
+    d.update(super().ToDict())
+    return d
+
+  def FromDict(self, d):
+    for bond in d['Bonds']:
+      self.AddBond(bond['Issue Date'], bond['Denomination'])
+    lakshmi.Asset.FromDict(self, d)
+    return self
 
   def AddBond(self, issue_date, denom):
-    self.bonds.append(
-      self.Bond(self.series, issue_date, denom, self.redemption_date))
+    self.bonds.append(self.Bond(self.series, issue_date, denom))
     return self
 
   def Value(self):
@@ -228,6 +306,17 @@ class IBonds(_TreasuryBonds):
   def __init__(self, class2ratio):
     super().__init__('I', class2ratio)
 
+  def ToDict(self):
+    d = {'Asset Mapping': self.class2ratio}
+    d.update(super().ToDict())
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = IBonds(d['Asset Mapping'])
+    _TreasuryBonds.FromDict(ret_obj, d)
+    return ret_obj
+
   def Name(self):
     return 'I Bonds'
 
@@ -238,6 +327,17 @@ class IBonds(_TreasuryBonds):
 class EEBonds(_TreasuryBonds):
   def __init__(self, class2ratio):
     super().__init__('EE', class2ratio)
+
+  def ToDict(self):
+    d = {'Asset Mapping': self.class2ratio}
+    d.update(super().ToDict())
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = EEBonds(d['Asset Mapping'])
+    _TreasuryBonds.FromDict(ret_obj, d)
+    return ret_obj
 
   def Name(self):
     return 'EE Bonds'
