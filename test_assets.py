@@ -48,13 +48,13 @@ class AssetsTest(unittest.TestCase):
     MockTicker.return_value = ticker
 
     vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
-    lots = [lakshmi.TaxLot(50, 1.0, '2012/12/12'),
-            lakshmi.TaxLot(30, 0.9, '2013/12/12')]
+    lots = [assets.TaxLot(50, 1.0, '2012/12/12'),
+            assets.TaxLot(30, 0.9, '2013/12/12')]
     with self.assertRaisesRegex(lakshmi.ValidationError,
                                 'Lots provided should sum up to 100.0'):
       vmmxx.SetLots(lots)
 
-    lots.append(lakshmi.TaxLot(20, 0.9, '2014/12/31'))
+    lots.append(assets.TaxLot(20, 0.9, '2014/12/31'))
     vmmxx.SetLots(lots)
     self.assertListEqual(lots, vmmxx.tax_lots)
 
@@ -84,7 +84,7 @@ class AssetsTest(unittest.TestCase):
     MockGet.assert_called_once_with(
       'https://api.vanguard.com/rs/ire/01/pe/fund/7555/price.json',
       headers={'Referer': 'https://vanguard.com/'})
-    fund.SetLots([lakshmi.TaxLot(10, 1.0, '2012/12/30')])
+    fund.SetLots([assets.TaxLot(10, 1.0, '2012/12/30')])
 
   @patch('datetime.datetime')
   @patch('requests.post')
