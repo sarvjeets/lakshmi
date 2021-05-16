@@ -1,7 +1,9 @@
 """Top level interfaces and definitions for Lakshmi."""
 
 from abc import ABC, abstractmethod
+import assets
 from table import Table
+import yaml
 
 
 class ValidationError(Exception):
@@ -74,12 +76,29 @@ class Account:
     """
     Arguments:
       name: Printable name for this account.
-      account_type: Type of this account (TODO: Ideally an enum or class).
+      account_type: Type of this account.
     """
     self._name = name
     self.account_type = account_type
     self._assets = {}
     self._cash = 0
+
+  def ToDict(self):
+    d = {'Name' : self._name,
+         'Account Type': self.account_type,
+         'Assets' : [assets.ToDict(asset) for asset in self._assets.values()]}
+    if self._cash != 0:
+      d['Available Cash'] = self._cash
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = Account(d.pop('Name'), d.pop('Account Type'))
+    for asset_dict in d.pop('Assets'):
+      ret_obj.AddAsset(assets.FromDict(asset_dict))
+    ret_obj._cash = d.pop('Available Cash', 0)
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+    return ret_obj
 
   def AddAsset(self, asset):
     if asset.ShortName() in self._assets:
@@ -111,6 +130,23 @@ class AssetClass:
     self.children = []
     # Populated when _Validate is called.
     self._leaves = None
+
+  def ToDict(self):
+    d = {'Name': self.name}
+    if self.children:
+      d['Children'] = [{'Ratio': ratio, 'Asset Class': child.ToDict()}
+                       for child, ratio in self.children]
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = AssetClass(d.pop('Name'))
+    for child_dict in d.pop('Children', []):
+      ret_obj.AddSubClass(
+        child_dict.pop('Ratio'),
+        AssetClass.FromDict(child_dict.pop('Asset Class')))
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+    return ret_obj.Validate()
 
   def Copy(self):
     """Returns a copy of this AssetClass and its sub-classes."""
@@ -254,6 +290,31 @@ class Portfolio:
     self._accounts = {}
     self.asset_classes = asset_classes.Validate()
     self._leaf_asset_classes = asset_classes.Leaves()
+
+  def Save(self, filename):
+    f = open(filename, 'w')
+    yaml.dump(self.ToDict(), f, sort_keys=False)
+    f.close()
+
+  @classmethod
+  def Load(cls, filename):
+    f = open(filename, 'r')
+    d = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    return Portfolio.FromDict(d)
+
+  def ToDict(self):
+    d = {'Asset Classes': self.asset_classes.ToDict()}
+    if self._accounts:
+      d['Accounts'] = [account.ToDict() for account in self._accounts.values()]
+    return d
+
+  @classmethod
+  def FromDict(cls, d):
+    ret_obj = Portfolio(AssetClass.FromDict(d.pop('Asset Classes')))
+    for account_dict in d.pop('Accounts', []):
+      ret_obj.AddAccount(Account.FromDict(account_dict))
+    assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+    return ret_obj
 
   def AddAccount(self, account):
     for asset in account.Assets():

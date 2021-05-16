@@ -92,6 +92,21 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('Bonds', ret_class.name)
     self.assertAlmostEqual(0.2, ratio)
 
+  def testAssetClassDict(self):
+    asset_class = (
+      AssetClass('All')
+        .AddSubClass(0.8,
+                     AssetClass('Equity')
+                       .AddSubClass(0.6, AssetClass('US'))
+                       .AddSubClass(0.4, AssetClass('International')))
+        .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+
+    asset_class = AssetClass.FromDict(asset_class.ToDict())
+    self.assertEqual({'US', 'International', 'Bonds'}, asset_class.Leaves())
+    ret_class, ratio = asset_class.FindAssetClass('US')
+    self.assertEqual('US', ret_class.name)
+    self.assertAlmostEqual(0.48, ratio)
+
   def testAssetClassCopy(self):
     asset_class = (
       AssetClass('All')
@@ -148,6 +163,15 @@ class LakshmiTest(unittest.TestCase):
     self.assertEqual('Test Asset', asset.Name())
     self.assertAlmostEqual(100.0, asset.Value())
 
+  def testAccountDict(self):
+    account = Account('Roth IRA', 'Post-tax').AddAsset(
+      ManualAsset('Test Asset', 100.0, {'All': 1.0}))
+    account.AddCash(200)
+    account = Account.FromDict(account.ToDict())
+    self.assertEqual(1, len(account._assets))
+    self.assertEqual('Test Asset', account.GetAsset('Test Asset').Name())
+    self.assertAlmostEqual(200.0, account.AvailableCash())
+
   def testOneAsset(self):
     portfolio = Portfolio(AssetClass('Equity')).AddAccount(
       Account('401(k)', 'Pre-tax').AddAsset(
@@ -165,6 +189,13 @@ class LakshmiTest(unittest.TestCase):
       portfolio.AssetAllocation(['Equity']).StrList())
     self.assertListEqual([], portfolio.AssetAllocationTree().List())
     self.assertListEqual([], portfolio.AssetAllocationCompact().List())
+
+  def testPortfolioDict(self):
+    portfolio = Portfolio(AssetClass('Equity')).AddAccount(
+      Account('401(k)', 'Pre-tax').AddAsset(
+        ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
+    portfolio = Portfolio.FromDict(portfolio.ToDict())
+    self.assertEqual(1, len(portfolio.Accounts()))
 
   def testAssetWhatIf(self):
     asset = ManualAsset('Test Asset', 100.0, {'Equity': 1.0})
