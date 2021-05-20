@@ -6,11 +6,6 @@ from table import Table
 import yaml
 
 
-class ValidationError(Exception):
-  """Exception raised when some validation failed."""
-  pass
-
-
 class Asset(ABC):
   """Class representing an asset (fund, ETF, cash, etc.)."""
   def __init__(self, class2ratio):
@@ -23,13 +18,12 @@ class Asset(ABC):
 
     total = 0
     for ratio in class2ratio.values():
-      if ratio < 0.0 or ratio > 1.0:
-        raise ValidationError('Bad Class ratio provided to Asset ({})'.format(ratio))
+      assert ratio >= 0.0 and ratio <= 1.0, (
+        'Bad Class ratio provided to Asset ({})'.format(ratio))
       total += ratio
 
-    if abs(total - 1.0) > 1e-6:
-      raise ValidationError(
-        'Total allocation to classes must be 100% (actual = {}%)'.format(
+    assert abs(total - 1.0) < 1e-6, (
+      'Total allocation to classes must be 100% (actual = {}%)'.format(
           round(total*100)))
 
   def ToDict(self):
@@ -101,9 +95,8 @@ class Account:
     return ret_obj
 
   def AddAsset(self, asset):
-    if asset.ShortName() in self._assets:
-      raise ValidationError('Attempting to add duplicate Asset: ' +
-                            asset.ShortName())
+    assert asset.ShortName() not in self._assets, (
+      'Attempting to add duplicate Asset: ' + asset.ShortName())
     self._assets[asset.ShortName()] = asset
     return self
 
@@ -172,15 +165,15 @@ class AssetClass:
     class_names = [self.name]
     total = 0.0
     for asset_class, ratio in self.children:
-      if ratio < 0.0 or ratio > 1.0:
-        raise ValidationError('Bad ratio provided to Asset Class ({})'.format(ratio))
+      assert ratio >= 0.0 and ratio <= 1.0, (
+        'Bad ratio provided to Asset Class ({})'.format(ratio))
       total += ratio
       temp_leafs, temp_classes = asset_class._Validate()
       self._leaves.update(temp_leafs)
       class_names += temp_classes
 
-    if abs(total - 1) > 1e-6:
-      raise ValidationError('Sum of sub-classes is not 100% (actual: {}%)'.format(total*100))
+    assert abs(total - 1) < 1e-6, (
+      'Sum of sub-classes is not 100% (actual: {}%)'.format(total*100))
 
     return self._leaves, class_names
 
@@ -188,14 +181,12 @@ class AssetClass:
     unused_leaves, all_class_names = self._Validate()
     duplicates = set([x for x in all_class_names if all_class_names.count(x) > 1])
 
-    if duplicates:
-      raise ValidationError('Found duplicate Asset class(es): ' + str(duplicates))
+    assert not duplicates, 'Found duplicate Asset class(es): ' + str(duplicates)
 
     return self
 
   def _Check(self):
-    if not self._leaves:
-      raise ValidationError('Need to validate AssetAllocation before using it.')
+    assert self._leaves, 'Need to validate AssetAllocation before using it.'
 
   def FindAssetClass(self, asset_class_name):
     """Returns a tuple of object representing asset_class_name and its desired ratio.
@@ -319,11 +310,11 @@ class Portfolio:
   def AddAccount(self, account):
     for asset in account.Assets():
       for asset_class in asset.class2ratio.keys():
-        if not asset_class in self._leaf_asset_classes:
-          raise ValidationError('Unknown or non-leaf asset class: ' + asset_class)
+        assert asset_class in self._leaf_asset_classes, (
+          'Unknown or non-leaf asset class: ' + asset_class)
 
-    if account.Name() in self._accounts:
-      raise ValidationError('Attempting to add duplicate account: ' + account.Name())
+    assert account.Name() not in self._accounts, (
+      'Attempting to add duplicate account: ' + account.Name())
 
     self._accounts[account.Name()] = account
     return self
@@ -450,10 +441,10 @@ class Portfolio:
 
     try:
       flat_asset_class.Validate()
-    except ValidationError:
-      raise ValidationError(
+    except AssertionError:
+      raise AssertionError(
         'AssetAllocation called with overlapping Asset Classes or ' +
-        'Asset Classes which does not cover the full tree.')
+        'Asset Classes which does not cover the full tree.') from None
 
     alloc = flat_asset_class.ReturnAllocation(self._GetAssetClassToValue(), 0)[0]
     table = Table(

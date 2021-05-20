@@ -66,9 +66,7 @@ class TaxLot:
   def __init__(self, date, quantity, unit_cost):
     # Do some sanity check.
     date_pattern = re.compile('\d{4}/\d{2}/\d{2}')
-    if not date_pattern.match(date):
-      raise lakshmi.ValidationError(
-        'Tax lot dates should be in format YYYY/MM/DD')
+    assert date_pattern.match(date), 'Tax lot dates should be in format YYYY/MM/DD'
 
     self.date = date
     self.quantity = quantity
@@ -110,9 +108,8 @@ class TradedAsset(lakshmi.Asset):
 
   def SetLots(self, tax_lots_list):
     sum_lots = sum([t.quantity for t in tax_lots_list])
-    if abs(sum_lots - self.shares) > 1e-6:
-      raise lakshmi.ValidationError('Lots provided should sum up to ' +
-                                    str(self.shares))
+    assert abs(sum_lots - self.shares) < 1e-6, (
+      'Lots provided should sum up to ' + str(self.shares))
     self.tax_lots = tax_lots_list
 
   def Value(self):

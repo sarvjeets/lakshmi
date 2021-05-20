@@ -2,7 +2,6 @@
 
 import assets
 import cache
-import lakshmi
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -66,7 +65,7 @@ class AssetsTest(unittest.TestCase):
     vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
     lots = [assets.TaxLot('2012/12/12', 50, 1.0),
             assets.TaxLot('2013/12/12', 30, 0.9)]
-    with self.assertRaisesRegex(lakshmi.ValidationError,
+    with self.assertRaisesRegex(AssertionError,
                                 'Lots provided should sum up to 100.0'):
       vmmxx.SetLots(lots)
 

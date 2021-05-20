@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from assets import ManualAsset
-from lakshmi import Account, AssetClass, Portfolio, ValidationError
+from lakshmi import Account, AssetClass, Portfolio
 
 import unittest
 
@@ -26,7 +26,7 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.6, AssetClass('US'))
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('US')))
-    with self.assertRaisesRegex(ValidationError, 'Found duplicate'):
+    with self.assertRaisesRegex(AssertionError, 'Found duplicate'):
       asset_class.Validate()
 
   def testManyAssetClassBadRatioSum(self):
@@ -38,7 +38,7 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.5, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(ValidationError, 'Sum of sub-classes'):
+    with self.assertRaisesRegex(AssertionError, 'Sum of sub-classes'):
       asset_class.Validate()
 
   def testManyAssetClassBadRatioNeg(self):
@@ -50,7 +50,7 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(ValidationError, 'Bad ratio'):
+    with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
       asset_class.Validate()
 
   def testManyAssetClassBadRatioHigh(self):
@@ -62,7 +62,7 @@ class LakshmiTest(unittest.TestCase):
                        .AddSubClass(0.4, AssetClass('International')))
         .AddSubClass(0.2, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(ValidationError, 'Bad ratio'):
+    with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
       asset_class.Validate()
 
   def testManyAssetClass(self):
@@ -128,7 +128,7 @@ class LakshmiTest(unittest.TestCase):
                      .AddSubClass(0.4, AssetClass('Intl')))
         .AddSubClass(0.4, AssetClass('Bonds')))
 
-    with self.assertRaisesRegex(ValidationError, 'Need to validate'):
+    with self.assertRaisesRegex(AssertionError, 'Need to validate'):
       asset_class.ValueMapped({})
 
     asset_class.Validate()
@@ -144,7 +144,7 @@ class LakshmiTest(unittest.TestCase):
     portfolio = Portfolio(AssetClass('Equity'))
     account = Account('Roth IRA', 'Post-tax').AddAsset(
       ManualAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
-    with self.assertRaisesRegex(ValidationError,
+    with self.assertRaisesRegex(AssertionError,
                                 'Unknown or non-leaf asset class: Bad Equity'):
       portfolio.AddAccount(account)
 
@@ -153,7 +153,7 @@ class LakshmiTest(unittest.TestCase):
     account = Account('Roth IRA', 'Post-tax').AddAsset(
       ManualAsset('Test Asset', 100.0, {'All': 1.0}))
     portfolio.AddAccount(account)
-    with self.assertRaisesRegex(ValidationError, 'Attempting to add'):
+    with self.assertRaisesRegex(AssertionError, 'Attempting to add'):
       portfolio.AddAccount(account)
 
   def testGetAssetFromAccount(self):
@@ -248,7 +248,7 @@ class LakshmiTest(unittest.TestCase):
         .AddAsset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
         .AddAsset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
-    with self.assertRaisesRegex(ValidationError,
+    with self.assertRaisesRegex(AssertionError,
                                 'AssetAllocation called with'):
       portfolio.AssetAllocation(['Equity', 'Intl'])
 
