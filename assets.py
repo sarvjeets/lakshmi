@@ -1,12 +1,8 @@
-"""Standard asset types.
+"""Implementation of standard asset types."""
 
-All these assets should implement the lakshmi.Asset top-level interface.
-"""
-
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from cache import cache, Cacheable
 import datetime
-import lakshmi
 import re
 import requests
 import yfinance
@@ -29,7 +25,65 @@ def FromDict(d):
   assert False, 'Class {} not found.'.format(class_name)
 
 
-class ManualAsset(lakshmi.Asset):
+class Asset(ABC):
+  """Class representing an asset (fund, ETF, cash, etc.)."""
+  def __init__(self, class2ratio):
+    """
+    Argments:
+      class2ratio: Dict of class_name -> ratio. 0 < Ratio <= 1.0
+    """
+    self._delta = 0
+    self.class2ratio = class2ratio
+
+    total = 0
+    for ratio in class2ratio.values():
+      assert ratio >= 0.0 and ratio <= 1.0, (
+        'Bad Class ratio provided to Asset ({})'.format(ratio))
+      total += ratio
+
+    assert abs(total - 1.0) < 1e-6, (
+      'Total allocation to classes must be 100% (actual = {}%)'.format(
+          round(total*100)))
+
+  def ToDict(self):
+    """Encodes this class into a dictionary.
+
+    This method for non-abstract Asset classes encodes all data.
+    This method for abstract Asset classes only encodes non-constructor data.
+    """
+    if self._delta != 0:
+      return {'What if': self._delta}
+    return dict()
+
+  def FromDict(self, d):
+    """Reverse of ToDict.
+
+    This method for non-abstract Asset classes is a factory method.
+    This method for abstract Asset classes decodes non-constructor data (if any).
+    """
+    self.WhatIf(d.pop('What if', 0))
+    return self
+
+  def WhatIf(self, delta):
+    self._delta += delta
+
+  def AdjustedValue(self):
+    return self.Value() + self._delta
+
+  @abstractmethod
+  def Value(self):
+    pass
+
+  @abstractmethod
+  def Name(self):
+    pass
+
+  @abstractmethod
+  def ShortName(self):
+    pass
+
+
+class ManualAsset(Asset):
   def __init__(self, name, value, class2ratio):
     self.name = name
     self.value = value
@@ -47,7 +101,7 @@ class ManualAsset(lakshmi.Asset):
     ret_obj = ManualAsset(d.pop('Name'),
                           d.pop('Value', 0),
                           d.pop('Asset Mapping'))
-    lakshmi.Asset.FromDict(ret_obj, d)
+    Asset.FromDict(ret_obj, d)
     assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj
 
@@ -84,7 +138,7 @@ class TaxLot:
     return ret_obj
 
 
-class TradedAsset(lakshmi.Asset):
+class TradedAsset(Asset):
   """An abstract class representing an asset with units and per unit price."""
   def __init__(self, shares, class2ratio):
     self.shares = shares
@@ -115,7 +169,7 @@ class TradedAsset(lakshmi.Asset):
   def Value(self):
     return self.shares * self.Price()
 
-  # This class inherits abstract methods Name & ShortName from lakshmi.Asset.
+  # This class inherits abstract methods Name & ShortName from Asset.
 
   @abstractmethod
   def Price(self):
@@ -211,7 +265,7 @@ class VanguardFund(TradedAsset, Cacheable):
     return float(req.json()['currentPrice']['dailyPrice']['regular']['price'])
 
 
-class _TreasuryBonds(lakshmi.Asset):
+class _TreasuryBonds(Asset):
   class Bond(Cacheable):
     """A class representing individual I or EE Bond."""
     def __init__(self, series, issue_date, denom):
@@ -279,7 +333,7 @@ class _TreasuryBonds(lakshmi.Asset):
     for bond in d.pop('Bonds'):
       self.AddBond(bond.pop('Issue Date'), bond.pop('Denomination'))
       assert len(bond) == 0, 'Extra attributes found: ' + str(list(bond.keys()))
-    lakshmi.Asset.FromDict(self, d)
+    Asset.FromDict(self, d)
     return self
 
   def AddBond(self, issue_date, denom):

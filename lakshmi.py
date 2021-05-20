@@ -1,67 +1,8 @@
 """Top level interfaces and definitions for Lakshmi."""
 
-from abc import ABC, abstractmethod
 import assets
 from table import Table
 import yaml
-
-
-class Asset(ABC):
-  """Class representing an asset (fund, ETF, cash, etc.)."""
-  def __init__(self, class2ratio):
-    """
-    Argments:
-      class2ratio: Dict of class_name -> ratio. 0 < Ratio <= 1.0
-    """
-    self._delta = 0
-    self.class2ratio = class2ratio
-
-    total = 0
-    for ratio in class2ratio.values():
-      assert ratio >= 0.0 and ratio <= 1.0, (
-        'Bad Class ratio provided to Asset ({})'.format(ratio))
-      total += ratio
-
-    assert abs(total - 1.0) < 1e-6, (
-      'Total allocation to classes must be 100% (actual = {}%)'.format(
-          round(total*100)))
-
-  def ToDict(self):
-    """Encodes this class into a dictionary.
-
-    This method for non-abstract Asset classes encodes all data.
-    This method for abstract Asset classes only encodes non-constructor data.
-    """
-    if self._delta != 0:
-      return {'What if': self._delta}
-    return dict()
-
-  def FromDict(self, d):
-    """Reverse of ToDict.
-
-    This method for non-abstract Asset classes is a factory method.
-    This method for abstract Asset classes decodes non-constructor data (if any).
-    """
-    self.WhatIf(d.pop('What if', 0))
-    return self
-
-  def WhatIf(self, delta):
-    self._delta += delta
-
-  def AdjustedValue(self):
-    return self.Value() + self._delta
-
-  @abstractmethod
-  def Value(self):
-    pass
-
-  @abstractmethod
-  def Name(self):
-    pass
-
-  @abstractmethod
-  def ShortName(self):
-    pass
 
 
 class Account:
