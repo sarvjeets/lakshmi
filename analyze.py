@@ -55,7 +55,7 @@ class TLHAnalyze(Analyzer):
     ret_val = Table(
       5,
       headers = ['Account', 'Asset', 'Date', 'Loss', 'Loss%'],
-      coltypes = [None, None, None, 'dollars', 'percentage'])
+      coltypes = ['str', 'str', 'str', 'dollars', 'percentage'])
     for account in portfolio.Accounts():
       for asset in account.Assets():
         if hasattr(asset, 'tax_lots') and asset.tax_lots:

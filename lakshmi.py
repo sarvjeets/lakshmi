@@ -281,11 +281,11 @@ class Portfolio:
     account_whatifs = Table(
       2,
       headers=['Account', 'Cash'],
-      coltypes = [None, 'delta_dollars'])
+      coltypes = ['str', 'delta_dollars'])
     asset_whatifs = Table(
       3,
       headers = ['Account', 'Asset', 'Delta'],
-      coltypes = [None, None, 'delta_dollars'])
+      coltypes = ['str', 'str', 'delta_dollars'])
 
     for account in self.Accounts():
       if account.AvailableCash() != 0.0:
@@ -316,7 +316,7 @@ class Portfolio:
     """Returns all the assets."""
     table = Table(3,
                   headers = ['Account', 'Asset', 'Value'],
-                  coltypes = [None, None, 'dollars'])
+                  coltypes = ['str', 'str', 'dollars'])
     for account in self.Accounts():
       for asset in account.Assets():
         table.AddRow(
@@ -341,7 +341,7 @@ class Portfolio:
 
     table = Table(3,
                   headers = ['Account Type', 'Value', '%'],
-                  coltypes = [None, 'dollars', 'percentage'])
+                  coltypes = ['str', 'dollars', 'percentage'])
     for account_type, value in account_type_to_value.items():
       table.AddRow([account_type, value, value/total])
     return table
@@ -360,7 +360,7 @@ class Portfolio:
   def AssetAllocationTree(self, levels=-1):
     table = Table(4,
                   headers = ['Class', 'Actual%', 'Desired%', 'Value'],
-                  coltypes = [None, 'percentage', 'percentage', 'dollars'])
+                  coltypes = ['str', 'percentage', 'percentage', 'dollars'])
     for alloc in self.asset_classes.ReturnAllocation(self._GetAssetClassToValue(), levels):
       if not alloc.children:
         continue
@@ -391,7 +391,7 @@ class Portfolio:
     table = Table(
       5,
       headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
-      coltypes = [None, 'percentage', 'percentage', 'dollars', 'delta_dollars'])
+      coltypes = ['str', 'percentage', 'percentage', 'dollars', 'delta_dollars'])
     for child in alloc.children:
       table.AddRow(
         [child.name,
@@ -424,7 +424,7 @@ class Portfolio:
         for i in range(len(alloc.children) - 1):
           # Make room for rest of the children by inserting empty extra rows of the
           # same size as the parent's row
-          ret_list.insert(index + 1, [''] * len(ret_list[index]))
+          ret_list.insert(index + 1, [None] * len(ret_list[index]))
         for i in range(len(alloc.children)):
           ret_list[index + i].extend(
            [alloc.children[i].name,
@@ -441,14 +441,14 @@ class Portfolio:
     leaf_aa = self.AssetAllocation(self.asset_classes.Leaves())
     for leaf_row in leaf_aa.List(): # Format: Class, A%, D%, Value, Diff
       ret_list_row = ret_list[FindIndex(leaf_row[0], ret_list)]
-      ret_list_row.extend([''] * (cols - len(ret_list_row)))
+      ret_list_row.extend([None] * (cols - len(ret_list_row)))
       ret_list_row.extend(leaf_row[1:])
 
     # All done, now build the table.
     t = Table(
       cols + 4,
       headers = ['Class', 'A%', 'D%'] * int(cols/3) + leaf_aa.Headers()[1:],
-      coltypes = [None, 'percentage', 'percentage'] * int(cols/3) + [
+      coltypes = ['str', 'percentage', 'percentage'] * int(cols/3) + [
         'percentage', 'percentage', 'dollars', 'delta_dollars'])
     t.SetRows(ret_list)
     return t

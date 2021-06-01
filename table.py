@@ -3,6 +3,14 @@
 from tabulate import tabulate
 
 class Table():
+  coltype2func = {
+      'str': lambda x: x,
+      'dollars': lambda x: '${:,.2f}'.format(x),
+      'delta_dollars': lambda x: '{}${:,.2f}'.format(
+        '-' if x < 0 else '+', abs(x)),
+      'percentage': lambda x: '{}%'.format(round(100*x)),
+    }
+
   def __init__(self, numcols, headers=(), coltypes=None):
     assert numcols >= 0
     self._numcols = numcols
@@ -13,9 +21,11 @@ class Table():
 
     if coltypes:
       assert len(coltypes) == numcols
+      assert set(coltypes).issubset(
+        self.coltype2func.keys()), 'Bad column type in coltypes'
       self._coltypes = coltypes
     else:
-      self._coltypes = [None] * self._numcols
+      self._coltypes = ['str'] * self._numcols
 
     self._rows = []
 
@@ -40,20 +50,15 @@ class Table():
     return self._rows
 
   def StrList(self):
-    coltype2func = {
-      None: lambda x: x,
-      'str': lambda x: str(x) if x != '' else '',
-      'dollars': lambda x: '${:,.2f}'.format(x) if x != '' else '',
-      'delta_dollars': lambda x: '{}${:,.2f}'.format(
-        '-' if x < 0 else '+', abs(x)) if x != '' else '',
-      'percentage': lambda x: '{}%'.format(round(100*x)) if x != '' else x,
-    }
-
     ret_list = []
     for row in self.List():
       ret_row = []
       for col_num in range(len(row)):
-        ret_row.append(coltype2func[self._coltypes[col_num]](row[col_num]))
+        if row[col_num] is None:
+          ret_row.append('')
+        else:
+          ret_row.append(self.coltype2func[self._coltypes[col_num]](
+            row[col_num]))
       ret_list.append(ret_row)
     return ret_list
 
