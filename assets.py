@@ -165,6 +165,7 @@ class TradedAsset(Asset):
     assert abs(sum_lots - self.shares) < 1e-6, (
       'Lots provided should sum up to ' + str(self.shares))
     self.tax_lots = tax_lots_list
+    return self
 
   def Value(self):
     return self.shares * self.Price()
