@@ -64,3 +64,32 @@ class TLHAnalyze(Analyzer):
           for lot in self._ReturnLotsToSell(price, asset.tax_lots):
             ret_val.AddRow([account.Name(), asset.ShortName()] + lot)
     return ret_val
+
+class BandRebalance(Analyzer):
+  """Triggers if portfolio asset class targets are outside the bands
+  specified. This considers an asset class outside bound if the
+  absolute difference in percentage allocation is more than max_abs_percent
+  different from target allocation or more than max_relative_percent
+  different from the target allocation."""
+  def __init__(self, max_abs_percent=0.05, max_relative_percent=0.25):
+    assert max_abs_percent > 0 and max_abs_percent < 1.0
+    assert max_relative_percent > 0 and max_relative_percent < 1.0
+    self.max_abs_percent = max_abs_percent
+    self.max_relative_percent = max_relative_percent
+
+  def Analyze(self, portfolio):
+    aa = portfolio.AssetAllocation(portfolio.asset_classes.Leaves())
+    headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference']
+    assert headers == aa.Headers()
+    ret_val = Table(
+      5,
+      headers,
+      ['str', 'percentage', 'percentage', 'dollars', 'delta_dollars'])
+    for row in aa.List():
+      abs_percent = abs(row[1] - row[2])
+      rel_percent = abs_percent / row[2] if row[2] != 0 else 0
+      if (abs_percent >= self.max_abs_percent or
+          rel_percent >= self.max_relative_percent):
+        ret_val.AddRow(row)
+
+    return ret_val
