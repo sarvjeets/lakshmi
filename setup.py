@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setup(
@@ -10,8 +10,12 @@ setup(
   author_email='sarvjeet@gmail.com',
   description='Investing Tools.',
   long_description=long_description,
-  long_description_content_type="text/markdown",
+  long_description_content_type='text/markdown',
   url='https://github.com/sarvjeets/Lakshmi',
+  platforms='any',
+  py_modules=['lakshmi'],
+  packages=find_packages(exclude=['tests', 'tests.*']),
+  include_package_data=True,
   install_requires=[
     'click~=8.0.1',
     'PyYAML~=5.4.1',
@@ -19,5 +23,6 @@ setup(
     'tabulate~=0.8.9',
     'yfinance~=0.1.59',
   ],
-  python_requires=">=3.9.6",
+  test_suite='tests',
+  python_requires='>=3.9.6',
 )
