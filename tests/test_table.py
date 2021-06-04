@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 
-import table
+from lakshmi.table import Table
 import unittest
 
 class TableTest(unittest.TestCase):
   def testEmptyTable(self):
-    t = table.Table(3)
+    t = Table(3)
     self.assertListEqual([], t.List())
     self.assertListEqual([], t.StrList())
     self.assertEqual('', t.String())
 
   def testNoHeadersAndColTypes(self):
-    t = table.Table(3)
+    t = Table(3)
     t.AddRow(['1', '2', '3'])
     self.assertListEqual([['1', '2', '3']],
                          t.List())
@@ -21,16 +21,16 @@ class TableTest(unittest.TestCase):
 
   def testBadColType(self):
     with self.assertRaisesRegex(AssertionError, 'Bad column type in coltypes'):
-      table.Table(2, coltypes = [None, 'str'])
+      Table(2, coltypes = [None, 'str'])
 
   def testSetRows(self):
-    t = table.Table(3)
+    t = Table(3)
     t.SetRows([['1', '2']])
     self.assertListEqual([['1', '2']], t.StrList())
 
   def testHeadersAndDiffColTypes(self):
     headers = ['1', '2', '3', '4']
-    t = table.Table(
+    t = Table(
       4,
       headers = headers,
       coltypes = ['str', 'dollars', 'delta_dollars', 'percentage'])
@@ -53,16 +53,16 @@ class TableTest(unittest.TestCase):
 
   def testMismatchedNumCols(self):
     with self.assertRaises(AssertionError):
-      t = table.Table(2, headers = ['1'])
+      t = Table(2, headers = ['1'])
     with self.assertRaises(AssertionError):
-      t = table.Table(2, headers = ['1', '2', '3'])
+      t = Table(2, headers = ['1', '2', '3'])
     with self.assertRaises(AssertionError):
-      t = table.Table(2, coltypes = ['str'])
+      t = Table(2, coltypes = ['str'])
     with self.assertRaises(AssertionError):
-      t = table.Table(2, headers = ['str', 'str', 'str'])
+      t = Table(2, headers = ['str', 'str', 'str'])
 
   def testTooManyCols(self):
-    t = table.Table(2)
+    t = Table(2)
     with self.assertRaises(AssertionError):
       t.AddRow(['1', '2', '3'])
     with self.assertRaises(AssertionError):
@@ -70,7 +70,7 @@ class TableTest(unittest.TestCase):
                  ['1', '2', '3']])
 
   def testTooFewCols(self):
-    t = table.Table(2)
+    t = Table(2)
     t.AddRow(['1'])
     t.SetRows([['1', '2'], ['1'], ['a']])
 

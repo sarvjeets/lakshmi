@@ -1,8 +1,8 @@
+from abc import ABC, abstractmethod
+from datetime import datetime
 import functools
 import os
 import pickle
-from abc import ABC, abstractmethod
-from datetime import datetime
 
 # Inspired by https://pypi.org/project/cache-to-disk/
 

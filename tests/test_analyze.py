@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-import analyze
-from assets import ManualAsset, TaxLot, TickerAsset
+import lakshmi.analyze as analyze
+from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
 from lakshmi import Account, AssetClass, Portfolio
 import unittest
 from unittest.mock import patch
@@ -14,7 +14,7 @@ class AnalyzeTest(unittest.TestCase):
     self.assertFalse(
       analyze.TLHAnalyze(0.5, 10000).Analyze(portfolio).List())
 
-  @patch('assets.TickerAsset.Price')
+  @patch('lakshmi.assets.TickerAsset.Price')
   def testTLHAnalyzePercent(self, mock_price):
     mock_price.return_value = 10.0
     portfolio = Portfolio(AssetClass('All')).AddAccount(
@@ -33,7 +33,7 @@ class AnalyzeTest(unittest.TestCase):
        ['Schwab', 'VXUS', '2020/01/25', '$2,000.00', '67%']],
       analyze.TLHAnalyze(0.5).Analyze(portfolio).StrList())
 
-  @patch('assets.TickerAsset.Price')
+  @patch('lakshmi.assets.TickerAsset.Price')
   def testTLHAnalyzePercentAndDollars(self, mock_price):
     mock_price.return_value = 10.0
     portfolio = Portfolio(AssetClass('All')).AddAccount(

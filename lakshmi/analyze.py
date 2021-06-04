@@ -5,9 +5,7 @@ just analyzing the portfolio and output the results (if any).
 """
 
 from abc import ABC, abstractmethod
-import assets
-import lakshmi
-from table import Table
+from lakshmi.table import Table
 
 class Analyzer(ABC):
   @abstractmethod

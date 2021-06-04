@@ -1,7 +1,7 @@
 """Top level interfaces and definitions for Lakshmi."""
 
-import assets
-from table import Table
+from lakshmi.assets import FromDict, ToDict
+from lakshmi.table import Table
 import yaml
 
 
@@ -21,7 +21,7 @@ class Account:
   def ToDict(self):
     d = {'Name' : self._name,
          'Account Type': self.account_type,
-         'Assets' : [assets.ToDict(asset) for asset in self._assets.values()]}
+         'Assets' : [ToDict(asset) for asset in self._assets.values()]}
     if self._cash != 0:
       d['Available Cash'] = self._cash
     return d
@@ -30,7 +30,7 @@ class Account:
   def FromDict(cls, d):
     ret_obj = Account(d.pop('Name'), d.pop('Account Type'))
     for asset_dict in d.pop('Assets'):
-      ret_obj.AddAsset(assets.FromDict(asset_dict))
+      ret_obj.AddAsset(FromDict(asset_dict))
     ret_obj._cash = d.pop('Available Cash', 0)
     assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
     return ret_obj

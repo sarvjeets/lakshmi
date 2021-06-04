@@ -1,7 +1,7 @@
 """Implementation of standard asset types."""
 
 from abc import ABC, abstractmethod
-from cache import cache, Cacheable
+from lakshmi.cache import cache, Cacheable
 import datetime
 import re
 import requests

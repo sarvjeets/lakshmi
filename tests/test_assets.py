@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
-import assets
-import cache
+import lakshmi.assets as assets
+import lakshmi.cache
 import unittest
 from unittest.mock import MagicMock, patch
 
 
 class AssetsTest(unittest.TestCase):
   def setUp(self):
-    cache.CACHE_DIR = None  # Disable caching.
+    lakshmi.cache.CACHE_DIR = None  # Disable caching.
 
   def testDictManualAssetWithWhatIf(self):
     manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})

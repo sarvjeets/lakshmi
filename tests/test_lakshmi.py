@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
-from assets import ManualAsset
 from lakshmi import Account, AssetClass, Portfolio
-
+from lakshmi.assets import ManualAsset
 import unittest
 
 class LakshmiTest(unittest.TestCase):
