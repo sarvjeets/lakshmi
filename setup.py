@@ -23,6 +23,11 @@ setup(
     'tabulate~=0.8.9',
     'yfinance~=0.1.59',
   ],
+  entry_points={
+    'console_scripts': [
+      'lak = lakshmi.lak:lak',
+    ],
+  },
   test_suite='tests',
-  python_requires='>=3.9.6',
+  python_requires='>=3.9.5',
 )
