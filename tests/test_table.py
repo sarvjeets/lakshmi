@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-
+"""Tests for lakshmi.table module."""
 from lakshmi.table import Table
 import unittest
 

@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-
+"""Tests for lakshmi.assets module."""
 import lakshmi.analyze as analyze
 from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
 from lakshmi import Account, AssetClass, Portfolio

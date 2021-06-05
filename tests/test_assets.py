@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-
+"""Tests for lakshmi.assets module."""
 import lakshmi.assets as assets
 import lakshmi.cache
 import unittest
