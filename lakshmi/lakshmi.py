@@ -224,14 +224,13 @@ class Portfolio:
     self._leaf_asset_classes = asset_classes.Leaves()
 
   def Save(self, filename):
-    f = open(filename, 'w')
-    yaml.dump(self.ToDict(), f, sort_keys=False)
-    f.close()
+    with open(filename, 'w') as f:
+      yaml.dump(self.ToDict(), f, sort_keys=False)
 
   @classmethod
   def Load(cls, filename):
-    f = open(filename, 'r')
-    d = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    with open(filename) as f:
+      d = yaml.load(f.read(), Loader=yaml.SafeLoader)
     return Portfolio.FromDict(d)
 
   def ToDict(self):
