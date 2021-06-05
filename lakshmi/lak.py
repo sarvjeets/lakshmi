@@ -22,22 +22,25 @@ class LakConfig:
 
   def __init__(self):
     config = self._ReturnConfig()
-    self._portfoliofilename = config.pop(
+    portfolio_file = config.pop(
       'portfolio',
       str(pathlib.PurePath.joinpath(
         pathlib.Path.home(), 'portfolio.yaml')))
+    self._portfolio = Portfolio.Load(portfolio_file)
 
     lakshmi.cache.CACHE_DIR = config.pop(
       'cache',
       str(pathlib.PurePath.joinpath(
         pathlib.Path.home(), '.lakshmicache')))
 
-  def LoadPortfolio(self):
-    return Portfolio.Load(self._portfoliofilename)
+  def Portfolio(self):
+    return self._portfolio
 
   def SavePortfolio(self, portfolio):
+    self._portfolio = portfolio
     portfolio.Save(self._portfoliofilename)
 
+lakconfig = LakConfig()
 continued=False
 def Separator():
   """Prints separator if multiple commands are chained."""
@@ -57,7 +60,8 @@ def lak():
 def total():
   """Prints the total value."""
   Separator()
-  portfolio = LakConfig().LoadPortfolio()
+  global lakconfig
+  portfolio = lakconfig.Portfolio()
   click.echo(
     Table(2, coltypes = ['str', 'dollars']).AddRow(
       ['Total Assets', portfolio.TotalValue()]).String())
@@ -67,7 +71,8 @@ def total():
 def al():
   """Prints the Asset Location."""
   Separator()
-  portfolio = LakConfig().LoadPortfolio()
+  global lakconfig
+  portfolio = lakconfig.Portfolio()
   click.echo(portfolio.AssetLocation().String())
 
 
@@ -80,9 +85,10 @@ def al():
               type=str,
               help='If set, only prints asset allocation for these asset classes')
 def aa(compact, asset_class):
-  """Prints the Asset allocation."""
+  """Prints the Asset Allocation."""
   Separator()
-  portfolio = LakConfig().LoadPortfolio()
+  global lakconfig
+  portfolio = lakconfig.Portfolio()
   if asset_class:
     assert compact, ('--no-compact is only supported when --asset-class' +
                      'is not specified.')
@@ -99,7 +105,9 @@ def aa(compact, asset_class):
 def assets():
   """Prints Assets and their current values."""
   Separator()
-  click.echo(LakConfig().LoadPortfolio().Assets().String())
+  global lakconfig
+  portfolio = lakconfig.Portfolio()
+  click.echo(portfolio.Assets().String())
 
 
 if __name__ == '__main__':
