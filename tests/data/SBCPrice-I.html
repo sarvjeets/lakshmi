@@ -1,0 +1,394 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+	<title>Calculate the Value of Your Paper Savings Bond(s)</title>
+	<meta name="BPD.source" content="BC_savings_results.tpl" />
+	<style type="text/css" media="all"> @import "/css/bc_all.css"; </style>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<link type="text/css" rel="stylesheet" media="screen" href="/css/gw_td_null.css" />
+	<style type="text/css" media="screen"> @import "/css/gw_indiv_screen.css"; </style>
+	<style type="text/css" media="print"> @import "/css/gw_indiv_print.css"; </style>
+	<link type="text/css" rel="stylesheet" media="all" href="/css/gw_td_fontsize76.css" title="76" />
+    
+    <link rel="alternate" type="application/rss+xml" title="Treasury Offering Announcements" href="/TA_WS/securities/announced?format=rss&days=14"/>
+    <link rel="alternate" type="application/rss+xml" title="Treasury Auction Results" href="/TA_WS/securities/auctioned?format=rss&days=14"/>
+    <link rel="alternate" type="application/rss+xml" title="Monthly Statement of the Public Debt" href="/rss/mspd.xml"/> 
+    <link rel="alternate" type="application/rss+xml" title="Savings Bonds Pro Updates" href="/rss/sbpro.xml"/> 
+    <link rel="alternate" type="application/rss+xml" title="Savings Bonds Wizard Updates" href="/rss/wizard.xml"/>
+</head>
+	
+
+<body id="indiv" onLoad="document.SBCForm.IssueDate.focus()">
+
+<div id="container">
+
+	<!-- BEGIN HEADER -->
+	<div id="header">
+
+		<!-- BEGIN LOGO -->
+		<div id="logo">
+			<a href="/tdhome.htm"><img src="/images/gw/td_logo.gif" width="232" height="50" alt="TreasuryDirect Logo" /></a>
+		</div>
+		<!-- END LOGO -->
+
+		<!-- BEGIN TYPE NAVIGATION -->
+		<div id="typenav">
+			<ul id="investortype">
+				<li>You are in:</li>
+				<li><strong>&#8250; Individual</strong></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/instit/instit.htm" title="Institutional">Institutional</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/govt/govt.htm">Government</a></li>
+			</ul>
+		</div>
+		<!-- END TYPE NAVIGATION -->
+
+		<!-- BEGIN SEARCH BOX -->
+		<div id="searchbox">
+			<form id="gs" method="get" action="http://search.treas.gov/search">
+				<fieldset>
+					<label for="q">Search: </label>
+					<input type="text" name="q" id="q" size="25" maxlength="256" value="" />
+					<input name="btnG" value="Search" class="button" type="image" src="/images/gw/go.gif" alt="Go" />
+					<input type="hidden" name="sort" value="date:D:L:d1" />
+					<input type="hidden" name="output" value="xml_no_dtd" />
+					<input type="hidden" name="ie" value="UTF-8" />
+					<input type="hidden" name="oe" value="UTF-8" />
+					<input type="hidden" name="client" value="BPD-treasurydirect" />
+					<input type="hidden" name="proxystylesheet" value="BPD-treasurydirect" />
+					<input type="hidden" name="site" value="BPD-treasurydirect" />
+				</fieldset>
+			</form>
+		</div>
+		<!-- END SEARCH BOX -->
+
+		<!-- BEGIN UTILITY NAVIGATION -->
+		<div id="utilitynav">
+			<ul>
+				<li><a href="/maillist/maillist.htm">Mailing Lists</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/about.htm">About</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/news/news.htm">News</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/sitemap.htm">Sitemap</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/email.htm">Contact Us</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/indiv/research/faq/faq.htm">FAQs</a></li>
+				<li>&nbsp;|&nbsp;</li>
+				<li><a href="/indiv/help/help.htm">Help</a></li>
+			</ul>
+		</div>
+		<!-- END UTILITY NAVIGATION -->
+
+	</div>
+	<!-- END HEADER -->
+
+	<!-- BEGIN PERSISTENT NAVIGATION -->
+	<div id="persistentnav">
+		<ul>
+			<li class="singleline"><a class="nonactive" href="/indiv/myaccount/myaccount.htm">My Accounts</a></li>
+			<li class="doubleline"><a class="nonactive" href="/indiv/products/products.htm">Treasury Securities<br />&amp; Programs</a></li>
+			<li class="singleline"><a class="nonactive" href="/indiv/research/research.htm">Research Center</a></li>
+			<li class="singleline"><a class="nonactive" href="/indiv/planning/planning.htm">Planning &amp; Giving</a></li>
+			<li class="singleline"><a class="active"    href="/indiv/tools/tools.htm">Tools</a></li>
+			<li class="singleline"><a class="nonactive" href="/indiv/forms/forms.htm">Forms</a></li>
+		</ul>
+	</div>
+	<!-- END PERSISTENT NAVIGATION -->
+	<div id="contentwrap">
+
+<!-- BEGIN BREADCRUMBNAV -->
+	<div id="breadcrumbnav">
+		<ul id="breadcrumb">
+			<li><a href="/tdhome.htm">Home</a></li>
+			<li>&#8250;</li>
+			<li><a href="/indiv/indiv.htm">Individual</a></li>
+			<li>&#8250;</li>
+			<li><a href="/indiv/tools/tools.htm">Tools</a></li>
+			<li>&#8250;</li>
+			<li>Calculate the Value of Your Paper Savings Bond(s)</li>
+		</ul>
+	</div>
+	<!-- END BREADCRUMBNAV -->
+
+
+<!-- BEGIN LOCALNAV -->
+<div id="localnav">
+	
+	<h1>TOOLS</h1>
+	<div id="verticalline">
+		<ul>
+			<li class="closed"><a href="/indiv/tools/tools_savingsbondcalc.htm">Savings Bond Calculator</a></li>
+			<li class="closed"><a href="/indiv/tools/tools_savingsbondwizard.htm">Savings Bond Wizard</a></li>
+			<li class="closed"><a href="/indiv/tools/tools_savingsbondvalues.htm">Savings Bond Value Files</a></li>
+			<li class="closed"><a href="/indiv/tools/trssitesb.htm">Savings Bond FRB Locator</a></li>
+			<li class="closed"><a href="/indiv/tools/trssitetd.htm">Treasury Bills, Notes, Bonds, &amp; TIPS FRB Locator</a></li>  
+			<li class="closed"><a href="/indiv/tools/tools_treasuryhunt.htm">Treasury Hunt</a></li>
+			<li class="closed"><a href="/indiv/tools/tools_estimationcalc.htm">Estimation Calculators</a></li>
+			<li class="closed"><div><a href="/indiv/tools/tools_redemptiontables.htm">Redemption Tables</a></li>
+			<li class="closed"><a href="/indiv/tools/tools_video.htm">Videos</a></li>
+			<li class="closedlast"><a href="/indiv/tools/tools_teachers.htm">For Teachers</a></li>
+
+		</ul>
+	</div>
+	<noscript>
+		<div id="acsialert"><p><img src="/images/alertmessage.gif" width="16" height="16" alt="Exclamation Point" />We're pleased to hear from our customers regarding their satisfaction with our website. Although your browser settings don't allow you to view the website survey we're conducting, please <a href="mailto:oadmin@fiscal.treasury.gov">e-mail</a> your comments.</p></div>
+	</noscript>
+
+</div>
+<!-- END LOCALNAV -->
+
+<!-- BEGIN CONTENT -->
+<div id="content">
+
+	
+
+	<h1>Calculate the Value of Your Paper Savings Bond(s)</h1>
+
+	<form name="SBCForm" method="post" action="https://www.treasurydirect.gov/BC/SBCPrice">
+
+	<div class="colwrap">
+	 <div class="col1">
+			<table class="entry">
+				<tr>
+					<th colspan="5">SAVINGS BOND CALCULATOR</th>
+				</tr>
+				<tr class="altrow1">
+					<td colspan="4" class="ls"><strong>Value as of:</strong></td>
+					<td rowspan="4" class="rs"><a href="/indiv/tools/tools_savingsbondcalc_instructions.htm" target="_blank"><img src="/images/gw/icon_help.gif" alt="Savings Bond Calculator Help" /></a></td>
+				</tr>
+				<tr class="altrow1">
+					<td colspan="1" class="ls"><input type="text" name="RedemptionDate" size="20" maxlength="7" value="04/2021" /></td>
+					<td colspan="3"s><div class="buttons"><input class="info" type="submit" name="btnUpdate.x" value="UPDATE" /></div></td>
+				</tr>
+				<tr class="altrow1">
+					<td class="ls"><strong>Series:</strong></td>
+					<td><strong>Denomination:</strong></td>
+					<td><strong>Bond Serial Number:</strong></td>
+					<td><strong>Issue Date:</strong></td>
+				</tr>
+				<tr class="altrow1">
+					<td class="ls">
+						<select name="Series">
+							<option value="EE">EE Bonds</option><option selected="selected" value="I">I Bonds</option><option value="E">E Bonds</option><option value="SN">Savings Notes</option>
+ 
+						</select>
+					</td>
+					<td>
+						<select name="Denomination">
+							<option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="75">75</option><option value="100">100</option><option value="200">200</option><option value="500">500</option><option selected="selected" value="1000">1,000</option><option value="5000">5,000</option><option value="10000">10,000</option>
+						</select>
+					</td>
+					<td><input type="text" name="SerialNumber" size="14" maxlength="13" value="" /></td>
+					<td><input type="text" name="IssueDate" size="8" maxlength="7" value="" /></td>
+				</tr>
+			</table>
+		<div class="buttons"><input class="action" type="submit" name="btnAdd.x" value="CALCULATE" />
+		<a href="https://www.treasurydirect.gov/indiv/help/bc/bc_savings_help.htm" target="_blank" class="save">HOW TO SAVE YOUR INVENTORY</a></div>
+
+		<br />
+		<br />
+
+		<hr />
+
+		<h2>Calculator Results for Redemption Date 04/2021</h2>
+
+		<div><input src="/images/bc/bc_view.gif" name="btnSave" type="image" alt="View this list." />
+		<input src="/images/bc/bc_print.gif" name="btnSave" type="image" alt="Print this list." />
+		<input src="/images/bc/bc_save.gif" name="btnSave" type="image" alt="Save this list." /></div>
+
+		</div>
+		<div class="col2">
+	<fieldset class="calc1">
+		<legend>Instructions</legend>
+		<p><a href="https://www.treasurydirect.gov/indiv/tools/tools_savingsbondcalc_instructions.htm" target="_blank">How to Use the Savings Bond Calculator</a></p>
+	</fieldset>
+	<a name="nte" id="nte"></a>
+	<fieldset class="calc1">
+			<legend>Notes Description</legend>
+			<table>
+			<tbody><tr>
+				<td><strong>NI</strong></td>
+				<td>Not Issued</td>
+			</tr>
+			<tr class="altrow2">
+				<td><strong>NE</strong></td>
+				<td>Not eligible for payment</td>
+			</tr>
+			<tr>
+				<td><strong>P5</strong></td>
+				<td>Includes 3 month interest penalty</td>
+			</tr>
+			<tr class="altrow2">
+				<td><strong>MA</strong></td>
+				<td>Matured and not earning interest</td>
+			</tr>
+		</tbody></table>
+		</fieldset>
+		</div>
+		</div>
+		
+		<br class="clrall" />
+		<div class="scrttl">
+		<table id="ta1">
+				<tr>
+					<th>Total Price</th>
+					<th>Total Value</th>
+					<th>Total Interest</th>
+					<th>YTD Interest</th>
+				</tr>
+				<tr>
+					<td>$1,000.00</td>
+					<td>$1,015.60</td>
+					<td>$15.60</td>
+					<td>$4.40</td>
+				</tr>
+			</table>
+		</div>
+		<br class="clrall" />
+
+		<p id="bndcount">Bonds: 1-1 of 1</p>
+		<table class="bnddata">
+			<thead>
+			<tr>
+				<th class="lft">Serial #</th>
+				<th>Series</th>
+				<th>Denom</th>
+				<th>Issue<br />Date</th>
+				<th>Next<br />Accrual</th>
+				<th>Final<br />Maturity</th>
+				<th>Issue<br />Price</th>
+				<th>Interest</th>
+				<th>Interest<br />Rate</th>
+				<th>Value</th>
+				<th>Note</th>
+				<th class="rgt">&nbsp;</th>
+			</tr>
+			</thead>
+			<tbody>
+			
+			<tr class="altrow1">
+<td class="lft">NA</td>
+<td class="se">I</td>
+<td>$1,000</td>
+<td>03/2020</td>
+<td>05/2021</td>
+<td>03/2050</td>
+<td>$1,000.00</td>
+<td>$15.60</td>
+<td>1.88%</td>
+<td><strong>$1,015.60</strong></td>
+<td class="nt"><a href="#nte">P5</a></td>
+<td class="rgt"><input class="linkbutton" type="submit" name="btnDel0.x" value="REMOVE" /></td>
+</tr>
+
+			
+			</tbody>
+		</table>
+
+		
+		
+		<br class="clrall" />
+		
+		<p><a href="#top">CALCULATE ANOTHER BOND</a></p>
+
+		<!-- Hidden Variables -->
+		<fieldset class="hdn">
+		<input type="hidden" name="SerialNumList" value=" ;" />
+		<input type="hidden" name="IssueDateList" value="947;" />
+		<input type="hidden" name="SeriesList" value="I;" />
+		<input type="hidden" name="DenominationList" value="1000;" />
+		<input type="hidden" name="IssuePriceList" value="1000.00;" />
+		<input type="hidden" name="InterestList" value="15.60;" />
+		<input type="hidden" name="YTDInterestList" value="4.40;" />
+		<input type="hidden" name="ValueList" value="1015.60;" />
+		<input type="hidden" name="InterestRateList" value="1.88;" />
+		<input type="hidden" name="NextAccrualDateList" value="961;" />
+		<input type="hidden" name="MaturityDateList" value="1307;" />
+		<input type="hidden" name="NoteList" value="P5;" />
+		<input type="hidden" name="OldRedemptionDate" value="960" />
+		<input type="hidden" name="ViewPos" value="1" />
+		<input type="hidden" name="ViewType" value="Partial" />
+		<input type="hidden" name="Version" value="6" />
+		</fieldset>
+		<!-- Hidden Variables -->
+
+	</form>
+	
+	<!-- Survey -->
+	
+	<div class="sub1">
+	<form action="/BS/bsSurveyHome" method="post">
+	<fieldset class="calc1">
+		<legend>Survey</legend>
+		
+			<p><strong>How would you rate this tool?</strong></p>
+				
+				<input name="Q_01_TD_SBC" value="1" type="radio" /> Excellent<br />
+				<input name="Q_01_TD_SBC" value="2" type="radio" /> Good<br />
+				<input name="Q_01_TD_SBC" value="3" type="radio" /> Fair<br />
+				<input name="Q_01_TD_SBC" value="4" type="radio" /> Poor<br />
+				<div class="buttons"><input class="action" value="SUBMIT" type="submit" /></div>
+			
+			<!-- Hidden Variables -->			
+			<input name="PageName" value="TDSatisfactionSBC" type="hidden" />
+			<input name="PageCode" value="1" type="hidden" />
+			<!-- Hidden Variables -->
+		
+	</fieldset>
+	</form>
+	</div>
+	
+	
+
+</div>
+<!-- END CONTENT -->
+
+<!-- BEGIN RIGHT -->
+<div id="right">
+
+	
+
+	
+
+</div>
+<!-- END RIGHT -->
+
+</div>
+<!-- BEGIN FOOTER -->
+<div id="footer">
+
+<ul>
+	<li><a href="/foia.htm">Freedom of Information Act</a></li>
+	<li>|</li>
+	<li><a href="/law_and_guidance.htm">Law &amp; Guidance</a></li>
+	<li>|</li>
+	<li><a href="/privacy.htm">Privacy &amp; Legal Notices</a></li>
+	<li>|</li>
+	<li><a href="/terms.htm">Website Terms &amp; Conditions</a></li>
+	<li>|</li>
+    <li><a href="/webapis/webapisindex.htm">Web API Documentation</a></li>
+    <li>|</li>
+	<li><a href="/viewers.htm">Plug-ins &amp; Viewers</a></li>
+	<li>|</li>
+	<li><a href="/accessibility.htm">Accessibility</a></li>
+	<li>|</li>
+	<li><a href="/data_quality.htm">Data Quality</a></li>
+</ul>
+
+<p><a href="http://www.fiscal.treasury.gov/">U.S. Department of the Treasury, Bureau of the Fiscal Service</a></p>
+</div>
+<!-- END FOOTER -->
+
+</div>
+
+</body>
+</html>
+
