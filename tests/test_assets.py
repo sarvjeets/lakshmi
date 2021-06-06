@@ -2,7 +2,7 @@
 import json
 import lakshmi.assets as assets
 import lakshmi.cache
-import os
+import pathlib
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -10,9 +10,7 @@ from unittest.mock import MagicMock, patch
 class AssetsTest(unittest.TestCase):
   def setUp(self):
     lakshmi.cache.CACHE_DIR = None  # Disable caching.
-    self.data_dir = os.path.join(
-      os.path.dirname(os.path.abspath(__file__)),
-      'data')
+    self.data_dir = (pathlib.Path(__file__).parent / 'data')
 
   def testDictManualAssetWithWhatIf(self):
     manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
@@ -100,8 +98,7 @@ class AssetsTest(unittest.TestCase):
   def testVanguardFundsName(self, MockGet):
     MockReq = MagicMock()
 
-    data_file_path = os.path.join(self.data_dir, 'profile.json')
-    with open(data_file_path) as data_file:
+    with open(self.data_dir / 'profile.json') as data_file:
       MockReq.json.return_value = json.load(data_file)
 
     MockGet.return_value = MockReq
@@ -118,8 +115,7 @@ class AssetsTest(unittest.TestCase):
   def testVanguardFundsValue(self, MockGet):
     MockReq = MagicMock()
 
-    data_file_path = os.path.join(self.data_dir, 'price.json')
-    with open(data_file_path) as data_file:
+    with open(self.data_dir / 'price.json') as data_file:
       MockReq.json.return_value = json.load(data_file)
     MockGet.return_value = MockReq
 
@@ -145,8 +141,7 @@ class AssetsTest(unittest.TestCase):
   @patch('requests.post')
   def testIBonds(self, MockPost, MockDate):
     MockReq = MagicMock()
-    html_file_path = os.path.join(self.data_dir, 'SBCPrice-I.html')
-    with open(html_file_path) as html_file:
+    with open(self.data_dir / 'SBCPrice-I.html') as html_file:
       MockReq.text = html_file.read()
     MockPost.return_value = MockReq
     MockDate.now.strftime.return_value = '04/2021'
@@ -187,8 +182,7 @@ class AssetsTest(unittest.TestCase):
   @patch('requests.post')
   def testEEBonds(self, MockPost, MockDate):
     MockReq = MagicMock()
-    html_file_path = os.path.join(self.data_dir, 'SBCPrice-EE.html')
-    with open(html_file_path) as html_file:
+    with open(self.data_dir / 'SBCPrice-EE.html') as html_file:
       MockReq.text = html_file.read()
     MockPost.return_value = MockReq
     MockDate.now.strftime.return_value = '04/2021'
