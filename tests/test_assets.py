@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 class AssetsTest(unittest.TestCase):
   def setUp(self):
-    lakshmi.cache.CACHE_DIR = None  # Disable caching.
+    lakshmi.cache.set_cache_dir(None)  # Disable caching.
     self.data_dir = (pathlib.Path(__file__).parent / 'data')
 
   def testDictManualAssetWithWhatIf(self):

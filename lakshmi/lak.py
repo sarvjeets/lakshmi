@@ -28,10 +28,13 @@ class LakConfig:
         pathlib.Path.home(), 'portfolio.yaml')))
     self._portfolio = Portfolio.Load(portfolio_file)
 
-    lakshmi.cache.CACHE_DIR = config.pop(
-      'cache',
-      str(pathlib.PurePath.joinpath(
-        pathlib.Path.home(), '.lakshmicache')))
+    if 'cache' in config:
+      cache_dir = config.pop('cache')
+      if cache_dir == '':
+        cache_dir = None
+      lakshmi.cache.set_cache_dir(cache_dir)
+    assert len(config) == 0, (
+      'Extra entries found in config file: ' + str(list(config.keys())))
 
   def Portfolio(self):
     return self._portfolio
