@@ -13,6 +13,8 @@ import pickle
 
 # If this is None, caching is disabled. Default is ~/.lakshmicache
 _CACHE_DIR = None
+# If True, cached entries are refreshed.
+FORCE_REFRESH = False
 
 def get_file_age(file):
   return (datetime.today() -
@@ -54,7 +56,7 @@ def cache(days):
       filename = '{}_{}.lkc'.format(days, key)
       file = _CACHE_DIR / filename
 
-      if file.exists() and get_file_age(file) < days:
+      if not FORCE_REFRESH and file.exists() and get_file_age(file) < days:
         return pickle.loads(file.read_bytes())
 
       value = func(class_obj)

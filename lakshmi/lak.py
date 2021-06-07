@@ -51,8 +51,12 @@ def Separator():
 
 
 @click.group(chain=True)
-def lak():
-  pass
+@click.option('--force-refresh/--no-force-refresh',
+              default=False,
+              show_default=True,
+              help='If set, fetches new data instead of using cached data.')
+def lak(force_refresh):
+  lakshmi.cache.FORCE_REFRESH = force_refresh
 
 
 @lak.command()
@@ -78,11 +82,15 @@ def al():
 @lak.command()
 @click.option('--compact/--no-compact',
               default=True,
+              show_default=True,
               help='If true, prints the Asset allocation tree in a compact format')
 @click.option('--asset-class',
               default='',
               type=str,
-              help='If set, only prints asset allocation for these asset classes')
+              help='If provided, only prints asset allocation for these asset classes. '
+                   'This is comma seperate list of asset classes (not necessarily '
+                   'leaf asset classes) and the allocation across these asset classes '
+                   'should sum to one.')
 def aa(compact, asset_class):
   """Prints the Asset Allocation."""
   Separator()
