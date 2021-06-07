@@ -2,37 +2,33 @@ import click
 from lakshmi import Portfolio
 import lakshmi.cache
 from lakshmi.table import Table
-import pathlib
+from pathlib import Path
 import yaml
 
 
 class LakConfig:
   LAKRC = '.lakrc'
   def _ReturnConfig(self):
-    lakrcfilename = pathlib.PurePath.joinpath(
-      pathlib.Path.home(),
-      self.LAKRC)
+    lakrcfile = Path.home() / self.LAKRC
 
-    if not lakrcfilename.exists():
+    if not lakrcfile.exists():
       return {}
-
-    with open(lakrcfilename) as lakrcfile:
-      config = yaml.load(lakrcfile.read(), Loader=yaml.SafeLoader)
+    config = yaml.load(lakrcfile.read_text(), Loader=yaml.SafeLoader)
     return config
 
   def __init__(self):
     config = self._ReturnConfig()
-    portfolio_file = config.pop(
-      'portfolio',
-      str(pathlib.PurePath.joinpath(
-        pathlib.Path.home(), 'portfolio.yaml')))
-    self._portfolio = Portfolio.Load(portfolio_file)
+    portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
+    portfolio_filename = str(Path(portfolio_filename).expanduser())
+    self._portfolio = Portfolio.Load(portfolio_filename)
 
     if 'cache' in config:
       cache_dir = config.pop('cache')
       if cache_dir == '':
-        cache_dir = None
-      lakshmi.cache.set_cache_dir(cache_dir)
+        lakshmi.cache.set_cache_dir(None)
+      else:
+        lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
+
     assert len(config) == 0, (
       'Extra entries found in config file: ' + str(list(config.keys())))
 
@@ -95,7 +91,7 @@ def aa(compact, asset_class):
   if asset_class:
     assert compact, ('--no-compact is only supported when --asset-class' +
                      'is not specified.')
-    classes_list = asset_class.split(',')
+    classes_list = [c.strip() for c in asset_class.split(',')]
     click.echo(portfolio.AssetAllocation(classes_list).String())
   else:
     if compact:
