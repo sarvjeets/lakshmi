@@ -19,7 +19,7 @@ an average investor manage their investing portfolio.
 
 ## Dedication
 
-I would like to thank my wife [Niharika](niharika.org), who encouraged me to
+I would like to thank my wife [Niharika](http://niharika.org), who encouraged me to
 start working on this package and continue supporting me throughout the development.
 This project would not exists without her love and support.
 
