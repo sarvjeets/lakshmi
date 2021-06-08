@@ -220,7 +220,7 @@ class LakshmiTest(unittest.TestCase):
                          portfolio.AssetLocation().StrList())
 
     self.assertListEqual(
-      [['-\nAll:'],
+      [['All:'],
        ['Equity', '60%', '50%', '$60.00'],
        ['Fixed Income', '40%', '50%', '$40.00']],
       portfolio.AssetAllocationTree().StrList())
@@ -356,7 +356,7 @@ class LakshmiTest(unittest.TestCase):
       portfolio.Assets().StrList())
 
     self.assertListEqual(
-      [['-\nAll:'],
+      [['All:'],
        ['Equity', '60%', '60%', '$120.00'],
        ['Bonds', '40%', '40%', '$80.00']],
       portfolio.AssetAllocationTree().StrList())

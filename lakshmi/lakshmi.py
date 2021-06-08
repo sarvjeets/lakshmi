@@ -360,11 +360,15 @@ class Portfolio:
     table = Table(4,
                   headers = ['Class', 'Actual%', 'Desired%', 'Value'],
                   coltypes = ['str', 'percentage', 'percentage', 'dollars'])
+    first_row = True
     for alloc in self.asset_classes.ReturnAllocation(self._GetAssetClassToValue(), levels):
       if not alloc.children:
         continue
 
-      table.AddRow(['-\n{}:'.format(alloc.name)])
+      if not first_row:
+        table.AddRow([' '])
+      first_row = False
+      table.AddRow(['{}:'.format(alloc.name)])
       for child in alloc.children:
         table.AddRow([child.name,
                       child.actual_allocation,
