@@ -24,7 +24,7 @@ class LakConfig:
 
     if 'cache' in config:
       cache_dir = config.pop('cache')
-      if cache_dir == '':
+      if cache_dir is None:
         lakshmi.cache.set_cache_dir(None)
       else:
         lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
