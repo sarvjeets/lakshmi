@@ -16,51 +16,55 @@ _CACHE_DIR = None
 # If True, cached entries are refreshed.
 FORCE_REFRESH = False
 
+
 def get_file_age(file):
-  return (datetime.today() -
-          datetime.fromtimestamp(file.stat().st_mtime)).days
+    return (datetime.today() -
+            datetime.fromtimestamp(file.stat().st_mtime)).days
+
 
 def set_cache_dir(cache_dir):
-  global _CACHE_DIR
-  _CACHE_DIR = cache_dir
-  if not _CACHE_DIR:
-    return
-  _CACHE_DIR.mkdir(exist_ok=True)
-  for file in _CACHE_DIR.iterdir():
-    if not file.name.endswith('.lkc'):
-      raise Exception(
-        'Unknown file {} in cache directory.'.format(file))
-    days = int(file.name.split('_')[0])
-    if get_file_age(file) >= days:
-      file.unlink()
+    global _CACHE_DIR
+    _CACHE_DIR = cache_dir
+    if not _CACHE_DIR:
+        return
+    _CACHE_DIR.mkdir(exist_ok=True)
+    for file in _CACHE_DIR.iterdir():
+        if not file.name.endswith('.lkc'):
+            raise Exception(
+                'Unknown file {} in cache directory.'.format(file))
+        days = int(file.name.split('_')[0])
+        if get_file_age(file) >= days:
+            file.unlink()
+
 
 set_cache_dir(Path.home() / '.lakshmicache')
 
+
 class Cacheable(ABC):
-  @abstractmethod
-  def CacheKey(self):
-    """Unique string value used as key for caching."""
-    pass
+    @abstractmethod
+    def CacheKey(self):
+        """Unique string value used as key for caching."""
+        pass
 
 
 def cache(days):
-  def decorator(func):
-    @functools.wraps(func)
-    def new_func(class_obj):
-      if not _CACHE_DIR:
-        return func(class_obj)
+    def decorator(func):
+        @functools.wraps(func)
+        def new_func(class_obj):
+            if not _CACHE_DIR:
+                return func(class_obj)
 
-      key = md5('{}_{}'.format(
-        func.__qualname__,
-        class_obj.CacheKey()).encode('utf8')).hexdigest()
-      filename = '{}_{}.lkc'.format(days, key)
-      file = _CACHE_DIR / filename
+            key = md5('{}_{}'.format(
+                func.__qualname__,
+                class_obj.CacheKey()).encode('utf8')).hexdigest()
+            filename = '{}_{}.lkc'.format(days, key)
+            file = _CACHE_DIR / filename
 
-      if not FORCE_REFRESH and file.exists() and get_file_age(file) < days:
-        return pickle.loads(file.read_bytes())
+            if not FORCE_REFRESH and file.exists() and get_file_age(file) < days:
+                return pickle.loads(file.read_bytes())
 
-      value = func(class_obj)
-      file.write_bytes(pickle.dumps(value))
-      return value
-    return new_func
-  return decorator
+            value = func(class_obj)
+            file.write_bytes(pickle.dumps(value))
+            return value
+        return new_func
+    return decorator
