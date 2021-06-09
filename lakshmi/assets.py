@@ -214,7 +214,7 @@ class TickerAsset(TradedAsset, Cacheable):
     def CacheKey(self):
         return self.ticker
 
-    @cache(1)
+    @cache(365)  # Name changes are rare.
     def Name(self):
         if self.yticker.info.get('longName') is None:
             raise NotFoundError(
