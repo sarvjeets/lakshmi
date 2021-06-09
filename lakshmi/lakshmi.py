@@ -199,8 +199,8 @@ class AssetClass:
           levels: How many levels of child allocation to return (-1 = all).
 
         Returns:
-        A list of ActualAllocation objects (for itself and any children classes
-        based on levels flag.
+        A list of ActualAllocation objects (for itself and any child classes
+        based on the levels flag).
         """
         value = self.ValueMapped(money_allocation)
         actual_alloc = self.Allocation(self.name, value)
@@ -409,25 +409,13 @@ class Portfolio:
             self._GetAssetClassToValue(), 0)[0]
         table = Table(
             5,
-            headers=[
-                'Class',
-                'Actual%',
-                'Desired%',
-                'Value',
-                'Difference'],
-            coltypes=[
-                'str',
-                'percentage',
-                'percentage',
-                'dollars',
-                'delta_dollars'])
+            headers=['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
+            coltypes=['str', 'percentage', 'percentage', 'dollars',
+                      'delta_dollars'])
         for child in alloc.children:
-            table.AddRow(
-                [child.name,
-                 child.actual_allocation,
-                 child.desired_allocation,
-                 child.value,
-                 child.value_difference])
+            table.AddRow([child.name, child.actual_allocation,
+                          child.desired_allocation, child.value,
+                          child.value_difference])
         return table
 
     def AssetAllocationCompact(self):
@@ -476,14 +464,9 @@ class Portfolio:
 
         # All done, now build the table.
         t = Table(cols + 4,
-                  headers=['Class',
-                           'A%',
-                           'D%'] * int(cols / 3) + leaf_aa.Headers()[1:],
-                  coltypes=['str',
-                            'percentage',
-                            'percentage'] * int(cols / 3) + ['percentage',
-                                                             'percentage',
-                                                             'dollars',
-                                                             'delta_dollars'])
+                  headers=['Class', 'A%', 'D%'] * int(cols / 3) +
+                  leaf_aa.Headers()[1:],
+                  coltypes=['str', 'percentage', 'percentage'] * int(cols / 3) +
+                  ['percentage', 'percentage', 'dollars', 'delta_dollars'])
         t.SetRows(ret_list)
         return t
