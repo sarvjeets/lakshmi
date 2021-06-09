@@ -60,7 +60,7 @@ def Separator():
               show_default=True,
               help='If set, fetches new data instead of using cached data.')
 def lak(force_refresh):
-    lakshmi.cache.FORCE_REFRESH = force_refresh
+    lakshmi.cache.set_force_refresh(force_refresh)
 
 
 @lak.command()
