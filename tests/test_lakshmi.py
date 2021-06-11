@@ -314,16 +314,16 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(1000.0, portfolio.TotalValue())
         self.assertEqual('Account 1', portfolio.GetAccount('Account 1').Name())
         self.assertEqual('Account 2', portfolio.GetAccount('Account 2').Name())
-        self.assertEqual(
+        self.assertAlmostEqual(
             100.0,
             portfolio.GetAccount('Account 1').GetAsset('Asset 1').Value())
-        self.assertEqual(
+        self.assertAlmostEqual(
             200.0,
             portfolio.GetAccount('Account 1').GetAsset('Asset 2').Value())
-        self.assertEqual(
+        self.assertAlmostEqual(
             300.0,
             portfolio.GetAccount('Account 2').GetAsset('Asset 1').Value())
-        self.assertEqual(
+        self.assertAlmostEqual(
             400.0,
             portfolio.GetAccount('Account 2').GetAsset('Asset 2').Value())
         self.assertListEqual(
@@ -332,6 +332,55 @@ class LakshmiTest(unittest.TestCase):
              ['Account 2', 'Asset 1', '$300.00'],
              ['Account 2', 'Asset 2', '$400.00']],
             portfolio.Assets().StrList())
+
+    def testGetAccountBySubStr(self):
+        portfolio = Portfolio(AssetClass('All'))
+        asset_class_map = {'All': 1.0}
+        (portfolio
+         .AddAccount(
+             Account('Account 1', 'Taxable')
+             .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
+             .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+         .AddAccount(
+             Account('Account 2', 'Roth IRA')
+             .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .AddAsset(ManualAsset('Asset 2', 400.0, asset_class_map))))
+        self.assertEqual('Account 1', portfolio.GetAccountBySubStr('1').Name())
+        with self.assertRaises(AssertionError):
+            portfolio.GetAccountBySubStr('Acc')
+        with self.assertRaises(AssertionError):
+            portfolio.GetAccountBySubStr('God')
+
+    def testGetAssetBySubStr(self):
+        portfolio = Portfolio(AssetClass('All'))
+        asset_class_map = {'All': 1.0}
+        (portfolio
+         .AddAccount(
+             Account('Account 1', 'Taxable')
+             .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
+             .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+         .AddAccount(
+             Account('Account 2', 'Roth IRA')
+             .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .AddAsset(ManualAsset('Funky Asset', 400.0, asset_class_map))))
+        self.assertAlmostEqual(300, portfolio.GetAssetBySubStr(
+            account_str='2', asset_str='1').Value())
+        self.assertAlmostEqual(200, portfolio.GetAssetBySubStr(
+            account_str='Account', asset_str='2').Value())
+        self.assertAlmostEqual(100, portfolio.GetAssetBySubStr(
+            account_str='1', asset_str='Asset 1').Value())
+        self.assertAlmostEqual(400, portfolio.GetAssetBySubStr(
+            asset_str='Funky').Value())
+
+        with self.assertRaises(AssertionError):
+            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='Ass')
+        with self.assertRaises(AssertionError):
+            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='1')
+        with self.assertRaises(AssertionError):
+            portfolio.GetAssetBySubStr(account_str='1', asset_str='Funky')
+        with self.assertRaises(AssertionError):
+            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='Yolo')
+
 
     def testWhatIfs(self):
         portfolio = Portfolio(AssetClass('All')

@@ -278,6 +278,38 @@ class Portfolio:
     def GetAccount(self, name):
         return self._accounts[name]
 
+    def GetAccountBySubStr(self, account_str):
+        """Returns account who name partially matches account_str.
+
+        This method throws an AssertionError if more than one or none of the
+        accounts match the account_str.
+        """
+        ret_val = None
+        for name, account in self._accounts.items():
+            if name.find(account_str) != -1:
+                assert not ret_val, (account_str + ' matches more than one '
+                        'account in the portfolio')
+                ret_val = account
+        assert ret_val, account_str + 'does not match any account in the portfolio'
+        return ret_val
+
+    def GetAssetBySubStr(self, account_str='', asset_str=''):
+        """Returns asset whose (account name, asset name or shortname) partially
+        matches account_str and asset_str. Raises AssertionError if none or
+        more than one asset matches the sub-strings."""
+        matched_assets = [asset for account in self.Accounts()
+                if account.Name().find(account_str) != -1
+                for asset in account.Assets()
+                if asset.Name().find(asset_str) != -1 or
+                asset.ShortName().find(asset_str) != -1]
+        if len(matched_assets) < 1:
+            raise AssertionError('Provided asset and account strings match none '
+                    'of the assets.')
+        if len(matched_assets) > 1:
+            raise AssertionError('Provided asset and account strings match more '
+                    'than one assets.')
+        return matched_assets[0]
+
     def WhatIf(self, account_name, asset_name, delta):
         """Runs a whatif scenario if asset_name in account_name is changed by delta."""
         account = self.GetAccount(account_name)
