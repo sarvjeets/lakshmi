@@ -86,21 +86,19 @@ def al():
 @lak.command()
 @click.option('--compact/--no-compact', default=True, show_default=True,
               help='If true, prints the Asset allocation tree in a compact format')
-@click.option('--asset-class', default='', type=str,
-              help='If provided, only prints asset allocation for these asset classes. '
-              'This is comma seperate list of asset classes (not necessarily '
-              'leaf asset classes) and the allocation across these asset classes '
-              'should sum to one.')
-def aa(compact, asset_class):
-    """Prints the Asset Allocation."""
+@click.argument('assets', nargs=-1)
+def aa(compact, assets):
+    """Prints the Asset Allocation. If assets are provided, only prints asset
+    allocation for these asset classes. The allocation across these asset
+    classes should sum to one.
+    """
     Separator()
     global lakconfig
     portfolio = lakconfig.Portfolio()
-    if asset_class:
-        assert compact, ('--no-compact is only supported when --asset-class'
-                         'is not specified.')
-        classes_list = [c.strip() for c in asset_class.split(',')]
-        click.echo(portfolio.AssetAllocation(classes_list).String())
+    if assets:
+        assert compact, ('--no-compact is only supported when assets '
+                         'are not provided.')
+        click.echo(portfolio.AssetAllocation(assets).String())
     else:
         if compact:
             click.echo(portfolio.AssetAllocationCompact().String())

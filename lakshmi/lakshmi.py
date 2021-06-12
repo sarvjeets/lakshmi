@@ -424,11 +424,11 @@ class Portfolio:
         return table
 
     def AssetAllocation(self, asset_class_list):
-        asset_class_ratio = map(self.asset_classes.FindAssetClass,
-                                asset_class_list)
         flat_asset_class = AssetClass('Root')
-        for asset_class, ratio in asset_class_ratio:
-            flat_asset_class.AddSubClass(ratio, asset_class)
+        for asset_class in asset_class_list:
+            found = self.asset_classes.FindAssetClass(asset_class)
+            assert found, f'Could not find {asset_class}'
+            flat_asset_class.AddSubClass(found[1], found[0])
 
         try:
             flat_asset_class.Validate()
