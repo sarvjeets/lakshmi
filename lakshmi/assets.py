@@ -22,7 +22,7 @@ def FromDict(d):
         if c.__name__ == class_name:
             return c.FromDict(d.pop(class_name))
 
-    assert False, 'Class {} not found.'.format(class_name)
+    raise AssertionError(f'Class {class_name} not found.')
 
 
 class Asset(ABC):
@@ -39,12 +39,11 @@ class Asset(ABC):
         total = 0
         for ratio in class2ratio.values():
             assert ratio >= 0.0 and ratio <= 1.0, (
-                'Bad Class ratio provided to Asset ({})'.format(ratio))
+                f'Bad Class ratio provided to Asset ({ratio})')
             total += ratio
 
         assert abs(total - 1.0) < 1e-6, (
-            'Total allocation to classes must be 100% (actual = {}%)'.format(
-                round(total * 100)))
+            f'Total allocation to classes must be 100% (actual = {total * 100}%)')
 
     def ToDict(self):
         """Encodes this class into a dictionary.
@@ -103,7 +102,7 @@ class ManualAsset(Asset):
                               d.pop('Value', 0),
                               d.pop('Asset Mapping'))
         Asset.FromDict(ret_obj, d)
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def Value(self):
@@ -137,7 +136,7 @@ class TaxLot:
     @classmethod
     def FromDict(cls, d):
         ret_obj = TaxLot(d.pop('Date'), d.pop('Quantity'), d.pop('Unit Cost'))
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
 
@@ -168,7 +167,7 @@ class TradedAsset(Asset):
     def SetLots(self, tax_lots_list):
         sum_lots = sum([t.quantity for t in tax_lots_list])
         assert abs(sum_lots - self.shares) < 1e-6, (
-            'Lots provided should sum up to ' + str(self.shares))
+            f'Lots provided should sum up to {self.shares}')
         self.tax_lots = tax_lots_list
         return self
 
@@ -208,7 +207,7 @@ class TickerAsset(TradedAsset, Cacheable):
             d.pop('Shares'),
             d.pop('Asset Mapping'))
         TradedAsset.FromDict(ret_obj, d)
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def CacheKey(self):
@@ -218,8 +217,7 @@ class TickerAsset(TradedAsset, Cacheable):
     def Name(self):
         if self.yticker.info.get('longName') is None:
             raise NotFoundError(
-                'Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
-                    self.ticker))
+                f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
         return self.yticker.info['longName']
 
     def ShortName(self):
@@ -229,8 +227,7 @@ class TickerAsset(TradedAsset, Cacheable):
     def Price(self):
         if self.yticker.info.get('regularMarketPrice') is None:
             raise NotFoundError(
-                'Cannot retrieve ticker ("{}") from Yahoo Finance'.format(
-                    self.ticker))
+                f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
         return self.yticker.info['regularMarketPrice']
 
 
@@ -255,7 +252,7 @@ class VanguardFund(TradedAsset, Cacheable):
             d.pop('Shares'),
             d.pop('Asset Mapping'))
         TradedAsset.FromDict(ret_obj, d)
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def CacheKey(self):
@@ -264,7 +261,7 @@ class VanguardFund(TradedAsset, Cacheable):
     @cache(365)  # Name changes are very rare.
     def Name(self):
         req = requests.get(
-            'https://api.vanguard.com/rs/ire/01/pe/fund/{}/profile.json'.format(self.fund_id),
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return req.json()['fundProfile']['longName']
@@ -275,7 +272,7 @@ class VanguardFund(TradedAsset, Cacheable):
     @cache(1)
     def Price(self):
         req = requests.get(
-            'https://api.vanguard.com/rs/ire/01/pe/fund/{}/price.json'.format(self.fund_id),
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/price.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return float(req.json()['currentPrice']
@@ -355,8 +352,7 @@ class _TreasuryBonds(Asset):
     def FromDict(self, d):
         for bond in d.pop('Bonds'):
             self.AddBond(bond.pop('Issue Date'), bond.pop('Denomination'))
-            assert len(
-                bond) == 0, 'Extra attributes found: ' + str(list(bond.keys()))
+            assert len(bond) == 0, f'Extra attributes found: {list(bond.keys())}'
         Asset.FromDict(self, d)
         return self
 
@@ -390,7 +386,7 @@ class IBonds(_TreasuryBonds):
     def FromDict(cls, d):
         ret_obj = IBonds(d.pop('Asset Mapping'))
         _TreasuryBonds.FromDict(ret_obj, d)
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def Name(self):
@@ -413,7 +409,7 @@ class EEBonds(_TreasuryBonds):
     def FromDict(cls, d):
         ret_obj = EEBonds(d.pop('Asset Mapping'))
         _TreasuryBonds.FromDict(ret_obj, d)
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def Name(self):

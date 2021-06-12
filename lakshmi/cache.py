@@ -76,9 +76,8 @@ def cache(days):
                 return func(class_obj)
             force_refresh = _ctx[_FORCE_STR]
 
-            key = '{}_{}'.format(func.__qualname__, class_obj.CacheKey())
-            filename = '{}_{}.lkc'.format(days,
-                                          md5(key.encode('utf8')).hexdigest())
+            key = f'{func.__qualname__}_{class_obj.CacheKey()}'
+            filename = f'{days}_{md5(key.encode("utf8")).hexdigest()}.lkc'
             file = cache_dir / filename
 
             if not force_refresh and file.exists() and get_file_age(file) < days:

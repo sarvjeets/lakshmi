@@ -31,7 +31,7 @@ class LakConfig:
                 lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
 
         assert len(config) == 0, (
-            'Extra entries found in config file: ' + str(list(config.keys())))
+            f'Extra entries found in config file: {list(config.keys())}')
 
     def Portfolio(self):
         return self._portfolio

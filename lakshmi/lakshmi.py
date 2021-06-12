@@ -38,7 +38,7 @@ class Account:
 
     def AddAsset(self, asset):
         assert asset.ShortName() not in self._assets, (
-            'Attempting to add duplicate Asset: ' + asset.ShortName())
+            f'Attempting to add duplicate Asset: {asset.ShortName()}')
         self._assets[asset.ShortName()] = asset
         return self
 
@@ -81,7 +81,7 @@ class AssetClass:
             ret_obj.AddSubClass(
                 child_dict.pop('Ratio'),
                 AssetClass.FromDict(child_dict.pop('Asset Class')))
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj.Validate()
 
     def Copy(self):
@@ -109,14 +109,14 @@ class AssetClass:
         total = 0.0
         for asset_class, ratio in self.children:
             assert ratio >= 0.0 and ratio <= 1.0, (
-                'Bad ratio provided to Asset Class ({})'.format(ratio))
+                    f'Bad ratio provided to Asset Class ({ratio})')
             total += ratio
             temp_leafs, temp_classes = asset_class._Validate()
             self._leaves.update(temp_leafs)
             class_names += temp_classes
 
         assert abs(total - 1) < 1e-6, (
-            'Sum of sub-classes is not 100% (actual: {}%)'.format(total * 100))
+            f'Sum of sub-classes is not 100% (actual: {total * 100}%)')
 
         return self._leaves, class_names
 
@@ -125,9 +125,7 @@ class AssetClass:
         duplicates = set([x for x in all_class_names
                           if all_class_names.count(x) > 1])
 
-        assert not duplicates, 'Found duplicate Asset class(es): ' + str(
-            duplicates)
-
+        assert not duplicates, f'Found duplicate Asset class(es): {duplicates}'
         return self
 
     def _Check(self):
@@ -165,13 +163,8 @@ class AssetClass:
 
     class Allocation:
         class Children:
-            def __init__(
-                    self,
-                    name,
-                    actual_allocation,
-                    desired_allocation,
-                    value,
-                    value_difference):
+            def __init__(self, name, actual_allocation, desired_allocation,
+                    value, value_difference):
                 self.name = name
                 self.actual_allocation = actual_allocation
                 self.desired_allocation = desired_allocation
@@ -185,11 +178,8 @@ class AssetClass:
 
         def AddChild(self, name, actual, desired):
             self.children.append(
-                self.Children(name,
-                              actual,
-                              desired,
-                              actual * self.value,
-                              (desired - actual) * self.value))
+                self.Children(name, actual, desired, actual * self.value,
+                    (desired - actual) * self.value))
 
     def ReturnAllocation(self, money_allocation, levels=-1):
         """Returns actual and desired allocation based on how money is allocated.
@@ -257,17 +247,17 @@ class Portfolio:
         ret_obj = Portfolio(AssetClass.FromDict(d.pop('Asset Classes')))
         for account_dict in d.pop('Accounts', []):
             ret_obj.AddAccount(Account.FromDict(account_dict))
-        assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
     def AddAccount(self, account):
         for asset in account.Assets():
             for asset_class in asset.class2ratio.keys():
                 assert asset_class in self._leaf_asset_classes, (
-                    'Unknown or non-leaf asset class: ' + asset_class)
+                    f'Unknown or non-leaf asset class: {asset_class}')
 
         assert account.Name() not in self._accounts, (
-            'Attempting to add duplicate account: ' + account.Name())
+            f'Attempting to add duplicate account: {account.Name()}')
 
         self._accounts[account.Name()] = account
         return self
@@ -284,14 +274,15 @@ class Portfolio:
         This method throws an AssertionError if more than one or none of the
         accounts match the account_str.
         """
-        ret_val = None
-        for name, account in self._accounts.items():
-            if name.find(account_str) != -1:
-                assert not ret_val, (account_str + ' matches more than one '
+        matched_accounts = [account for account in self.Accounts()
+                if account.Name().count(account_str)]
+        if len(matched_accounts) == 0:
+            raise AssertionError(f'{account_str} does not match any account '
+                    'in the portfolio')
+        if len(matched_accounts) > 1:
+            raise AssertionError(f'{account_str} matches more than one '
                         'account in the portfolio')
-                ret_val = account
-        assert ret_val, account_str + 'does not match any account in the portfolio'
-        return ret_val
+        return matched_accounts[0]
 
     def GetAssetBySubStr(self, account_str='', asset_str=''):
         """Returns asset whose (account name, asset name or shortname) partially
@@ -415,7 +406,7 @@ class Portfolio:
             if not first_row:
                 table.AddRow([' '])
             first_row = False
-            table.AddRow(['{}:'.format(alloc.name)])
+            table.AddRow([f'{alloc.name}:'])
             for child in alloc.children:
                 table.AddRow([child.name,
                               child.actual_allocation,
@@ -433,9 +424,9 @@ class Portfolio:
         try:
             flat_asset_class.Validate()
         except AssertionError:
-            raise AssertionError(
-                'AssetAllocation called with overlapping Asset Classes or ' +
-                'Asset Classes which does not cover the full tree.') from None
+            raise AssertionError('AssetAllocation called with overlapping '
+                    'Asset Classes or Asset Classes which does not cover the '
+                    'full tree.') from None
 
         alloc = flat_asset_class.ReturnAllocation(
             self._GetAssetClassToValue(), 0)[0]
