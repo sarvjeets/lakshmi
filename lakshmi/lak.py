@@ -54,16 +54,20 @@ def Separator():
     continued = True
 
 
-@click.group(chain=True)
+@click.group()
 @click.option('--force-refresh/--no-force-refresh',
-              default=False,
-              show_default=True,
-              help='If set, fetches new data instead of using cached data.')
+        default=False,
+        show_default=True,
+        help='If set, fetches new data instead of using cached data.')
 def lak(force_refresh):
     lakshmi.cache.set_force_refresh(force_refresh)
 
 
-@lak.command()
+@lak.group(chain=True)
+def list():
+    pass
+
+@list.command()
 def total():
     """Prints the total value."""
     Separator()
@@ -74,7 +78,7 @@ def total():
             ['Total Assets', portfolio.TotalValue()]).String())
 
 
-@lak.command()
+@list.command()
 def al():
     """Prints the Asset Location."""
     Separator()
@@ -83,22 +87,24 @@ def al():
     click.echo(portfolio.AssetLocation().String())
 
 
-@lak.command()
+@list.command()
 @click.option('--compact/--no-compact', default=True, show_default=True,
-              help='If true, prints the Asset allocation tree in a compact format')
-@click.argument('assets', nargs=-1)
-def aa(compact, assets):
-    """Prints the Asset Allocation. If assets are provided, only prints asset
-    allocation for these asset classes. The allocation across these asset
-    classes should sum to one.
-    """
+        help='If true, prints the Asset allocation tree in a compact format')
+@click.option('--asset-class', default='', type=str,
+        help='If provided, only prints asset allocation for these asset classes. '
+        'This is comma seperate list of asset classes (not necessarily '
+        'leaf asset classes) and the allocation across these asset classes '
+        'should sum to one.')
+def aa(compact, asset_class):
+    """Prints the Asset Allocation."""
     Separator()
     global lakconfig
     portfolio = lakconfig.Portfolio()
-    if assets:
-        assert compact, ('--no-compact is only supported when assets '
-                         'are not provided.')
-        click.echo(portfolio.AssetAllocation(assets).String())
+    if asset_class:
+        assert compact, ('--no-compact is only supported when --asset-class'
+                'is not specified.')
+        classes_list = [c.strip() for c in asset_class.split(',')]
+        click.echo(portfolio.AssetAllocation(classes_list).String())
     else:
         if compact:
             click.echo(portfolio.AssetAllocationCompact().String())
@@ -106,7 +112,7 @@ def aa(compact, assets):
             click.echo(portfolio.AssetAllocationTree().String())
 
 
-@lak.command()
+@list.command()
 def assets():
     """Prints Assets and their current values."""
     Separator()
