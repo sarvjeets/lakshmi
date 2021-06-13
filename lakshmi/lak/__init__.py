@@ -50,6 +50,7 @@ class LakContext:
 lakctx = None
 
 @click.group()
+@click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
         help='Fetch new data instead of using previously cached data.')
 def lak(refresh):
