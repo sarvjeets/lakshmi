@@ -351,7 +351,7 @@ class Portfolio:
         table = Table(
                 3 + short_name + quantity,
                 headers=['Account'] +
-                        (['ShortName'] if short_name else []) +
+                        (['Name'] if short_name else []) +
                         (['Quantity'] if quantity else []) +
                         ['Asset', 'Value'],
                 coltypes=['str'] +
