@@ -62,7 +62,11 @@ def lak(refresh):
 @lak.group(chain=True)
 def list():
     """Command to list various parts of the portfolio."""
-    pass
+    global lakctx
+    account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
+    if account_whatifs.List() or asset_whatifs.List():
+        click.secho('Warning: Hypothetical what if are set.\n', fg='red')
+
 
 @list.command()
 def total():
@@ -122,6 +126,20 @@ def assets(short_name, quantity):
     lakctx.Separator()
     portfolio = lakctx.Portfolio()
     click.echo(portfolio.Assets(short_name=short_name, quantity=quantity).String())
+
+
+@list.command()
+def whatifs():
+    """Print hypothetical what ifs for assets and accounts."""
+    global lakctx
+    account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
+    if account_whatifs.List():
+        lakctx.Separator()
+        click.echo(account_whatifs.String())
+    if asset_whatifs.List():
+        lakctx.Separator()
+        click.echo(asset_whatifs.String())
+
 
 @lak.command(context_settings={"ignore_unknown_options": True})
 @click.option('--asset', '-a', type=str, metavar='substr',
