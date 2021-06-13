@@ -20,8 +20,8 @@ class LakConfig:
     def __init__(self):
         config = self._ReturnConfig()
         portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
-        portfolio_filename = str(Path(portfolio_filename).expanduser())
-        self._portfolio = Portfolio.Load(portfolio_filename)
+        self.portfolio_filename = str(Path(portfolio_filename).expanduser())
+        self._portfolio = Portfolio.Load(self.portfolio_filename)
 
         if 'cache' in config:
             cache_dir = config.pop('cache')
@@ -36,9 +36,8 @@ class LakConfig:
     def Portfolio(self):
         return self._portfolio
 
-    def SavePortfolio(self, portfolio):
-        self._portfolio = portfolio
-        portfolio.Save(self._portfoliofilename)
+    def SavePortfolio(self):
+        self._portfolio.Save(self.portfolio_filename)
 
 
 lakconfig = LakConfig()
@@ -126,6 +125,46 @@ def assets(short_name, quantity):
     global lakconfig
     portfolio = lakconfig.Portfolio()
     click.echo(portfolio.Assets(short_name=short_name, quantity=quantity).String())
+
+@lak.command(context_settings={"ignore_unknown_options": True})
+@click.option('--asset', type=str,
+        help='Make changes to this asset (a sub-string that matches either the asset name or the short name)')
+@click.option('--account', type=str,
+        help='Make changes to this account (a sub-string that matches the account name)')
+@click.option('--reset/--no-reset', default=False,
+        help='If set, reset all hypothetical whatif amounts.')
+@click.argument('delta', type=float, required=False)
+def whatif(asset, account, reset, delta):
+    """Run hypothetical what if scenarios."""
+    # Sanity check the flags.
+    global lakconfig
+    portfolio = lakconfig.Portfolio()
+
+    if reset:
+        assert asset is None and account is None and delta is None, (
+                'Can\'t specify any other flags/arguments when --reset is '
+                'specified')
+        portfolio.ResetWhatIfs()
+        lakconfig.SavePortfolio()
+        return
+
+    assert delta is not None, ('Must specify a value (delta) to add/subtract '
+            'from an account or asset')
+
+    if asset is None and account is not None:  # Delta is applied to Account
+        account_name = portfolio.GetAccountNameBySubStr(account)
+        portfolio.WhatIfAddCash(account_name, delta)
+        lakconfig.SavePortfolio()
+        return
+
+    if asset is not None:
+        account_name, asset_name = portfolio.GetAssetNameBySubStr(
+                account if account is not None else '', asset)
+        portfolio.WhatIf(account_name, asset_name, delta)
+        lakconfig.SavePortfolio()
+        return
+
+    raise click.ClickException('One of asset or account must be provided.')
 
 
 if __name__ == '__main__':
