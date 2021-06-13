@@ -50,12 +50,10 @@ class LakContext:
 lakctx = None
 
 @click.group()
-@click.option('--force-refresh/--no-force-refresh',
-        default=False,
-        show_default=True,
-        help='If set, fetches new data instead of using cached data.')
-def lak(force_refresh):
-    lakshmi.cache.set_force_refresh(force_refresh)
+@click.option('--refresh', '-r', is_flag=True,
+        help='Fetch new data instead of using previously cached data.')
+def lak(refresh):
+    lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:
         lakctx = LakContext()
@@ -88,9 +86,9 @@ def al():
 
 @list.command()
 @click.option('--compact/--no-compact', default=True, show_default=True,
-        help='If true, prints the Asset allocation tree in a compact format')
-@click.option('--asset-class', default='', type=str,
-        help='If provided, only prints asset allocation for these asset classes. '
+        help='Print the Asset allocation tree in a compact format')
+@click.option('--asset-class', '-a', type=str,
+        help='If provided, only print asset allocation for these asset classes. '
         'This is comma seperate list of asset classes (not necessarily '
         'leaf asset classes) and the allocation across these asset classes '
         'should sum to one.')
@@ -112,11 +110,11 @@ def aa(compact, asset_class):
 
 
 @list.command()
-@click.option('--short-name/--no-short-name', default=False, show_default=True,
-        help='If set, prints the Short name of the assets as well (e.g. Ticker for '
+@click.option('--short-name', '-s', is_flag=True,
+        help='Print the short name of the assets as well (e.g. Ticker for '
         'assets that have it)')
-@click.option('--quantity/--no-quantity', default=False, show_default=True,
-        help='If set, prints the quantity of the asset (e.g. quantity or shares for '
+@click.option('--quantity', '-q', is_flag=True,
+        help='Print the quantity of the asset (e.g. quantity/shares for '
         'assets that support it)')
 def assets(short_name, quantity):
     """Prints Assets and their current values."""
@@ -126,15 +124,15 @@ def assets(short_name, quantity):
     click.echo(portfolio.Assets(short_name=short_name, quantity=quantity).String())
 
 @lak.command(context_settings={"ignore_unknown_options": True})
-@click.option('--asset', type=str,
+@click.option('--asset', '-a', type=str, metavar='substr',
         help='Make changes to this asset (a sub-string that matches either the asset name or the short name)')
-@click.option('--account', type=str,
+@click.option('--account', '-t', type=str, metavar='substr',
         help='Make changes to this account (a sub-string that matches the account name)')
-@click.option('--reset/--no-reset', default=False,
-        help='If set, reset all hypothetical whatif amounts.')
+@click.option('--reset', '-r', is_flag=True,
+        help='Reset all hypothetical whatif amounts.')
 @click.argument('delta', type=float, required=False)
 def whatif(asset, account, reset, delta):
-    """Run hypothetical what if scenarios."""
+    """Run hypothetical what if scenarios by adding DELTA to an account or asset."""
     # Sanity check the flags.
     global lakctx
     portfolio = lakctx.Portfolio()
