@@ -7,7 +7,6 @@ import yaml
 
 class Account:
     """Class representing an account."""
-
     def __init__(self, name, account_type):
         """
         Arguments:
@@ -60,7 +59,6 @@ class Account:
 
 class AssetClass:
     """(Tree of) Asset classes."""
-
     def __init__(self, name):
         self.name = name
         self.children = []

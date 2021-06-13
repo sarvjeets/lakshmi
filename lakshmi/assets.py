@@ -27,7 +27,6 @@ def FromDict(d):
 
 class Asset(ABC):
     """Class representing an asset (fund, ETF, cash, etc.)."""
-
     def __init__(self, class2ratio):
         """
         Argments:
