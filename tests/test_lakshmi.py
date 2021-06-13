@@ -1,10 +1,15 @@
 """Tests for lakshmi module."""
 from lakshmi import Account, AssetClass, Portfolio
-from lakshmi.assets import ManualAsset
+from lakshmi.assets import ManualAsset, TickerAsset
+import lakshmi.cache
 import unittest
+from unittest.mock import MagicMock, patch
 
 
 class LakshmiTest(unittest.TestCase):
+    def setUp(self):
+        lakshmi.cache.set_cache_dir(None)  # Disable caching.
+
     def testEmptyPortfolio(self):
         portfolio = Portfolio(AssetClass('E'))
         self.assertAlmostEqual(0, portfolio.TotalValue())
@@ -242,6 +247,36 @@ class LakshmiTest(unittest.TestCase):
             [['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
              ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.AssetAllocationCompact().StrList())
+
+    @patch('yfinance.Ticker')
+    def testListAssets(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
+                       'regularMarketPrice': 1.0}
+        MockTicker.return_value = ticker
+
+        portfolio = Portfolio(AssetClass('All')).AddAccount(
+                Account('Schwab', 'Taxable')
+                    .AddAsset(TickerAsset('VMMXX', 420.0, {'All': 1.0}))
+                    .AddAsset(ManualAsset('Cash', 840.0, {'All': 1.0})))
+
+        self.assertListEqual(
+                [['Schwab', 'Vanguard Cash Reserves Federal', '$420.00'],
+                 ['Schwab', 'Cash', '$840.00']],
+                portfolio.Assets().StrList())
+        self.assertListEqual(
+                [['Schwab', 'VMMXX', 'Vanguard Cash Reserves Federal', '$420.00'],
+                 ['Schwab', 'Cash', 'Cash', '$840.00']],
+                portfolio.Assets(short_name=True).StrList())
+        self.assertListEqual(
+                [['Schwab', 'VMMXX', '420.0', 'Vanguard Cash Reserves Federal',
+                    '$420.00'],
+                 ['Schwab', 'Cash', '', 'Cash', '$840.00']],
+                portfolio.Assets(short_name=True, quantity=True).StrList())
+        self.assertListEqual(
+                [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
+                 ['Schwab', '', 'Cash', '$840.00']],
+                portfolio.Assets(quantity=True).StrList())
 
     def testFlatAssetAllocation(self):
         portfolio = Portfolio(

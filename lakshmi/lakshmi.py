@@ -346,17 +346,28 @@ class Portfolio:
                 total += asset.AdjustedValue()
         return total
 
-    def Assets(self):
+    def Assets(self, short_name=False, quantity=False):
         """Returns all the assets."""
-        table = Table(3,
-                      headers=['Account', 'Asset', 'Value'],
-                      coltypes=['str', 'str', 'dollars'])
+        table = Table(
+                3 + short_name + quantity,
+                headers=['Account'] +
+                        (['ShortName'] if short_name else []) +
+                        (['Quantity'] if quantity else []) +
+                        ['Asset', 'Value'],
+                coltypes=['str'] +
+                         (['str'] if short_name else []) +
+                         (['str'] if quantity else []) +
+                         ['str', 'dollars'])
         for account in self.Accounts():
             for asset in account.Assets():
-                table.AddRow(
-                    [account.Name(),
-                     asset.Name(),
-                     asset.AdjustedValue()])
+                row = ([account.Name()] +
+                        ([f'{asset.ShortName()}'] if short_name else []) +
+                        [asset.Name(), asset.AdjustedValue()])
+                if quantity:
+                    row.insert(1 + short_name, f'{asset.shares}'
+                            if hasattr(asset, 'shares') else '')
+                table.AddRow(row)
+
         return table
 
     def AssetLocation(self):
