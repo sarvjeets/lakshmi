@@ -284,13 +284,14 @@ class Portfolio:
         return matched_accounts[0]
 
     def GetAssetNameBySubStr(self, account_str='', asset_str=''):
-        """Returns a tuple account_name, asset_name where (account name, asset
-        name or shortname) partially matches account_str and asset_str.
+        """Returns a tuple account_name, asset_name where account name
+        partially matches account_str and asset name partially matches
+        asset_str or asset short name == asset_str
         Raises AssertionError if none or more than one asset matches the
         sub-strings."""
         matched_assets = list(filter(
                 lambda x: x[0].count(account_str) and (
-                    x[1].count(asset_str) or x[2].count(asset_str)),
+                    x[1].count(asset_str) or x[2] == asset_str),
                 [(account.Name(), asset.Name(), asset.ShortName())
                     for account in self.Accounts()
                     for asset in account.Assets()]))
@@ -300,7 +301,7 @@ class Portfolio:
         if len(matched_assets) > 1:
             raise AssertionError('Provided asset and account strings match more '
                     'than one assets.')
-        return matched_assets[0][0], matched_assets[0][1]
+        return matched_assets[0][0], matched_assets[0][2]
 
     def WhatIf(self, account_name, asset_name, delta):
         """Runs a whatif scenario if asset_name in account_name is changed by delta."""
