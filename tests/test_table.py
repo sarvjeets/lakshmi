@@ -29,25 +29,25 @@ class TableTest(unittest.TestCase):
         self.assertListEqual([['1', '2']], t.StrList())
 
     def testHeadersAndDiffColTypes(self):
-        headers = ['1', '2', '3', '4']
+        headers = ['1', '2', '3', '4', '5']
         t = Table(
-            4,
+            5,
             headers=headers,
-            coltypes=['str', 'dollars', 'delta_dollars', 'percentage'])
+            coltypes=['str', 'dollars', 'delta_dollars', 'percentage', 'float'])
 
-        rows = [['r1', 3, 4.1, 0.5],
-                ['r6', 8, -9.2, 0.1]]
+        rows = [['r1', 3, 4.1, 0.5, 1],
+                ['r6', 8, -9.2, 0.1, 2.345]]
         t.SetRows(rows)
 
         self.assertListEqual(headers, t.Headers())
         self.assertListEqual(
-            ['left', 'right', 'right', 'left'],
+            ['left', 'right', 'right', 'left', 'right'],
             t.ColAlign())
 
         self.assertListEqual(rows, t.List())
         self.assertListEqual(
-            [['r1', '$3.00', '+$4.10', '50%'],
-             ['r6', '$8.00', '-$9.20', '10%']],
+            [['r1', '$3.00', '+$4.10', '50%', '1.000'],
+             ['r6', '$8.00', '-$9.20', '10%', '2.345']],
             t.StrList())
         self.assertGreater(len(t.String()), 0)
 

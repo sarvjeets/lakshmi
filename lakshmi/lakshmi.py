@@ -356,7 +356,7 @@ class Portfolio:
                         ['Asset', 'Value'],
                 coltypes=['str'] +
                          (['str'] if short_name else []) +
-                         (['str'] if quantity else []) +
+                         (['float'] if quantity else []) +
                          ['str', 'dollars'])
         for account in self.Accounts():
             for asset in account.Assets():
@@ -364,8 +364,8 @@ class Portfolio:
                         ([f'{asset.ShortName()}'] if short_name else []) +
                         [asset.Name(), asset.AdjustedValue()])
                 if quantity:
-                    row.insert(1 + short_name, f'{asset.shares}'
-                            if hasattr(asset, 'shares') else '')
+                    row.insert(1 + short_name, asset.shares
+                            if hasattr(asset, 'shares') else None)
                 table.AddRow(row)
 
         return table

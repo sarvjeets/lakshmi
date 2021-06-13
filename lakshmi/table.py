@@ -10,6 +10,7 @@ class Table():
         'delta_dollars': lambda x: '{}${:,.2f}'.format(
             '-' if x < 0 else '+', abs(x)),
         'percentage': lambda x: '{}%'.format(round(100 * x)),
+        'float': lambda x: '{:,.3f}'.format(x),
     }
 
     def __init__(self, numcols, headers=(), coltypes=None):
@@ -43,8 +44,8 @@ class Table():
         return self._headers
 
     def ColAlign(self):
-        return list(map(lambda x: 'right' if x == 'dollars' or x ==
-                    'delta_dollars' else 'left', self._coltypes))
+        return list(map(lambda x: 'left' if x == 'str' or x ==
+                    'percentage' else 'right', self._coltypes))
 
     def List(self):
         return self._rows
