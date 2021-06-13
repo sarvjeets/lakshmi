@@ -65,6 +65,7 @@ def lak(force_refresh):
 
 @lak.group(chain=True)
 def list():
+    """Command to list various parts of the portfolio."""
     pass
 
 @list.command()
@@ -113,12 +114,18 @@ def aa(compact, asset_class):
 
 
 @list.command()
-def assets():
+@click.option('--short-name/--no-short-name', default=False, show_default=True,
+        help='If set, prints the Short name of the assets as well (e.g. Ticker for '
+        'assets that have it)')
+@click.option('--quantity/--no-quantity', default=False, show_default=True,
+        help='If set, prints the quantity of the asset (e.g. quantity or shares for '
+        'assets that support it)')
+def assets(short_name, quantity):
     """Prints Assets and their current values."""
     Separator()
     global lakconfig
     portfolio = lakconfig.Portfolio()
-    click.echo(portfolio.Assets().String())
+    click.echo(portfolio.Assets(short_name=short_name, quantity=quantity).String())
 
 
 if __name__ == '__main__':
