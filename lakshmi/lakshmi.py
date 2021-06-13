@@ -266,14 +266,15 @@ class Portfolio:
     def GetAccount(self, name):
         return self._accounts[name]
 
-    def GetAccountBySubStr(self, account_str):
-        """Returns account who name partially matches account_str.
+    def GetAccountNameBySubStr(self, account_str):
+        """Returns account name who name partially matches account_str.
 
         This method throws an AssertionError if more than one or none of the
         accounts match the account_str.
         """
-        matched_accounts = [account for account in self.Accounts()
-                if account.Name().count(account_str)]
+
+        matched_accounts = list(filter(lambda x: x.count(account_str),
+                [account.Name() for account in self.Accounts()]))
         if len(matched_accounts) == 0:
             raise AssertionError(f'{account_str} does not match any account '
                     'in the portfolio')
@@ -282,22 +283,24 @@ class Portfolio:
                         'account in the portfolio')
         return matched_accounts[0]
 
-    def GetAssetBySubStr(self, account_str='', asset_str=''):
-        """Returns asset whose (account name, asset name or shortname) partially
-        matches account_str and asset_str. Raises AssertionError if none or
-        more than one asset matches the sub-strings."""
-        matched_assets = [asset for account in self.Accounts()
-                if account.Name().find(account_str) != -1
-                for asset in account.Assets()
-                if asset.Name().find(asset_str) != -1 or
-                asset.ShortName().find(asset_str) != -1]
+    def GetAssetNameBySubStr(self, account_str='', asset_str=''):
+        """Returns a tuple account_name, asset_name where (account name, asset
+        name or shortname) partially matches account_str and asset_str.
+        Raises AssertionError if none or more than one asset matches the
+        sub-strings."""
+        matched_assets = list(filter(
+                lambda x: x[0].count(account_str) and (
+                    x[1].count(asset_str) or x[2].count(asset_str)),
+                [(account.Name(), asset.Name(), asset.ShortName())
+                    for account in self.Accounts()
+                    for asset in account.Assets()]))
         if len(matched_assets) < 1:
             raise AssertionError('Provided asset and account strings match none '
                     'of the assets.')
         if len(matched_assets) > 1:
             raise AssertionError('Provided asset and account strings match more '
                     'than one assets.')
-        return matched_assets[0]
+        return matched_assets[0][0], matched_assets[0][1]
 
     def WhatIf(self, account_name, asset_name, delta):
         """Runs a whatif scenario if asset_name in account_name is changed by delta."""

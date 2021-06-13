@@ -368,7 +368,7 @@ class LakshmiTest(unittest.TestCase):
              ['Account 2', 'Asset 2', '$400.00']],
             portfolio.Assets().StrList())
 
-    def testGetAccountBySubStr(self):
+    def testGetAccountNameBySubStr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
@@ -380,13 +380,13 @@ class LakshmiTest(unittest.TestCase):
              Account('Account 2', 'Roth IRA')
              .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
              .AddAsset(ManualAsset('Asset 2', 400.0, asset_class_map))))
-        self.assertEqual('Account 1', portfolio.GetAccountBySubStr('1').Name())
-        with self.assertRaises(AssertionError):
-            portfolio.GetAccountBySubStr('Acc')
-        with self.assertRaises(AssertionError):
-            portfolio.GetAccountBySubStr('God')
+        self.assertEqual('Account 1', portfolio.GetAccountNameBySubStr('1'))
+        with self.assertRaisesRegex(AssertionError, 'matches more than'):
+            portfolio.GetAccountNameBySubStr('Acc')
+        with self.assertRaisesRegex(AssertionError, 'does not match'):
+            portfolio.GetAccountNameBySubStr('God')
 
-    def testGetAssetBySubStr(self):
+    def testGetAssetNameBySubStr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
@@ -398,23 +398,25 @@ class LakshmiTest(unittest.TestCase):
              Account('Account 2', 'Roth IRA')
              .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
              .AddAsset(ManualAsset('Funky Asset', 400.0, asset_class_map))))
-        self.assertAlmostEqual(300, portfolio.GetAssetBySubStr(
-            account_str='2', asset_str='1').Value())
-        self.assertAlmostEqual(200, portfolio.GetAssetBySubStr(
-            account_str='Account', asset_str='2').Value())
-        self.assertAlmostEqual(100, portfolio.GetAssetBySubStr(
-            account_str='1', asset_str='Asset 1').Value())
-        self.assertAlmostEqual(400, portfolio.GetAssetBySubStr(
-            asset_str='Funky').Value())
+        self.assertTupleEqual(('Account 2', 'Asset 1'),
+                portfolio.GetAssetNameBySubStr(
+                    account_str='2', asset_str='1'))
+        self.assertAlmostEqual(('Account 1', 'Asset 2'),
+                portfolio.GetAssetNameBySubStr(
+                    account_str='Account', asset_str='2'))
+        self.assertAlmostEqual(('Account 1', 'Asset 1'),
+                portfolio.GetAssetNameBySubStr(
+                    account_str='1', asset_str='Asset 1'))
+        self.assertAlmostEqual(('Account 2', 'Funky Asset'),
+                portfolio.GetAssetNameBySubStr(
+                    asset_str='Funky'))
 
-        with self.assertRaises(AssertionError):
-            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='Ass')
-        with self.assertRaises(AssertionError):
-            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='1')
-        with self.assertRaises(AssertionError):
-            portfolio.GetAssetBySubStr(account_str='1', asset_str='Funky')
-        with self.assertRaises(AssertionError):
-            portfolio.GetAssetBySubStr(account_str='Acc', asset_str='Yolo')
+        with self.assertRaisesRegex(AssertionError, 'more than one'):
+            portfolio.GetAssetNameBySubStr(account_str='Acc', asset_str='Ass')
+        with self.assertRaisesRegex(AssertionError, 'match none of'):
+            portfolio.GetAssetNameBySubStr(account_str='1', asset_str='Funky')
+        with self.assertRaisesRegex(AssertionError, 'match none of'):
+            portfolio.GetAssetNameBySubStr(account_str='Acc', asset_str='Yolo')
 
 
     def testWhatIfs(self):
