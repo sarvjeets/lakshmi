@@ -75,6 +75,20 @@ class AssetsTest(unittest.TestCase):
         vmmxx.SetLots(lots)
         self.assertListEqual(lots, vmmxx.tax_lots)
 
+    @patch('lakshmi.assets.TickerAsset.Price')
+    def testPrintLots(self, MockPrice):
+        MockPrice.return_value = 15.0
+
+        vti = assets.TickerAsset('VTI', 100.0, {'All': 1.0})
+        lots = [assets.TaxLot('2011/01/01', 50, 10.0),
+                assets.TaxLot('2012/01/01', 50, 20.0)]
+        vti.SetLots(lots)
+
+        self.assertListEqual(
+                [['2011/01/01', '50.000', '$500.00', '+$250.00', '50%'],
+                 ['2012/01/01', '50.000', '$1,000.00', '-$250.00', '-25%']],
+                vti.PrintLots().StrList())
+
     @patch('yfinance.Ticker')
     def testDictTicker(self, MockTicker):
         ticker = MagicMock()

@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from lakshmi.cache import cache, Cacheable
+from lakshmi.table import Table
 import datetime
 import re
 import requests
@@ -169,6 +170,21 @@ class TradedAsset(Asset):
             f'Lots provided should sum up to {self.shares}')
         self.tax_lots = tax_lots_list
         return self
+
+    def PrintLots(self):
+        ret_val = Table(5,
+                headers=['Date', 'Quanity', 'Cost', 'Gain', 'Gain%'],
+                coltypes=['str', 'float', 'dollars', 'delta_dollars',
+                    'percentage'])
+        for lot in self.tax_lots:
+            ret_val.AddRow(
+                    [lot.date,
+                     lot.quantity,
+                     lot.unit_cost * lot.quantity,
+                     (self.Price() - lot.unit_cost) * lot.quantity,
+                     self.Price() / lot.unit_cost - 1])
+        return ret_val
+
 
     def Value(self):
         return self.shares * self.Price()
