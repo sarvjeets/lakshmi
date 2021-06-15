@@ -2,6 +2,7 @@
 from lakshmi import Account, AssetClass, Portfolio
 from lakshmi.assets import ManualAsset, TickerAsset
 import lakshmi.cache
+from lakshmi.table import Table
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -184,6 +185,19 @@ class LakshmiTest(unittest.TestCase):
         self.assertEqual(1, len(account._assets))
         self.assertEqual('Test Asset', account.GetAsset('Test Asset').Name())
         self.assertAlmostEqual(200.0, account.AvailableCash())
+
+    def testAccountString(self):
+        account = Account('Roth IRA', 'Post-tax').AddAsset(
+                ManualAsset('Test', 100.0, {'All': 1.0}))
+        expected = (Table(2)
+                .AddRow(['Name:', 'Roth IRA'])
+                .AddRow(['Type:','Post-tax'])
+                .AddRow(['Total:', '$100.00']))
+        self.assertEqual(expected.String(tablefmt='plain'), account.String())
+
+        account.AddCash(-10)
+        expected.AddRow(['Available Cash:', '-$10.00'])
+        self.assertEqual(expected.String(tablefmt='plain'), account.String())
 
     def testOneAsset(self):
         portfolio = Portfolio(AssetClass('Equity')).AddAccount(

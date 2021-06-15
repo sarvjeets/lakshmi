@@ -2,6 +2,7 @@
 
 from lakshmi.assets import FromDict, ToDict
 from lakshmi.table import Table
+import lakshmi.utils as utils
 import yaml
 
 
@@ -34,6 +35,16 @@ class Account:
         ret_obj._cash = d.pop('Available Cash', 0)
         assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
         return ret_obj
+
+    def String(self):
+        table = Table(2)
+        table.AddRow(['Name:', f'{self._name}'])
+        table.AddRow(['Type:', f'{self.account_type}'])
+        total = sum([asset.AdjustedValue() for asset in self._assets.values()])
+        table.AddRow(['Total:', utils.FormatMoney(total)])
+        if self._cash:
+            table.AddRow(['Available Cash:', utils.FormatMoneyDelta(self._cash)])
+        return table.String(tablefmt='plain')
 
     def AddAsset(self, asset):
         assert asset.ShortName() not in self._assets, (
