@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from lakshmi.cache import cache, Cacheable
 from lakshmi.table import Table
+import lakshmi.utils as utils
 import datetime
 import re
 import requests
@@ -63,6 +64,25 @@ class Asset(ABC):
         """
         self.WhatIf(d.pop('What if', 0))
         return self
+
+    def ToTable(self):
+        table = Table(2).AddRow(['Name:', f'{self.Name()}'])
+
+        asset_mapping_table = Table(2, coltypes=['str', 'percentage'])
+        for asset_class, ratio in self.class2ratio.items():
+            asset_mapping_table.AddRow([f'{asset_class}:', ratio])
+        table.AddRow(['Asset Class Mapping:', f'{asset_mapping_table.String(tablefmt="plain")}'])
+
+        if self._delta:
+            table.AddRow(['Adjusted Value:', f'{utils.FormatMoney(self.AdjustedValue())}'])
+            table.AddRow(['What if:', f'{utils.FormatMoneyDelta(self._delta)}'])
+        else:
+            table.AddRow(['Value:', f'{utils.FormatMoney(self.AdjustedValue())}'])
+
+        return table
+
+    def String(self):
+        return self.ToTable().String(tablefmt='plain')
 
     def WhatIf(self, delta):
         self._delta += delta
@@ -171,20 +191,26 @@ class TradedAsset(Asset):
         self.tax_lots = tax_lots_list
         return self
 
-    def PrintLots(self):
-        ret_val = Table(5,
+    def ListLots(self):
+        table = Table(5,
                 headers=['Date', 'Quanity', 'Cost', 'Gain', 'Gain%'],
                 coltypes=['str', 'float', 'dollars', 'delta_dollars',
                     'percentage'])
         for lot in self.tax_lots:
-            ret_val.AddRow(
+            table.AddRow(
                     [lot.date,
                      lot.quantity,
                      lot.unit_cost * lot.quantity,
                      (self.Price() - lot.unit_cost) * lot.quantity,
                      self.Price() / lot.unit_cost - 1])
-        return ret_val
+        return table
 
+    def ToTable(self):
+        table = super().ToTable()
+        table.AddRow(['Price:', f'{utils.FormatMoney(self.Price())}'])
+        if self.tax_lots:
+            table.AddRow(['Tax lots:', f'{self.ListLots().String()}'])
+        return table
 
     def Value(self):
         return self.shares * self.Price()
@@ -224,6 +250,13 @@ class TickerAsset(TradedAsset, Cacheable):
         TradedAsset.FromDict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
+
+    def ToTable(self):
+        table = super().ToTable()
+        rows = table.List()
+        rows.insert(0, ['Ticker:', f'{self.ticker}'])
+        table.SetRows(rows)
+        return table
 
     def CacheKey(self):
         return self.ticker
@@ -269,6 +302,13 @@ class VanguardFund(TradedAsset, Cacheable):
         TradedAsset.FromDict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
+
+    def ToTable(self):
+        table = super().ToTable()
+        rows = table.List()
+        rows.insert(0, ['Fund id:', f'{self.fund_id}'])
+        table.SetRows(rows)
+        return table
 
     def CacheKey(self):
         return str(self.fund_id)
@@ -382,11 +422,18 @@ class _TreasuryBonds(Asset):
         return value
 
     def ListBonds(self):
-        ret_val = []
+        table = Table(
+                4,
+                headers=['Issue Date', 'Denom', 'Rate', 'Value'],
+                coltypes=['str', 'dollars', 'str', 'dollars'])
         for bond in self.bonds:
-            ret_val.append(bond.AsList())
-        return ret_val
+            table.AddRow(bond.AsList())
+        return table
 
+    def ToTable(self):
+        table = super().ToTable()
+        table.AddRow(['Bonds:', f'{self.ListBonds().String()}'])
+        return table
 
 class IBonds(_TreasuryBonds):
     def __init__(self, class2ratio):

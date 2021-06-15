@@ -28,6 +28,20 @@ class AssetsTest(unittest.TestCase):
         self.assertAlmostEqual(100.5, manual_asset.AdjustedValue())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
+    def testManualAssetToTable(self):
+        manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
+        expected = [['Name:', 'Cash'],
+                    ['Asset Class Mapping:', 'Fixed Income:  100%'],
+                    ['Value:', '$100.50']]
+        self.assertListEqual(expected, manual_asset.ToTable().StrList())
+
+        manual_asset.WhatIf(-100)
+        expected = [['Name:', 'Cash'],
+                    ['Asset Class Mapping:', 'Fixed Income:  100%'],
+                    ['Adjusted Value:', '$0.50'],
+                    ['What if:', '-$100.00']]
+        self.assertListEqual(expected, manual_asset.ToTable().StrList())
+
     @patch('yfinance.Ticker')
     def testBadTicker(self, MockTicker):
         bad_ticker = MagicMock()
@@ -57,13 +71,7 @@ class AssetsTest(unittest.TestCase):
 
         MockTicker.assert_called_once_with('VMMXX')
 
-    @patch('yfinance.Ticker')
-    def testTaxLotsTicker(self, MockTicker):
-        ticker = MagicMock()
-        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
-                       'regularMarketPrice': 1.0}
-        MockTicker.return_value = ticker
-
+    def testTaxLotsTicker(self):
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2012/12/12', 50, 1.0),
                 assets.TaxLot('2013/12/12', 30, 0.9)]
@@ -76,7 +84,7 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(lots, vmmxx.tax_lots)
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testPrintLots(self, MockPrice):
+    def testListLots(self, MockPrice):
         MockPrice.return_value = 15.0
 
         vti = assets.TickerAsset('VTI', 100.0, {'All': 1.0})
@@ -87,7 +95,31 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(
                 [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
                  ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
-                vti.PrintLots().StrList())
+                vti.ListLots().StrList())
+
+    @patch('lakshmi.assets.TickerAsset.Name')
+    @patch('lakshmi.assets.TickerAsset.Price')
+    def testTickerAssetToTable(self, MockPrice, MockName):
+        MockPrice.return_value = 10.0
+        MockName.return_value = 'Google Inc'
+
+        goog = assets.TickerAsset('GOOG', 100.0, {'All': 1.0})
+        expected = [['Ticker:', 'GOOG'],
+                    ['Name:', 'Google Inc'],
+                    ['Asset Class Mapping:', 'All:  100%'],
+                    ['Value:', '$1,000.00'],
+                    ['Price:', '$10.00']]
+        self.assertListEqual(expected, goog.ToTable().StrList())
+
+        goog.SetLots([assets.TaxLot('2020/10/10', 100, 11)])
+        expected = [['Ticker:', 'GOOG'],
+                    ['Name:', 'Google Inc'],
+                    ['Asset Class Mapping:', 'All:  100%'],
+                    ['Value:', '$1,000.00'],
+                    ['Price:', '$10.00']]
+        # Compare all but last element (tax lots).
+        self.assertListEqual(expected, goog.ToTable().StrList()[:-1])
+        self.assertEquals('Tax lots:', goog.ToTable().StrList()[-1:][0][0])
 
     @patch('yfinance.Ticker')
     def testDictTicker(self, MockTicker):
@@ -152,6 +184,20 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual(1, len(fund.tax_lots))
         self.assertEqual(100, fund._delta)
 
+    @patch('lakshmi.assets.VanguardFund.Name')
+    @patch('lakshmi.assets.VanguardFund.Price')
+    def testTickerAssetToTable(self, MockPrice, MockName):
+        MockPrice.return_value = 10.0
+        MockName.return_value = 'Vanguardy Fund'
+
+        goog = assets.VanguardFund(123, 100.0, {'All': 1.0})
+        expected = [['Fund id:', '123'],
+                    ['Name:', 'Vanguardy Fund'],
+                    ['Asset Class Mapping:', 'All:  100%'],
+                    ['Value:', '$1,000.00'],
+                    ['Price:', '$10.00']]
+        self.assertListEqual(expected, goog.ToTable().StrList())
+
     @patch('datetime.datetime')
     @patch('requests.post')
     def testIBonds(self, MockPost, MockDate):
@@ -176,12 +222,27 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('I Bonds', ibonds.Name())
         self.assertEqual('I Bonds', ibonds.ShortName())
         self.assertAlmostEqual(10156.0, ibonds.Value())
-        self.assertEqual(1, len(ibonds.ListBonds()))
-        self.assertEqual(4, len(ibonds.ListBonds()[0]))
-        self.assertEqual('03/2020', ibonds.ListBonds()[0][0])
-        self.assertEqual(10000, ibonds.ListBonds()[0][1])
-        self.assertEqual('1.88%', ibonds.ListBonds()[0][2])
-        self.assertAlmostEqual(10156.0, ibonds.ListBonds()[0][3])
+        self.assertListEqual(
+                [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
+                ibonds.ListBonds().StrList())
+
+    @patch('datetime.datetime')
+    @patch('requests.post')
+    def testIBondsToTable(self, MockPost, MockDate):
+        MockReq = MagicMock()
+        with open(self.data_dir / 'SBCPrice-I.html') as html_file:
+            MockReq.text = html_file.read()
+        MockPost.return_value = MockReq
+        MockDate.now.strftime.return_value = '04/2021'
+
+        ibonds = assets.IBonds({'Bonds': 1.0})
+        ibonds.AddBond('03/2020', 10000)
+
+        expected = [['Name:', 'I Bonds'],
+                    ['Asset Class Mapping:', 'Bonds:  100%'],
+                    ['Value:', '$10,156.00']]
+        self.assertListEqual(expected, ibonds.ToTable().StrList()[:-1])
+        self.assertEqual('Bonds:', ibonds.ToTable().StrList()[-1:][0][0])
 
     def testDictIBonds(self):
         ibonds = assets.IBonds({'B': 1.0})
@@ -217,12 +278,9 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('EE Bonds', eebonds.Name())
         self.assertEqual('EE Bonds', eebonds.ShortName())
         self.assertAlmostEqual(10008.0, eebonds.Value())
-        self.assertEqual(1, len(eebonds.ListBonds()))
-        self.assertEqual(4, len(eebonds.ListBonds()[0]))
-        self.assertEqual('03/2020', eebonds.ListBonds()[0][0])
-        self.assertEqual(10000, eebonds.ListBonds()[0][1])
-        self.assertEqual('0.10%', eebonds.ListBonds()[0][2])
-        self.assertAlmostEqual(10008.0, eebonds.ListBonds()[0][3])
+        self.assertListEqual(
+                [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
+                eebonds.ListBonds().StrList())
 
     def testDictEEBonds(self):
         eebonds = assets.EEBonds({'B': 1.0})
