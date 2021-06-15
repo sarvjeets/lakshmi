@@ -85,6 +85,8 @@ class Asset(ABC):
         return self.ToTable().String(tablefmt='plain')
 
     def WhatIf(self, delta):
+        assert self.AdjustedValue() + delta >= 0, ('Value of an asset '
+                'can not be negative.')
         self._delta += delta
 
     def AdjustedValue(self):
@@ -105,6 +107,7 @@ class Asset(ABC):
 
 class ManualAsset(Asset):
     def __init__(self, name, value, class2ratio):
+        assert value >= 0, 'Value of an asset can not be negative.'
         self.name = name
         self.value = value
         super().__init__(class2ratio)

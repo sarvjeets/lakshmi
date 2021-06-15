@@ -21,6 +21,11 @@ class AssetsTest(unittest.TestCase):
         self.assertAlmostEqual(200.5, manual_asset.AdjustedValue())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
+    def testAssetBadWhatIf(self):
+        a = assets.ManualAsset('Cash', 100, {'All': 1.0})
+        with self.assertRaises(AssertionError):
+            a.WhatIf(-101)
+
     def testDictManualAsset(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         manual_asset = assets.FromDict(assets.ToDict(manual_asset))
@@ -173,7 +178,9 @@ class AssetsTest(unittest.TestCase):
             headers={'Referer': 'https://vanguard.com/'})
         fund.SetLots([assets.TaxLot('2012/12/30', 10, 1.0)])
 
-    def testDictVanguardFund(self):
+    @patch('lakshmi.assets.VanguardFund.Value')
+    def testDictVanguardFund(self, MockValue):
+        MockValue.return_value = 100.0
         fund = assets.VanguardFund(1234, 20, {'Bonds': 1.0})
         fund.SetLots([assets.TaxLot('2021/05/15', 20, 5.0)])
         fund.WhatIf(100)
@@ -244,7 +251,9 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(expected, ibonds.ToTable().StrList()[:-1])
         self.assertEqual('Bonds:', ibonds.ToTable().StrList()[-1:][0][0])
 
-    def testDictIBonds(self):
+    @patch('lakshmi.assets.IBonds.Value')
+    def testDictIBonds(self, MockValue):
+        MockValue.return_value = 11000
         ibonds = assets.IBonds({'B': 1.0})
         ibonds.AddBond('02/2020', 10000)
         ibonds.WhatIf(-100.0)
@@ -281,8 +290,9 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(
                 [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
                 eebonds.ListBonds().StrList())
-
-    def testDictEEBonds(self):
+    @patch('lakshmi.assets.EEBonds.Value')
+    def testDictEEBonds(self, MockValue):
+        MockValue.return_value = 10010
         eebonds = assets.EEBonds({'B': 1.0})
         eebonds.AddBond('02/2020', 10000)
         eebonds.WhatIf(-100.0)
