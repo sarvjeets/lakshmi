@@ -1,15 +1,14 @@
 """Module to help output and print tables."""
 
 from tabulate import tabulate
-
+import lakshmi.utils as utils
 
 class Table():
     coltype2func = {
         'str': lambda x: x,
-        'dollars': lambda x: '${:,.2f}'.format(x),
-        'delta_dollars': lambda x: '{}${:,.2f}'.format(
-            '-' if x < 0 else '+', abs(x)),
-        'percentage': lambda x: '{}%'.format(round(100 * x)),
+        'dollars': lambda x: utils.FormatMoney(x),
+        'delta_dollars': lambda x: utils.FormatMoneyDelta(x),
+        'percentage': lambda x: f'{round(100*x)}%',
         'float': lambda x: str(float(x)),
     }
 
