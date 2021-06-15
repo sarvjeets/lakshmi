@@ -116,16 +116,6 @@ class AssetsTest(unittest.TestCase):
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, goog.ToTable().StrList())
 
-        goog.SetLots([assets.TaxLot('2020/10/10', 100, 11)])
-        expected = [['Ticker:', 'GOOG'],
-                    ['Name:', 'Google Inc'],
-                    ['Asset Class Mapping:', 'All:  100%'],
-                    ['Value:', '$1,000.00'],
-                    ['Price:', '$10.00']]
-        # Compare all but last element (tax lots).
-        self.assertListEqual(expected, goog.ToTable().StrList()[:-1])
-        self.assertEquals('Tax lots:', goog.ToTable().StrList()[-1:][0][0])
-
     @patch('yfinance.Ticker')
     def testDictTicker(self, MockTicker):
         ticker = MagicMock()
@@ -193,17 +183,17 @@ class AssetsTest(unittest.TestCase):
 
     @patch('lakshmi.assets.VanguardFund.Name')
     @patch('lakshmi.assets.VanguardFund.Price')
-    def testTickerAssetToTable(self, MockPrice, MockName):
+    def testVangurdFundAssetToTable(self, MockPrice, MockName):
         MockPrice.return_value = 10.0
         MockName.return_value = 'Vanguardy Fund'
 
-        goog = assets.VanguardFund(123, 100.0, {'All': 1.0})
+        fund = assets.VanguardFund(123, 100.0, {'All': 1.0})
         expected = [['Fund id:', '123'],
                     ['Name:', 'Vanguardy Fund'],
                     ['Asset Class Mapping:', 'All:  100%'],
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
-        self.assertListEqual(expected, goog.ToTable().StrList())
+        self.assertListEqual(expected, fund.ToTable().StrList())
 
     @patch('datetime.datetime')
     @patch('requests.post')
@@ -232,24 +222,6 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(
                 [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
                 ibonds.ListBonds().StrList())
-
-    @patch('datetime.datetime')
-    @patch('requests.post')
-    def testIBondsToTable(self, MockPost, MockDate):
-        MockReq = MagicMock()
-        with open(self.data_dir / 'SBCPrice-I.html') as html_file:
-            MockReq.text = html_file.read()
-        MockPost.return_value = MockReq
-        MockDate.now.strftime.return_value = '04/2021'
-
-        ibonds = assets.IBonds({'Bonds': 1.0})
-        ibonds.AddBond('03/2020', 10000)
-
-        expected = [['Name:', 'I Bonds'],
-                    ['Asset Class Mapping:', 'Bonds:  100%'],
-                    ['Value:', '$10,156.00']]
-        self.assertListEqual(expected, ibonds.ToTable().StrList()[:-1])
-        self.assertEqual('Bonds:', ibonds.ToTable().StrList()[-1:][0][0])
 
     @patch('lakshmi.assets.IBonds.Value')
     def testDictIBonds(self, MockValue):

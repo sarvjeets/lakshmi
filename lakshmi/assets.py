@@ -211,9 +211,14 @@ class TradedAsset(Asset):
     def ToTable(self):
         table = super().ToTable()
         table.AddRow(['Price:', f'{utils.FormatMoney(self.Price())}'])
-        if self.tax_lots:
-            table.AddRow(['Tax lots:', f'{self.ListLots().String()}'])
         return table
+
+    def String(self):
+        if not self.tax_lots:
+            return super().String()
+
+        return (super().String() + '\n\nTax lots:\n' +
+                f'{self.ListLots().String()}')
 
     def Value(self):
         return self.shares * self.Price()
@@ -433,10 +438,10 @@ class _TreasuryBonds(Asset):
             table.AddRow(bond.AsList())
         return table
 
-    def ToTable(self):
-        table = super().ToTable()
-        table.AddRow(['Bonds:', f'{self.ListBonds().String()}'])
-        return table
+    def String(self):
+        return (super().String() + '\n\nBonds:\n' +
+                f'{self.ListBonds().String()}')
+
 
 class IBonds(_TreasuryBonds):
     def __init__(self, class2ratio):
