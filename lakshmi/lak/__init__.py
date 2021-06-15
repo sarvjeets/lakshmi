@@ -18,6 +18,7 @@ class LakContext:
     def __init__(self, lakrc='~/.lakrc'):
         self.lakrc = lakrc
         self.continued = False
+        self.whatifs = None
         config = self._ReturnConfig()
 
         portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
@@ -39,6 +40,19 @@ class LakContext:
             click.echo('\n')
         # Set it up so that separator is printed for the next command.
         self.continued = True
+
+    def GetWhatIfs(self):
+        if not self.whatifs:
+            self.whatifs = self.Portfolio().GetWhatIfs()
+        return self.whatifs
+
+    def WarnForWhatIfs(self):
+        if self.continued:
+            return
+
+        self.GetWhatIfs()
+        if self.whatifs[0].List() or self.whatifs[1].List():
+            click.secho('Warning: Hypothetical what if are set.\n', fg='red')
 
     def Portfolio(self):
         return self._portfolio
@@ -64,15 +78,16 @@ def lak(refresh):
 def list():
     """Command to list various parts of the portfolio."""
     global lakctx
-    account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
-    if account_whatifs.List() or asset_whatifs.List():
-        click.secho('Warning: Hypothetical what if are set.\n', fg='red')
+    #account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
+    #if account_whatifs.List() or asset_whatifs.List():
+    #    click.secho('Warning: Hypothetical what if are set.\n', fg='red')
 
 
 @list.command()
 def total():
     """Prints the total value."""
     global lakctx
+    lakctx.WarnForWhatIfs()
     lakctx.Separator()
     portfolio = lakctx.Portfolio()
     click.echo(
@@ -84,6 +99,7 @@ def total():
 def al():
     """Prints the Asset Location."""
     global lakctx
+    lakctx.WarnForWhatIfs()
     lakctx.Separator()
     portfolio = lakctx.Portfolio()
     click.echo(portfolio.AssetLocation().String())
@@ -100,6 +116,7 @@ def al():
 def aa(compact, asset_class):
     """Prints the Asset Allocation."""
     global lakctx
+    lakctx.WarnForWhatIfs()
     lakctx.Separator()
     portfolio = lakctx.Portfolio()
     if asset_class:
@@ -124,6 +141,7 @@ def aa(compact, asset_class):
 def assets(short_name, quantity):
     """Prints Assets and their current values."""
     global lakctx
+    lakctx.WarnForWhatIfs()
     lakctx.Separator()
     portfolio = lakctx.Portfolio()
     click.echo(portfolio.Assets(short_name=short_name, quantity=quantity).String())
@@ -133,7 +151,7 @@ def assets(short_name, quantity):
 def whatifs():
     """Print hypothetical what ifs for assets and accounts."""
     global lakctx
-    account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
+    account_whatifs, asset_whatifs = lakctx.GetWhatIfs()
     if account_whatifs.List():
         lakctx.Separator()
         click.echo(account_whatifs.String())
