@@ -36,13 +36,13 @@ class AssetsTest(unittest.TestCase):
     def testManualAssetToTable(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         expected = [['Name:', 'Cash'],
-                    ['Asset Class Mapping:', 'Fixed Income:  100%'],
+                    ['Asset Class Mapping:', 'Fixed Income  100%'],
                     ['Value:', '$100.50']]
         self.assertListEqual(expected, manual_asset.ToTable().StrList())
 
         manual_asset.WhatIf(-100)
         expected = [['Name:', 'Cash'],
-                    ['Asset Class Mapping:', 'Fixed Income:  100%'],
+                    ['Asset Class Mapping:', 'Fixed Income  100%'],
                     ['Adjusted Value:', '$0.50'],
                     ['What if:', '-$100.00']]
         self.assertListEqual(expected, manual_asset.ToTable().StrList())
@@ -111,7 +111,7 @@ class AssetsTest(unittest.TestCase):
         goog = assets.TickerAsset('GOOG', 100.0, {'All': 1.0})
         expected = [['Ticker:', 'GOOG'],
                     ['Name:', 'Google Inc'],
-                    ['Asset Class Mapping:', 'All:  100%'],
+                    ['Asset Class Mapping:', 'All  100%'],
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, goog.ToTable().StrList())
@@ -190,7 +190,7 @@ class AssetsTest(unittest.TestCase):
         fund = assets.VanguardFund(123, 100.0, {'All': 1.0})
         expected = [['Fund id:', '123'],
                     ['Name:', 'Vanguardy Fund'],
-                    ['Asset Class Mapping:', 'All:  100%'],
+                    ['Asset Class Mapping:', 'All  100%'],
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, fund.ToTable().StrList())

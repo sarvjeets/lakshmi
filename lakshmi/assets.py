@@ -70,7 +70,7 @@ class Asset(ABC):
 
         asset_mapping_table = Table(2, coltypes=['str', 'percentage'])
         for asset_class, ratio in self.class2ratio.items():
-            asset_mapping_table.AddRow([f'{asset_class}:', ratio])
+            asset_mapping_table.AddRow([f'{asset_class}', ratio])
         table.AddRow(['Asset Class Mapping:', f'{asset_mapping_table.String(tablefmt="plain")}'])
 
         if self._delta:
