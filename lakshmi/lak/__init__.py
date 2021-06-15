@@ -198,8 +198,33 @@ def whatif(asset, account, reset, delta):
         lakctx.SavePortfolio()
         return
 
-    raise click.ClickException('One of asset or account must be provided.')
+    raise click.UsageError('At least one of --asset or --account must be specified')
 
+@lak.command()
+@click.option('--asset', '-a', type=str, metavar='substr',
+        help='Get Info about this asset (a sub-string that matches either the asset name or the short name)')
+@click.option('--account', '-t', type=str, metavar='substr',
+        help='Get Info about this account (a sub-string that matches the account name)')
+def info(asset, account):
+    """Prints detailed information about an asset or account. If only account is
+    specified, this command prints information about an account. If asset or both
+    asset and acccount is specified, it prints information about an asset. In the second
+    case, asset (and optionally account) must match exactly one asset in the portfolio."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+
+    if asset is None and account is not None:
+        account_name = portfolio.GetAccountNameBySubStr(account)
+        click.echo(portfolio.GetAccount(account_name).String())
+        return
+
+    if asset is not None:
+        account_name, asset_name = portfolio.GetAssetNameBySubStr(
+                account if account is not None else '', asset)
+        click.echo(portfolio.GetAccount(account_name).GetAsset(asset_name).String())
+        return
+
+    raise click.UsageError('At least one of --asset or --account must be specified')
 
 if __name__ == '__main__':
     lak()
