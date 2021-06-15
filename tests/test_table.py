@@ -41,12 +41,12 @@ class TableTest(unittest.TestCase):
 
         self.assertListEqual(headers, t.Headers())
         self.assertListEqual(
-            ['left', 'right', 'right', 'left', 'right'],
+            ['left', 'right', 'right', 'right', 'decimal'],
             t.ColAlign())
 
         self.assertListEqual(rows, t.List())
         self.assertListEqual(
-            [['r1', '$3.00', '+$4.10', '50%', '1.000'],
+            [['r1', '$3.00', '+$4.10', '50%', '1.0'],
              ['r6', '$8.00', '-$9.20', '10%', '2.345']],
             t.StrList())
         self.assertGreater(len(t.String()), 0)

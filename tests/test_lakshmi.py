@@ -269,12 +269,12 @@ class LakshmiTest(unittest.TestCase):
                  ['Schwab', 'Cash', 'Cash', '$840.00']],
                 portfolio.Assets(short_name=True).StrList())
         self.assertListEqual(
-                [['Schwab', 'VMMXX', '420.000', 'Vanguard Cash Reserves Federal',
+                [['Schwab', 'VMMXX', '420.0', 'Vanguard Cash Reserves Federal',
                     '$420.00'],
                  ['Schwab', 'Cash', '', 'Cash', '$840.00']],
                 portfolio.Assets(short_name=True, quantity=True).StrList())
         self.assertListEqual(
-                [['Schwab', '420.000', 'Vanguard Cash Reserves Federal', '$420.00'],
+                [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
                  ['Schwab', '', 'Cash', '$840.00']],
                 portfolio.Assets(quantity=True).StrList())
 
