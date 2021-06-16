@@ -386,24 +386,30 @@ class Portfolio:
         return table
 
     def AssetLocation(self):
-        """Returns asset location as a list of [account_type, value, percentage]."""
-        account_type_to_value = {}
-        total = 0.0
-
+        """Returns asset location as a list of [asset class, account_type, percentage, value]."""
+        class2type = {}  # Mapping of asset class -> account type -> money
         for account in self.Accounts():
-            account_type_to_value[account.account_type] = account_type_to_value.get(
-                account.account_type, 0) + account.AvailableCash()
-            total += account.AvailableCash()
             for asset in account.Assets():
-                account_type_to_value[account.account_type] = account_type_to_value.get(
-                    account.account_type, 0) + asset.AdjustedValue()
-                total += asset.AdjustedValue()
+                for name, ratio in asset.class2ratio.items():
+                    if not name in class2type:
+                        class2type[name] = {}
+                    class2type[name][account.account_type] = class2type[name].get(
+                            account.account_type, 0) + ratio * asset.AdjustedValue()
 
-        table = Table(3,
-                      headers=['Account Type', 'Value', '%'],
-                      coltypes=['str', 'dollars', 'percentage'])
-        for account_type, value in account_type_to_value.items():
-            table.AddRow([account_type, value, value / total])
+        table = Table(
+                4,
+                headers=['Asset Class', 'Account Type', 'Percentage', 'Value'],
+                coltypes=['str', 'str', 'percentage', 'dollars'])
+
+        for asset_class, type2value in class2type.items():
+            first = True
+            total = sum(type2value.values())
+            if abs(total) < 1e-6:
+                continue
+            for account_type, value in sorted(type2value.items(), key=lambda x: x[1], reverse=True):
+                table.AddRow([asset_class if first else '', account_type,
+                    value / total, value])
+                first = False
         return table
 
     def _GetAssetClassToValue(self):

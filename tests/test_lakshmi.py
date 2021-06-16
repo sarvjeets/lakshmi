@@ -208,7 +208,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
                              portfolio.Assets().StrList())
         self.assertAlmostEqual(100.0, portfolio.TotalValue())
-        self.assertListEqual([['Pre-tax', '$100.00', '100%']],
+        self.assertListEqual([['Equity', 'Pre-tax', '100%', '$100.00']],
                              portfolio.AssetLocation().StrList())
         self.assertListEqual([], portfolio.AssetAllocationTree().List())
         self.assertListEqual(
@@ -245,8 +245,10 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
                              portfolio.Assets().StrList())
         self.assertAlmostEqual(100.0, portfolio.TotalValue())
-        self.assertListEqual([['Taxable', '$100.00', '100%']],
-                             portfolio.AssetLocation().StrList())
+        self.assertListEqual(
+                [['Equity', 'Taxable', '100%', '$60.00'],
+                 ['Fixed Income', 'Taxable', '100%', '$40.00']],
+                portfolio.AssetLocation().StrList())
 
         self.assertListEqual(
             [['All:'],
@@ -291,6 +293,29 @@ class LakshmiTest(unittest.TestCase):
                 [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
                  ['Schwab', '', 'Cash', '$840.00']],
                 portfolio.Assets(quantity=True).StrList())
+
+
+    def testAssetLocation(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .AddSubClass(0.8,
+                         AssetClass('Equity')
+                         .AddSubClass(0.6, AssetClass('US'))
+                         .AddSubClass(0.4, AssetClass('Intl')))
+            .AddSubClass(0.2, AssetClass('Bonds')).Validate())
+        (portfolio
+                .AddAccount(Account('Account1', 'Taxable')
+                    .AddAsset(ManualAsset('US A', 60.0, {'US': 1.0}))
+                    .AddAsset(ManualAsset('Intl A', 30.0, {'Intl': 1.0}))
+                    .AddAsset(ManualAsset('Bond A', 10.0, {'Bonds': 1.0})))
+                .AddAccount(Account('Account2', 'Pre-tax')
+                    .AddAsset(ManualAsset('Bond A', 40.0, {'Bonds': 1.0}))))
+        self.assertEquals(
+                [['US', 'Taxable', '100%', '$60.00'],
+                 ['Intl', 'Taxable', '100%', '$30.00'],
+                 ['Bonds', 'Pre-tax', '80%', '$40.00'],
+                 ['', 'Taxable', '20%', '$10.00']],
+                portfolio.AssetLocation().StrList())
 
     def testFlatAssetAllocation(self):
         portfolio = Portfolio(
@@ -477,7 +502,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual(
             [['All:'],
              ['Equity', '60%', '60%', '$120.00'],
-                ['Bonds', '40%', '40%', '$80.00']],
+             ['Bonds', '40%', '40%', '$80.00']],
             portfolio.AssetAllocationTree().StrList())
 
         portfolio.WhatIfAddCash('Account 1', 30)
@@ -506,8 +531,8 @@ class LakshmiTest(unittest.TestCase):
             asset_whatifs.StrList())
 
         self.assertListEqual(
-            [['Taxable', '$230.00', '33%'],
-             ['Pre-tax', '$460.00', '67%']],
+            [['Equity', 'Taxable', '100%', '$120.00'],
+             ['Bonds', 'Taxable', '100%', '$80.00']],
             portfolio.AssetLocation().StrList())
 
         portfolio.ResetWhatIfs()
