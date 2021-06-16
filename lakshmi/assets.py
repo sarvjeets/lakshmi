@@ -85,9 +85,10 @@ class Asset(ABC):
         return self.ToTable().String(tablefmt='plain')
 
     def WhatIf(self, delta):
-        assert self.AdjustedValue() + delta >= 0, ('Value of an asset '
-                'can not be negative.')
+        if delta < -self.AdjustedValue():
+            delta = - self.AdjustedValue()
         self._delta += delta
+        return delta
 
     def AdjustedValue(self):
         return self.Value() + self._delta

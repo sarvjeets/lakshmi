@@ -23,8 +23,8 @@ class AssetsTest(unittest.TestCase):
 
     def testAssetBadWhatIf(self):
         a = assets.ManualAsset('Cash', 100, {'All': 1.0})
-        with self.assertRaises(AssertionError):
-            a.WhatIf(-101)
+        self.assertAlmostEqual(-100, a.WhatIf(-101))
+        self.assertAlmostEqual(0, a.AdjustedValue())
 
     def testDictManualAsset(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
