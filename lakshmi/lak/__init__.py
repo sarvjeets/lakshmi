@@ -240,6 +240,7 @@ def info(asset, account):
 
 @lak.group()
 def edit():
+    """Edit, add or delete parts of the portfolio."""
     pass
 
 
@@ -261,6 +262,7 @@ def edit_and_parse(edit_dict, parse_fn):
 
 @edit.command()
 def assetclass():
+    """Edit the Asset classes and desired AA across those asset classes."""
     global lakctx
     portfolio = lakctx.Portfolio()
 
@@ -277,6 +279,7 @@ def assetclass():
 @click.option('--account', '-t', type=str, metavar='substr',
         help='Edit the account that matches this sub-string')
 def account(account):
+    """Edit accounts in the portfolio."""
     if account is None:
         raise click.BadParameter('--account must be specified')
 
@@ -309,6 +312,7 @@ def account(account):
         help='Get Info about this account (a sub-string that matches the '
         'account name)')
 def asset(asset, account):
+    """Edit assets in the portfolio."""
     global lakctx
     portfolio = lakctx.Portfolio()
 
