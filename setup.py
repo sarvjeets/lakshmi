@@ -4,14 +4,14 @@ with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setup(
-    name='Lakshmi',
+    name='lakshmi',
     version='1.0.0',
     author='Sarvjeet Singh',
     author_email='sarvjeet@gmail.com',
     description='Investing Tools.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/sarvjeets/Lakshmi',
+    url='https://github.com/sarvjeets/lakshmi',
     platforms='any',
     py_modules=['lakshmi'],
     packages=find_packages(exclude=['tests', 'tests.*']),

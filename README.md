@@ -1,4 +1,4 @@
-# Lakshmi
+# lakshmi
 
 ## Introduction
 This project is inspired by all the time I spent on
