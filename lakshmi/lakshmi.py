@@ -21,8 +21,9 @@ class Account:
 
     def ToDict(self):
         d = {'Name': self._name,
-             'Account Type': self.account_type,
-             'Assets': [ToDict(asset) for asset in self._assets.values()]}
+             'Account Type': self.account_type}
+        if self._assets:
+             d['Assets'] = [ToDict(asset) for asset in self._assets.values()]
         if self._cash != 0:
             d['Available Cash'] = self._cash
         return d
@@ -30,7 +31,7 @@ class Account:
     @classmethod
     def FromDict(cls, d):
         ret_obj = Account(d.pop('Name'), d.pop('Account Type'))
-        for asset_dict in d.pop('Assets'):
+        for asset_dict in d.pop('Assets', []):
             ret_obj.AddAsset(FromDict(asset_dict))
         ret_obj._cash = d.pop('Available Cash', 0)
         assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
@@ -46,8 +47,8 @@ class Account:
             table.AddRow(['Available Cash:', utils.FormatMoneyDelta(self._cash)])
         return table.String(tablefmt='plain')
 
-    def AddAsset(self, asset):
-        assert asset.ShortName() not in self._assets, (
+    def AddAsset(self, asset, replace=False):
+        assert replace or asset.ShortName() not in self._assets, (
             f'Attempting to add duplicate Asset: {asset.ShortName()}')
         self._assets[asset.ShortName()] = asset
         return self
@@ -55,8 +56,16 @@ class Account:
     def Assets(self):
         return self._assets.values()
 
+    def SetAssets(self, assets):
+        self._assets = {}
+        for asset in assets:
+            self.AddAsset(asset)
+
     def GetAsset(self, short_name):
         return self._assets[short_name]
+
+    def RemoveAsset(self, short_name):
+        del self._assets[short_name]
 
     def Name(self):
         return self._name
@@ -259,17 +268,20 @@ class Portfolio:
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def AddAccount(self, account):
+    def AddAccount(self, account, replace=False):
         for asset in account.Assets():
             for asset_class in asset.class2ratio.keys():
                 assert asset_class in self._leaf_asset_classes, (
                     f'Unknown or non-leaf asset class: {asset_class}')
 
-        assert account.Name() not in self._accounts, (
+        assert replace or account.Name() not in self._accounts, (
             f'Attempting to add duplicate account: {account.Name()}')
 
         self._accounts[account.Name()] = account
         return self
+
+    def RemoveAccount(self, account_name):
+        del self._accounts[account_name]
 
     def Accounts(self):
         return self._accounts.values()

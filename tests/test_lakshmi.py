@@ -162,20 +162,20 @@ class LakshmiTest(unittest.TestCase):
                 'Unknown or non-leaf asset class: Bad Equity'):
             portfolio.AddAccount(account)
 
-    def testDuplicateAccount(self):
-        portfolio = Portfolio(AssetClass('All'))
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
-            ManualAsset('Test Asset', 100.0, {'All': 1.0}))
-        portfolio.AddAccount(account)
-        with self.assertRaisesRegex(AssertionError, 'Attempting to add'):
-            portfolio.AddAccount(account)
-
-    def testGetAssetFromAccount(self):
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
-            ManualAsset('Test Asset', 100.0, {'All': 1.0}))
-        asset = account.GetAsset('Test Asset')
-        self.assertEqual('Test Asset', asset.Name())
+    def testGetSetAssetsFromAccount(self):
+        account = (Account('Roth IRA', 'Post-tax')
+                .AddAsset(ManualAsset('Test Asset 1', 100.0, {'All': 1.0}))
+                .AddAsset(ManualAsset('Test Asset 2', 200.0, {'All': 1.0})))
+        asset = account.GetAsset('Test Asset 1')
+        self.assertEqual('Test Asset 1', asset.Name())
         self.assertAlmostEqual(100.0, asset.Value())
+
+        account.AddAsset(ManualAsset('Test Asset 1', 300.0, {'All': 1.0}), replace=True)
+        account.SetAssets(account.Assets())
+        self.assertEqual(2, len(account.Assets()))
+        account.RemoveAsset('Test Asset 1')
+        with self.assertRaises(KeyError):
+            account.GetAsset('Test Asset 1')
 
     def testAccountDict(self):
         account = Account('Roth IRA', 'Post-tax').AddAsset(
@@ -198,6 +198,23 @@ class LakshmiTest(unittest.TestCase):
         account.AddCash(-10)
         expected.AddRow(['Available Cash:', '-$10.00'])
         self.assertEqual(expected.String(tablefmt='plain'), account.String())
+
+    def testDuplicateAccount(self):
+        portfolio = Portfolio(AssetClass('All'))
+        account = Account('Roth IRA', 'Post-tax').AddAsset(
+            ManualAsset('Test Asset', 100.0, {'All': 1.0}))
+        portfolio.AddAccount(account)
+        with self.assertRaisesRegex(AssertionError, 'Attempting to add'):
+            portfolio.AddAccount(account)
+        portfolio.AddAccount(account, replace=True)
+
+    def testRemoveAccount(self):
+        portfolio = Portfolio(AssetClass('All'))
+        account = Account('Roth IRA', 'Post-tax').AddAsset(
+            ManualAsset('Test Asset', 100.0, {'All': 1.0}))
+        portfolio.AddAccount(account)
+        portfolio.RemoveAccount('Roth IRA')
+        self.assertEqual(0, len(portfolio.Accounts()))
 
     def testOneAsset(self):
         portfolio = Portfolio(AssetClass('Equity')).AddAccount(
@@ -294,7 +311,6 @@ class LakshmiTest(unittest.TestCase):
                  ['Schwab', '', 'Cash', '$840.00']],
                 portfolio.Assets(quantity=True).StrList())
 
-
     def testAssetLocation(self):
         portfolio = Portfolio(
             AssetClass('All')
@@ -310,7 +326,7 @@ class LakshmiTest(unittest.TestCase):
                     .AddAsset(ManualAsset('Bond A', 10.0, {'Bonds': 1.0})))
                 .AddAccount(Account('Account2', 'Pre-tax')
                     .AddAsset(ManualAsset('Bond A', 40.0, {'Bonds': 1.0}))))
-        self.assertEquals(
+        self.assertEqual(
                 [['US', 'Taxable', '100%', '$60.00'],
                  ['Intl', 'Taxable', '100%', '$30.00'],
                  ['Bonds', 'Pre-tax', '80%', '$40.00'],
