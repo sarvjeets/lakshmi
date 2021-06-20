@@ -53,7 +53,7 @@ class LakContext:
 
         self.GetWhatIfs()
         if self.whatifs[0].List() or self.whatifs[1].List():
-            click.secho('Warning: Hypothetical what if are set.\n', fg='red')
+            click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
 
     def Portfolio(self):
         return self._portfolio
