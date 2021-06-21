@@ -319,10 +319,11 @@ def asset(asset, account):
     account_name, asset_name = portfolio.GetAssetNameBySubStr(
             account if account is not None else '', asset)
     account_obj = portfolio.GetAccount(account_name)
+    asset_obj = account_obj.GetAsset(asset_name)
 
-    asset_obj = edit_and_parse(lakshmi.assets.ToDict(
-        account_obj.GetAsset(asset_name)),
-        lakshmi.assets.FromDict)
+    asset_obj = edit_and_parse(asset_obj.ToDict(),
+            asset_obj.FromDict)
+
     if asset_obj is None:
         return
 
