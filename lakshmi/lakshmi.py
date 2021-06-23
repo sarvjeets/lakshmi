@@ -88,7 +88,7 @@ class AssetClass:
     def ToDict(self):
         d = {'Name': self.name}
         if self.children:
-            d['Children'] = [{'Ratio': ratio, 'Asset Class': child.ToDict()}
+            d['Children'] = [{'Ratio': ratio} | child.ToDict()
                              for child, ratio in self.children]
         return d
 
@@ -98,7 +98,7 @@ class AssetClass:
         for child_dict in d.pop('Children', []):
             ret_obj.AddSubClass(
                 child_dict.pop('Ratio'),
-                AssetClass.FromDict(child_dict.pop('Asset Class')))
+                AssetClass.FromDict(child_dict))
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj.Validate()
 
