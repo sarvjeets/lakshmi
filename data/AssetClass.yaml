@@ -1,0 +1,21 @@
+# # The asset classes across which to track asset allocation
+# # (e.g. with lak list aa) command.
+# # The following shows an example of a nested asset allocation:
+# # All -> Equity 60% and Bonds 40%
+# # Equity -> US 60% and International 40%
+# 
+# # Name of the asset class.
+# Name: All
+# # Optionally the children of this asset class (each of which
+# # is itself an asset class and can have more asset classes
+# # as children).
+# Children:
+# - Ratio: 0.6
+#   Name: Equity
+#   Children:
+#   - Ratio: 0.6
+#     Name: US
+#   - Ratio: 0.4
+#     Name: International
+# - Ratio: 0.4
+#   Name: Bonds

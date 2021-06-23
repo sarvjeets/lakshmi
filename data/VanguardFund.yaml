@@ -1,0 +1,23 @@
+# # This asset is used to track Vanguard funds that don't have a
+# # ticker symbol associalted with them. The vakue of this asset
+# # is automatically updated by pulling the current price from
+# # the vanguard website. An example is 'Vanguard Institutional
+# # Total Bond Market Index Trust'.
+# 
+# # The fund id (numeric) for this fund.
+# Fund Id: 7555
+# 
+# # The total number of shared
+# Shares: 212
+# 
+# # How this asset maps to the asset classes defined in the portfolio.
+# # This is used to generate asset allocation (e.g. when using
+# # `lak list aa` command)
+# Asset Mapping:
+#   Bonds: 1.0
+# 
+# # Optionally the tax lot information for the asset.
+# Tax Lots:
+# - Date: 2021/04/28
+#   Quantity: 212
+#   Unit Cost: 110

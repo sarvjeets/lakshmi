@@ -1,0 +1,15 @@
+# # A ManualAsset's value is not updated automatically is a manually
+# # specified.
+# 
+# # A unique name for this asset (in the account).
+# Name: Cash
+# 
+# # The value of this asset.
+# Value: 1000
+# 
+# # How this asset maps to the asset classes defined in the portfolio.
+# # This is used to generate asset allocation (e.g. when using
+# # `lak list aa` command)
+# Asset Mapping:
+#   Bonds: 1.0
+# 
