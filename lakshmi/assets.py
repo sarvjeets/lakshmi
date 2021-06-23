@@ -85,6 +85,8 @@ class Asset(ABC):
         return self.ToTable().String(tablefmt='plain')
 
     def WhatIf(self, delta):
+        if delta == 0:
+            return 0
         if delta < -self.AdjustedValue():
             delta = - self.AdjustedValue()
         self._delta += delta
