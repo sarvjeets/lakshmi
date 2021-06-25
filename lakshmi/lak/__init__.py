@@ -26,7 +26,6 @@ class LakContext:
 
         portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
-        self._portfolio = Portfolio.Load(self.portfolio_filename)
 
         if 'cache' in config:
             cache_dir = config.pop('cache')
@@ -272,6 +271,23 @@ def edit_and_parse(edit_dict, parse_fn, filename):
             if not click.confirm('Do you want to edit again?'):
                 click.echo('No changes made.')
                 return None
+
+
+@lak.command()
+def init():
+    """Initializes a new portfolio by adding asset classes."""
+    global lakctx
+    if Path(lakctx.portfolio_filename).exists():
+        raise click.ClickException('Portfolio file already exists: ' +
+                lakctx.portfolio_filename)
+
+    asset_class = edit_and_parse(
+            None,
+            lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
+            'AssetClass.yaml')
+    if not asset_class:
+        return None
+    Portfolio(asset_class).Save(lakctx.portfolio_filename)
 
 
 @edit.command()
