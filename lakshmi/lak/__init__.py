@@ -69,11 +69,10 @@ lakctx = None
 @click.option('--refresh', '-r', is_flag=True,
         help='Fetch new data instead of using previously cached data.')
 def lak(refresh):
-    lakshmi.cache.set_force_refresh(False)
+    lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:
         lakctx = LakContext()
-        lakshmi.cache.set_force_refresh(refresh)
 
 
 @lak.group(chain=True)
