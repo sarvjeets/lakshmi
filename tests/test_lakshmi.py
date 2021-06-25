@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 
 
 class LakshmiTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         lakshmi.cache.set_cache_dir(None)  # Disable caching.
 
     def testEmptyPortfolio(self):

@@ -8,9 +8,10 @@ from unittest.mock import MagicMock, patch
 
 
 class AssetsTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         lakshmi.cache.set_cache_dir(None)  # Disable caching.
-        self.data_dir = (pathlib.Path(__file__).parent / 'data')
+        cls.data_dir = (pathlib.Path(__file__).parent / 'data')
 
     def testDictManualAssetWithWhatIf(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
