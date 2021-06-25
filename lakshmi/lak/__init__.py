@@ -237,7 +237,7 @@ def info(asset, account):
 
 @lak.group()
 def edit():
-    """Edit, add or delete parts of the portfolio."""
+    """Edit parts of the portfolio."""
     pass
 
 
@@ -249,7 +249,8 @@ def edit_and_parse(edit_dict, parse_fn, help_filename=None):
                 'data' / help_filename)
         HELP_MSG += help_filepath.read_text()
 
-    original_str = edit_str = yaml.dump(edit_dict, sort_keys=False) + HELP_MSG
+    original_str = edit_str = (yaml.dump(edit_dict, sort_keys=False)
+            if edit_dict else ''  + HELP_MSG)
     while True:
         edit_str = click.edit(edit_str)
         if not edit_str or original_str == edit_str:
@@ -315,10 +316,10 @@ def account(account):
 @edit.command()
 @click.option('--asset', '-a', type=str, metavar='substr', required=True,
         help='Get Info about this asset (a sub-string that matches either '
-        'the asset name or the short name)')
+        'the asset name or the short name).')
 @click.option('--account', '-t', type=str, metavar='substr',
         help='Get Info about this account (a sub-string that matches the '
-        'account name)')
+        'account name).')
 def asset(asset, account):
     """Edit assets in the portfolio."""
     global lakctx
@@ -339,6 +340,52 @@ def asset(asset, account):
     if asset_obj.ShortName() != asset_name:
         account_obj.RemoveAsset(asset_name)
     account_obj.AddAsset(asset_obj, replace=True)
+
+    lakctx.SavePortfolio()
+
+
+@lak.group()
+def add():
+    """Add new accounts or assets to the portfolio."""
+    pass
+
+
+@add.command()
+def account():
+    """Add a new account to the portfolio."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+
+    account = edit_and_parse(None, lakshmi.Account.FromDict, 'Account.yaml')
+    if account is None:
+        return
+    portfolio.AddAccount(account)
+    lakctx.SavePortfolio()
+
+
+@add.command()
+@click.option('--asset-type', '-p', required=True,
+        type=click.Choice([c.__name__ for c in lakshmi.assets.CLASSES],
+            case_sensitive=False),
+        help='Add this type of asset.')
+@click.option('--account', '-t', type=str, metavar='substr',
+        help='Add asset to this account (a sub-string that matches the '
+        'account name).')
+def asset(asset_type, account):
+    """Edit assets in the portfolio."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+
+    account_name = portfolio.GetAccountNameBySubStr(account)
+    account_obj = portfolio.GetAccount(account_name)
+    asset_cls = [c for c in lakshmi.assets.CLASSES if c.__name__ == asset_type][0]
+
+    asset_obj = edit_and_parse(None, asset_cls.FromDict, asset_type + '.yaml')
+
+    if asset_obj is None:
+        return
+
+    account_obj.AddAsset(asset_obj)
 
     lakctx.SavePortfolio()
 

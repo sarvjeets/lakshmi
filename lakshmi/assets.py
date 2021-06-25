@@ -13,14 +13,12 @@ import yfinance
 def ToDict(asset):
     return {asset.__class__.__name__: asset.ToDict()}
 
-
 def FromDict(d):
     keys = list(d.keys())
     assert len(keys) == 1
     class_name = keys[0]
 
-    classes = [ManualAsset, TickerAsset, VanguardFund, IBonds, EEBonds]
-    for c in classes:
+    for c in CLASSES:
         if c.__name__ == class_name:
             return c.FromDict(d.pop(class_name))
 
@@ -488,3 +486,6 @@ class EEBonds(_TreasuryBonds):
 
     def ShortName(self):
         return self.Name()
+
+
+CLASSES = [ManualAsset, TickerAsset, VanguardFund, IBonds, EEBonds]
