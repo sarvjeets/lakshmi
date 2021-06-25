@@ -284,13 +284,10 @@ def assetclass():
 
 
 @edit.command()
-@click.option('--account', '-t', type=str, metavar='substr',
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
         help='Edit the account that matches this sub-string')
 def account(account):
     """Edit accounts in the portfolio."""
-    if account is None:
-        raise click.BadParameter('--account must be specified')
-
     global lakctx
     portfolio = lakctx.Portfolio()
 
@@ -368,7 +365,7 @@ def account():
         type=click.Choice([c.__name__ for c in lakshmi.assets.CLASSES],
             case_sensitive=False),
         help='Add this type of asset.')
-@click.option('--account', '-t', type=str, metavar='substr',
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
         help='Add asset to this account (a sub-string that matches the '
         'account name).')
 def asset(asset_type, account):
@@ -387,6 +384,44 @@ def asset(asset_type, account):
 
     account_obj.AddAsset(asset_obj)
 
+    lakctx.SavePortfolio()
+
+
+@lak.group()
+def delete():
+    """Delete an account or asset."""
+    pass
+
+@delete.command()
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+        help='Delete the account that matches this sub-string')
+@click.confirmation_option(prompt='This operation is not reversable. Are you sure?')
+def account(account):
+    """Delete an account in the portfolio."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+    account_name = portfolio.GetAccountNameBySubStr(account)
+    portfolio.RemoveAccount(account_name)
+    lakctx.SavePortfolio()
+
+
+@delete.command()
+@click.option('--asset', '-a', type=str, metavar='substr', required=True,
+        help='Delete this asset (a sub-string that matches either '
+        'the asset name or the short name).')
+@click.option('--account', '-t', type=str, metavar='substr',
+        help='Delete the specified asset from this account (a sub-string '
+        'that matches the account name).')
+@click.confirmation_option(prompt='This operation is not reversable. Are you sure?')
+def asset(asset, account):
+    """Delete an asset from the portfolio."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+
+    account_name, asset_name = portfolio.GetAssetNameBySubStr(
+            account if account is not None else '', asset)
+    account_obj = portfolio.GetAccount(account_name)
+    account_obj.RemoveAsset(asset_name)
     lakctx.SavePortfolio()
 
 
