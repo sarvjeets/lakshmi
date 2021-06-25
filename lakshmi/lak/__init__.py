@@ -80,9 +80,6 @@ def lak(refresh):
 def list():
     """Command to list various parts of the portfolio."""
     global lakctx
-    #account_whatifs, asset_whatifs = lakctx.Portfolio().GetWhatIfs()
-    #if account_whatifs.List() or asset_whatifs.List():
-    #    click.secho('Warning: Hypothetical what if are set.\n', fg='red')
 
 
 @list.command()
