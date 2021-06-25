@@ -241,15 +241,24 @@ def edit():
     pass
 
 
-def edit_and_parse(edit_dict, parse_fn):
-    original_str = edit_str = yaml.dump(edit_dict, sort_keys=False)
+def edit_and_parse(edit_dict, parse_fn, help_filename=None):
+    HELP_MSG = ('\n\n' + '# # Lines starting with "#" are ignored and an empty '
+            'message aborts this command.\n\n')
+    if help_filename:
+        help_filepath = (Path(__file__).parents[2].absolute() /
+                'data' / help_filename)
+        HELP_MSG += help_filepath.read_text()
+
+    original_str = edit_str = yaml.dump(edit_dict, sort_keys=False) + HELP_MSG
     while True:
         edit_str = click.edit(edit_str)
         if not edit_str or original_str == edit_str:
             click.echo('No changes made.')
             return None
+        edit_str.split(HELP_MSG, 1)[0].rstrip('\n')
         try:
-            return parse_fn(yaml.load(edit_str, Loader=yaml.SafeLoader))
+            return parse_fn(yaml.load(edit_str.split(
+                HELP_MSG, 1)[0].rstrip('\n'), Loader=yaml.SafeLoader))
         except Exception as e:
             click.echo('Error parsing file: ' + repr(e))
             if not click.confirm('Do you want to edit again?'):
@@ -265,7 +274,8 @@ def assetclass():
 
     asset_classes = edit_and_parse(
             portfolio.asset_classes.ToDict(),
-            lambda x: lakshmi.AssetClass.FromDict(x).Validate())
+            lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
+            'AssetClass.yaml')
     if asset_classes is None:
         return
     portfolio.asset_classes = asset_classes
@@ -290,7 +300,8 @@ def account(account):
 
     account_obj = edit_and_parse(
             account_obj.ToDict(),
-            lakshmi.Account.FromDict)
+            lakshmi.Account.FromDict,
+            'Account.yaml')
     if account_obj is None:
         return
     account_obj.SetAssets(assets)
@@ -319,7 +330,8 @@ def asset(asset, account):
     asset_obj = account_obj.GetAsset(asset_name)
 
     asset_obj = edit_and_parse(asset_obj.ToDict(),
-            asset_obj.FromDict)
+            asset_obj.FromDict,
+            asset_obj.__class__.__name__ + '.yaml')
 
     if asset_obj is None:
         return
