@@ -20,6 +20,8 @@ class LakContext:
         self.lakrc = lakrc
         self.continued = False
         self.whatifs = None
+        self._portfolio = None
+
         config = self._ReturnConfig()
 
         portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
@@ -56,7 +58,10 @@ class LakContext:
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
 
     def Portfolio(self):
+        if not self._portfolio:
+            self._portfolio = Portfolio.Load(self.portfolio_filename)
         return self._portfolio
+
 
     def SavePortfolio(self):
         self._portfolio.Save(self.portfolio_filename)
@@ -78,8 +83,7 @@ def lak(refresh):
 @lak.group(chain=True)
 def list():
     """Command to list various parts of the portfolio."""
-    global lakctx
-
+    pass
 
 @list.command()
 def total():
@@ -240,25 +244,29 @@ def edit():
     pass
 
 
-def edit_and_parse(edit_dict, parse_fn, help_filename=None):
-    HELP_MSG = ('\n\n' + '# # Lines starting with "#" are ignored and an empty '
-            'message aborts this command.\n\n')
-    if help_filename:
-        help_filepath = (Path(__file__).parents[2].absolute() /
-                'data' / help_filename)
-        HELP_MSG += help_filepath.read_text()
+def edit_and_parse(edit_dict, parse_fn, filename):
+    filepath = (Path(__file__).parents[2].absolute() /
+            'data' / filename)
+    if edit_dict:
+        HELP_MSG = ('\n\n' + '# # Lines starting with "#" are ignored and an '
+                'empty message aborts this command.\n\n' +
+                filepath.read_text().replace('\n', '\n# '))
+        edit_str = yaml.dump(edit_dict, sort_keys=False) + HELP_MSG
+    else:
+        edit_str = filepath.read_text()
 
-    original_str = edit_str = (yaml.dump(edit_dict, sort_keys=False)
-            if edit_dict else ''  + HELP_MSG)
     while True:
         edit_str = click.edit(edit_str)
-        if not edit_str or original_str == edit_str:
+        if not edit_str:
             click.echo('No changes made.')
             return None
-        edit_str.split(HELP_MSG, 1)[0].rstrip('\n')
         try:
-            return parse_fn(yaml.load(edit_str.split(
-                HELP_MSG, 1)[0].rstrip('\n'), Loader=yaml.SafeLoader))
+            if edit_dict:
+                parse_str = edit_str.split(HELP_MSG, 1)[0].rstrip('\n')
+            else:
+                parse_str = edit_str
+
+            return parse_fn(yaml.load(parse_str, Loader=yaml.SafeLoader))
         except Exception as e:
             click.echo('Error parsing file: ' + repr(e))
             if not click.confirm('Do you want to edit again?'):

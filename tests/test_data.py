@@ -9,8 +9,7 @@ class DataTest(unittest.TestCase):
     def ParseDict(self, filename, function):
         file_path = (Path(__file__).parents[1].absolute() /
                 'data' / filename)
-        non_commented_str = file_path.read_text().replace('\n# ', '\n')
-        d = yaml.load(non_commented_str, Loader=yaml.SafeLoader)
+        d = yaml.load(file_path.read_text(), Loader=yaml.SafeLoader)
         return function(d)
 
     def testAccount(self):

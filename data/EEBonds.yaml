@@ -1,16 +1,16 @@
-# # EE Bonds are bought at Treasury Direct website. This asset allows
-# # you to track the current value of your EE Bonds purchased from
-# # Treasury Direct.
-# 
-# # How this asset maps to the asset classes defined in the portfolio.
-# # This is used to generate asset allocation (e.g. when using
-# # `lak list aa` command)
-# Asset Mapping:
-#   Bonds: 1.0
-# 
-# # List of EE Bonds with the purchase month and denomination.
-# Bonds:
-# - Issue Date: 11/2012
-#   Denomination: 10000
-# - Issue Date: 01/2013
-#   Denomination: 10000
+# EE Bonds are bought at Treasury Direct website. This asset allows
+# you to track the current value of your EE Bonds purchased from
+# Treasury Direct.
+
+# How this asset maps to the asset classes defined in the portfolio.
+# This is used to generate asset allocation (e.g. when using
+# `lak list aa` command)
+Asset Mapping:
+  Bonds: 1.0
+
+# List of EE Bonds with the purchase month and denomination.
+Bonds:
+- Issue Date: 11/2012
+  Denomination: 10000
+- Issue Date: 01/2013
+  Denomination: 10000
