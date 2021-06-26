@@ -14,7 +14,7 @@ class Analyzer(ABC):
         pass
 
 
-class TLHAnalyze(Analyzer):
+class TLH(Analyzer):
     """Tax loss harvesting opportunity analyzer.
 
     This triggers a message with details of tax lots that could be sold to

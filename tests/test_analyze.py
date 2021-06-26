@@ -7,15 +7,15 @@ from unittest.mock import patch
 
 
 class AnalyzeTest(unittest.TestCase):
-    def testTLHAnalyzeNoLots(self):
+    def testTLH(self):
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable').AddAsset(
                 ManualAsset('Cash', 100.0, {'All': 1.0})))
         self.assertFalse(
-            analyze.TLHAnalyze(0.5, 10000).Analyze(portfolio).List())
+            analyze.TLH(0.5, 10000).Analyze(portfolio).List())
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testTLHAnalyzePercent(self, mock_price):
+    def testTLH(self, mock_price):
         mock_price.return_value = 10.0
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable')
@@ -31,10 +31,10 @@ class AnalyzeTest(unittest.TestCase):
         self.assertListEqual(
             [['Schwab', 'VTI', '2020/01/31', '$5,500.00', '52%'],
              ['Schwab', 'VXUS', '2020/01/25', '$2,000.00', '67%']],
-            analyze.TLHAnalyze(0.5).Analyze(portfolio).StrList())
+            analyze.TLH(0.5).Analyze(portfolio).StrList())
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testTLHAnalyzePercentAndDollars(self, mock_price):
+    def testTLH(self, mock_price):
         mock_price.return_value = 10.0
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable')
@@ -50,7 +50,7 @@ class AnalyzeTest(unittest.TestCase):
             [['Schwab', 'VTI', '2020/01/31', '$500.00', '9%'],
              ['Schwab', 'VTI', '2021/03/31', '$1,000.00', '17%'],
                 ['Schwab', 'VXUS', '2020/01/25', '$2,000.00', '67%']],
-            analyze.TLHAnalyze(0.5, 1400).Analyze(portfolio).StrList())
+            analyze.TLH(0.5, 1400).Analyze(portfolio).StrList())
 
     def testRebalanceAnalyzeOutsideBounds(self):
         portfolio = Portfolio(
