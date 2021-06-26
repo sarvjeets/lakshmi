@@ -1,5 +1,6 @@
 import click
 from lakshmi import Portfolio
+import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
 from lakshmi.table import Table
@@ -39,7 +40,7 @@ class LakContext:
 
     def Separator(self):
         if self.continued:
-            click.echo('\n')
+            click.echo()
         # Set it up so that separator is printed for the next command.
         self.continued = True
 
@@ -446,6 +447,50 @@ def asset(asset, account):
     account_obj = portfolio.GetAccount(account_name)
     account_obj.RemoveAsset(asset_name)
     lakctx.SavePortfolio()
+
+
+@lak.group(chain=True)
+def analyze():
+    pass
+
+@analyze.command()
+@click.option('--max-percentage', '-p', type=float, default=10,
+        show_default=True,
+        help='The max percenatage loss for each lot before TLHing.')
+@click.option('--max-dollars', '-d', type=int,
+        help='The max absolute loss for an asset (across all tax lots) '
+        'before TLHing.')
+def tlh(max_percentage, max_dollars):
+    """Shows which lots can be Tax-loss harvested."""
+    global lakctx
+    lakctx.Separator()
+    table = lakshmi.analyze.TLH(max_percentage/100, max_dollars).Analyze(
+            lakctx.Portfolio())
+    if not table.List():
+        click.echo('No tax lots to harvest.')
+    else:
+        click.echo(table.String())
+
+
+@analyze.command()
+@click.option('--max-abs-percentage', '-a', type=float, default=5,
+        show_default=True,
+        help='Max absolute difference before rebalancing.')
+@click.option('--max-relative-percentage', '-r', type=float, default=25,
+        help='The max relatve differnce before rebalancing.')
+def rebalance(max_abs_percentage, max_relative_percentage):
+    """Shows if assets needs to be rebalanced based on a band
+    based rebalancing scheme. For more information, please refer to
+    https://www.whitecoatinvestor.com/rebalancing-the-525-rule/."""
+    global lakctx
+    lakctx.Separator()
+    table = lakshmi.analyze.BandRebalance(
+            max_abs_percentage/100, max_relative_percentage/100).Analyze(
+            lakctx.Portfolio())
+    if not table.List():
+        click.echo('Portfolio Asset allocation within bounds.')
+    else:
+        click.echo(table.String())
 
 
 if __name__ == '__main__':
