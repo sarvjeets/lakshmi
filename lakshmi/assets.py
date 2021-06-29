@@ -344,7 +344,6 @@ class VanguardFund(TradedAsset, Cacheable):
 class _TreasuryBonds(Asset):
     class Bond(Cacheable):
         """A class representing individual I or EE Bond."""
-
         def __init__(self, series, issue_date, denom):
             self.series = series
             self.issue_date = issue_date
@@ -352,22 +351,14 @@ class _TreasuryBonds(Asset):
             self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 
         def CacheKey(self):
-            return '{}_{}_{}_{}'.format(
+            return '{}_{}_{}'.format(
                 self.series,
                 self.issue_date.replace('/', '.'),
-                self.denom,
                 self.redemption_date.replace('/', '.'))
 
         @cache(32)  # The value of a Bond doesn't change in a month.
         def _GetBondInfo(self):
-            # TD website doesn't support some denominations for electronic
-            # bonds.
-            scale = self.denom / 1000.0
-            if self.series == 'EE':
-                # EE Bonds returned are half the value (I guess TD website
-                # assumes paper bonds)
-                scale *= 2
-
+            """Returns the rate and value of a $1000 bond."""
             data = {
                 'RedemptionDate': self.redemption_date,
                 'Series': self.series,
@@ -383,11 +374,13 @@ class _TreasuryBonds(Asset):
             ret_vals = re.findall('\n<td>.*</td>', req.text)
             rate = re.sub('\n|<[^>]+>', '', ret_vals[6])
             value = float(re.sub('\n|\\$|,|<[^>]+>', '', ret_vals[7]))
-            return rate, scale * value
+            # EE Bonds returned are half the value (I guess TD website
+            # assumes paper bonds)
+            return rate, value * (2.0 if self.series == 'EE' else 1.0)
 
         def Value(self):
             unused_rate, value = self._GetBondInfo()
-            return value
+            return value * (self.denom / 1000.0)
 
         def Rate(self):
             rate, unused_value = self._GetBondInfo()
@@ -395,6 +388,7 @@ class _TreasuryBonds(Asset):
 
         def AsList(self):
             rate, value = self._GetBondInfo()
+            value *= (self.denom / 1000.0)
             return [self.issue_date, self.denom, rate, value]
 
     def __init__(self, series, class2ratio):
