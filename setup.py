@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
+from lakshmi.constants import NAME, VERSION
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setup(
-    name='lakshmi',
-    version='1.0.0',
+    name=NAME,
+    version=VERSION,
     author='Sarvjeet Singh',
     author_email='sarvjeet@gmail.com',
     description='Investing Tools.',

@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from lakshmi.cache import cache, Cacheable
+import lakshmi.constants
 from lakshmi.table import Table
 import lakshmi.utils as utils
 import datetime
@@ -238,7 +239,10 @@ class TickerAsset(TradedAsset, Cacheable):
 
     def __init__(self, ticker, shares, class2ratio):
         self.ticker = ticker
-        self.yticker = yfinance.Ticker(ticker)
+        session = requests.Session()
+        session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
+            '{lakshmi.constants.VERSION}')
+        self.yticker = yfinance.Ticker(ticker, session=session)
         super().__init__(shares, class2ratio)
 
     def ToDict(self):

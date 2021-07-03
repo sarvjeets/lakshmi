@@ -61,7 +61,7 @@ class AssetsTest(unittest.TestCase):
         with self.assertRaisesRegex(assets.NotFoundError, 'Cannot retrieve ticker'):
             ticker_asset.Value()
 
-        MockTicker.assert_called_once_with('bad')
+        MockTicker.assert_called_once()
 
     @patch('yfinance.Ticker')
     def testGoodTicker(self, MockTicker):
@@ -75,7 +75,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('Vanguard Cash Reserves Federal', vmmxx.Name())
         self.assertEqual('VMMXX', vmmxx.ShortName())
 
-        MockTicker.assert_called_once_with('VMMXX')
+        MockTicker.assert_called_once()
 
     def testTaxLotsTicker(self):
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
