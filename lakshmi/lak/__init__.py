@@ -62,7 +62,6 @@ class LakContext:
             self._portfolio = Portfolio.Load(self.portfolio_filename)
         return self._portfolio
 
-
     def SavePortfolio(self):
         self._portfolio.Save(self.portfolio_filename)
 
