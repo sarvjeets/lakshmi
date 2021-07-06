@@ -1,4 +1,4 @@
-# lakshmi
+# Lakshmi
 
 ## Introduction
 This project is inspired by all the time I spent on
@@ -7,15 +7,67 @@ things like asset allocation, location and minimizing costs. The focus is on
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to acheive above-average
 returns (after costs). This tool is build around the same priciples to help
-an average investor manage their investing portfolio.
+an _average_ investor manage their investing portfolio.
 
 ## Installation
 
-## Usage
+TODO: Add installation instruction once it's published.
 
-### Command-line interface
+## Command-line interface
 
-### Library
+(This is a quick-start guide. You can find a detailed description of
+the tool [here](add_link))
+
+The simplest way to use this project is via the **lak** command. You can
+access upto date help via:
+
+```
+lak --help
+```
+
+You can create a new portfolio by either:
+1. Copying an [existing](TODO) portfolio file to ~/portfolio.yaml and editing
+it.
+
+-- OR --
+
+2. You can do it step-by-step via the lak commands. The following command will
+open up an editor to enter your desired asset allocation:
+```
+lak init
+```
+
+You can also view help for any of the commands. For example, to view help for
+all commands mentioned in this quick start guide you can run the following
+commands:
+```
+lak init --help
+lak add --help
+lak add account --help
+lak add asset --help
+lak list --help
+```
+
+You can add few accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) via
+the **lak add** command:
+```
+lak add account
+```
+After that you can assets within these accounts via:
+```
+lak add asset -p TickerAsset -t account_str 
+```
+
+That's it. You can view you portfolio, asset allocation and asset location via:
+```
+lak list assets total aa al
+```
+
+[Detailed Description of the tool](todo)
+
+## Library
+
+TODO: Add details about the lakshmi module.
 
 ## Dedication
 
