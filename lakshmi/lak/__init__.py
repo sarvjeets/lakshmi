@@ -506,6 +506,7 @@ def asset(asset, account):
 
 @lak.group(chain=True)
 def analyze():
+    """Analyze the portfolio. """
     pass
 
 
