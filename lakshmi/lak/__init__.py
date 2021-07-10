@@ -1,3 +1,9 @@
+"""Command line interface for Lakshmi.
+
+This is meant to be used as an application and would not work well if used
+as library (by design it keeps a lot of global state and is not safe to be
+called multiple times from the same program). If there is ever need to use
+it as a library, this code requires major refactoring to clean it up."""
 
 from pathlib import Path
 from lakshmi import Portfolio
@@ -89,7 +95,7 @@ class LakContext:
         return self.portfolio
 
     def SavePortfolio(self):
-        """Sacve self.portfolio back to file."""
+        """Save self.portfolio back to file."""
         self.portfolio.Save(self.portfolio_filename)
 
 
