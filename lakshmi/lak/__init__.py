@@ -18,6 +18,7 @@ import yaml
 class LakContext:
     """Context class with utilities to help the script keep state and
     share it."""
+    DEFAULT_PORTFOLIO = '~/portfolio.yaml'
 
     def _ReturnConfig(self):
         """Internal function to read and return .lakrc file."""
@@ -37,10 +38,12 @@ class LakContext:
         self.whatifs = None
         # The loaded portfolio.
         self.portfolio = None
+        self.tablefmt = None
 
         config = self._ReturnConfig()
 
-        portfolio_filename = config.pop('portfolio', '~/portfolio.yaml')
+        portfolio_filename = config.pop(
+                'portfolio', LakContext.DEFAULT_PORTFOLIO)
         portfolio_file = Path(portfolio_filename).expanduser()
         if not portfolio_file.exists():
             raise click.ClickException(
@@ -119,11 +122,21 @@ def lak(refresh):
         # Setup a new context object for child commands.
         lakctx = LakContext()
 
-
 @lak.group(chain=True)
-def list():
+@click.option('--format',  '-f',
+              type=click.Choice(
+                  ['plain', 'simple', 'github', 'grid', 'fancy_grid',
+                    'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex',
+                    'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
+                  case_sensitive=False),
+              default='simple',
+              help='Set output table format. For more information on table'
+              'formats, please see "Table format" section on: '
+              'https://pypi.org/project/tabulate/')
+def list(format):
     """Command to list various parts of the portfolio."""
-    pass
+    global lakctx
+    lakctx.tablefmt = format
 
 
 @list.command()
@@ -135,7 +148,7 @@ def total():
     portfolio = lakctx.Portfolio()
     click.echo(
         Table(2, coltypes=['str', 'dollars']).AddRow(
-            ['Total Assets', portfolio.TotalValue()]).String())
+            ['Total Assets', portfolio.TotalValue()]).String(lakctx.tablefmt))
 
 
 @list.command()
@@ -147,7 +160,7 @@ def al():
     lakctx.WarnForWhatIfs()
     lakctx.OptionalSeparator()
     portfolio = lakctx.Portfolio()
-    click.echo(portfolio.AssetLocation().String())
+    click.echo(portfolio.AssetLocation().String(lakctx.tablefmt))
 
 
 @list.command()
@@ -157,8 +170,8 @@ def al():
 @click.option('--asset-class', '-a', type=str,
               help='If provided, only print asset allocation for these asset '
               'classes. This is comma seperated list of asset classes (not '
-              'necessarily leaf asset classes) and the allocation across these '
-              'asset classes should sum to 100%.')
+              'necessarily leaf asset classes) and the allocation across '
+              'these asset classes should sum to 100%.')
 def aa(compact, asset_class):
     """Prints the Asset Allocation of the portfolio. For more information,
     please see https://www.bogleheads.org/wiki/Asset_allocation"""
@@ -173,12 +186,15 @@ def aa(compact, asset_class):
                 '--no-compact is only supported when --asset-class '
                 'is not specified.')
         classes_list = [c.strip() for c in asset_class.split(',')]
-        click.echo(portfolio.AssetAllocation(classes_list).String())
+        click.echo(portfolio.AssetAllocation(classes_list).String(
+            lakctx.tablefmt))
     else:
         if compact:
-            click.echo(portfolio.AssetAllocationCompact().String())
+            click.echo(portfolio.AssetAllocationCompact().String(
+                lakctx.tablefmt))
         else:
-            click.echo(portfolio.AssetAllocationTree().String())
+            click.echo(portfolio.AssetAllocationTree().String(
+                lakctx.tablefmt))
 
 
 @list.command()
@@ -186,8 +202,8 @@ def aa(compact, asset_class):
               help='Print the short name of the assets as well (e.g. Ticker '
               'for assets that have it).')
 @click.option('--quantity', '-q', is_flag=True,
-              help='Print the quantity of the asset (e.g. quantity/shares for '
-              'assets that have it).')
+              help='Print the quantity of the asset (e.g. quantity/shares '
+              'for assets that have it).')
 def assets(short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     global lakctx
@@ -195,7 +211,7 @@ def assets(short_name, quantity):
     lakctx.OptionalSeparator()
     portfolio = lakctx.Portfolio()
     click.echo(portfolio.Assets(short_name=short_name,
-                                quantity=quantity).String())
+                                quantity=quantity).String(lakctx.tablefmt))
 
 
 @list.command()
@@ -205,10 +221,10 @@ def whatifs():
     account_whatifs, asset_whatifs = lakctx.GetWhatIfs()
     if account_whatifs.List():
         lakctx.OptionalSeparator()
-        click.echo(account_whatifs.String())
+        click.echo(account_whatifs.String(lakctx.tablefmt))
     if asset_whatifs.List():
         lakctx.OptionalSeparator()
-        click.echo(asset_whatifs.String())
+        click.echo(asset_whatifs.String(lakctx.tablefmt))
 
 
 @lak.command(context_settings={"ignore_unknown_options": True})
@@ -266,8 +282,8 @@ def whatif(asset, account, reset, delta):
               help='Get Info about this asset (a sub-string that matches '
               'either the asset name or the short name)')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a sub-string that matches the '
-              'account name)')
+              help='Get Info about this account (a sub-string that matches '
+              'the account name)')
 def info(asset, account):
     """Prints detailed information about an asset or account. If only account
     is specified, this command prints information about an account. If asset
@@ -445,7 +461,7 @@ def account():
     lakctx.SavePortfolio()
 
 
-@add.command()
+@add.command
 @click.option('--asset-type', '-p', required=True,
               type=click.Choice([c.__name__ for c in lakshmi.assets.CLASSES],
                                 case_sensitive=False),
