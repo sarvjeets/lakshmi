@@ -26,6 +26,24 @@ upto help, run:
 
 ```
 lak --help
+
+Usage: lak [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version      Show the version and exit.
+  -r, --refresh  Re-fetch all data instead of using previously cached data.
+                 For large portfolios this would be extremely slow.
+  --help         Show this message and exit.
+
+Commands:
+  add      Add new accounts or assets to the portfolio.
+  analyze  Analyze the portfolio.
+  delete   Delete an account or asset.
+  edit     Edit parts of the portfolio.
+  info     Prints detailed information about an asset or account.
+  init     Initializes a new portfolio by adding asset classes.
+  list     Command to list various parts of the portfolio.
+  whatif   Run hypothetical what if scenarios by adding DELTA to an...
 ```
 
 A new portfolio can be created by either:
