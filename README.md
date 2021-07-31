@@ -6,12 +6,12 @@ This project is inspired by all the time I spent on
 things like asset allocation, location and minimizing costs. The focus is on
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to acheive above-average
-returns (after costs). This tool is build around the same priciples to help
+returns after costs. This tool is build around the same priciples to help
 an _average_ investor manage their investing portfolio.
 
 ## Installation
 
-You can install the package via pip:
+To install the library and the lak command line tool, run:
 ```
 pip install lakshmi
 ```
@@ -19,49 +19,56 @@ pip install lakshmi
 ## Command-line interface
 
 (This is a quick-start guide. You may find a detailed description of
-the tool [here](add_link))
+the tool [here](docs/lak.md))
 
-The simplest way to use this project is via the **lak** command. You may
-access upto date help via:
+The simplest way to use this project is via the **lak** command. To access the
+upto help, run:
 
 ```
 lak --help
 ```
 
-You may create a new portfolio by either:
-1. Copying an [existing](TODO) portfolio file to ~/portfolio.yaml and editing
-it.
+A new portfolio can be created by either:
+1. Copying an [existing](data/portfolio.yaml) (TODO: Add file) portfolio file to 
+~/portfolio.yaml and editing it.
 
 -- OR --
 
-2. You may do it step-by-step via the lak commands. The following command will
-open up an editor to enter your desired asset allocation:
+2. Using the lak commands to create a new portfolio. The following command will
+open up an editor to input the desired asset allocation:
 ```
 lak init
 ```
 
-You can also view help for any of the commands. For example, to view help for
-the init command:
+To view help for the init command, please run:
 ```
 lak init --help
 ```
 
-You may add few accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) via
-the **lak add** command:
+Accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) can be added via
+the **lak add account** command:
 ```
 lak add account
 ```
-After that you can add assets to these accounts via:
+Assets can be added to the account via the **lak add asset** command:
 ```
 lak add asset -p TickerAsset -t account_str
 ```
+where account_str is a sub-string that uniquely matches an account added previously.
 
-That's it. Now you can view you portfolio, asset allocation and asset location via:
+That's it. To view all the assets, asset allocation and asset location, run:
+```
+lak list assets 
+lak list total
+list list aa
+lak list al
+```
+The **lak list** commands can also be chained:
 ```
 lak list assets total aa al
 ```
 
-[TODO: Detailed Description of the tool](todo)
+[TODO: Detailed Description of the tool](docs/lak.md)
 
 ## Library
 
