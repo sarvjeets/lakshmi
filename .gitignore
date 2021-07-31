@@ -1,5 +1,7 @@
 *~
 *.swp
 __pycache__
+build
+dist
 lakshmi.egg-info
 venv
