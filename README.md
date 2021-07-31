@@ -11,7 +11,10 @@ an _average_ investor manage their investing portfolio.
 
 ## Installation
 
-TODO: Add installation instructions once it's published.
+You can install the package via pip:
+```
+pip install lakshmi
+```
 
 ## Command-line interface
 
@@ -50,7 +53,7 @@ lak add account
 ```
 After that you can add assets to these accounts via:
 ```
-lak add asset -p TickerAsset -t account_str 
+lak add asset -p TickerAsset -t account_str
 ```
 
 That's it. Now you can view you portfolio, asset allocation and asset location via:
