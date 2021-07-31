@@ -11,7 +11,7 @@ an _average_ investor manage their investing portfolio.
 
 ## Installation
 
-TODO: Add installation instruction once it's published.
+TODO: Add installation instructions once it's published.
 
 ## Command-line interface
 
@@ -58,7 +58,7 @@ That's it. Now you can view you portfolio, asset allocation and asset location v
 lak list assets total aa al
 ```
 
-[Detailed Description of the tool](todo)
+[TODO: Detailed Description of the tool](todo)
 
 ## Library
 
@@ -78,4 +78,3 @@ tremendously in my investing journey:
 [Livesoft](https://www.bogleheads.org/forum/viewtopic.php?t=237269),
 [Mel Lindauer](https://www.bogleheads.org/wiki/Mel_Lindauer) and
 [LadyGeek](https://www.bogleheads.org/blog/2018/12/04/interview-with-ladygeek-bogleheads-site-administrator/).
-
