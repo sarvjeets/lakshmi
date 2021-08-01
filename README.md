@@ -51,9 +51,6 @@ pip install lakshmi
 
 ## Command-line interface
 
-(This is a quick-start guide. You may find a detailed description of
-the tool [here](docs/lak.md))
-
 The simplest way to use this project is via the **lak** command. To access the
 upto help, run:
 
@@ -131,7 +128,7 @@ That's it. To view all the assets, asset allocation and asset location, run:
 ```
 lak list assets
 lak list total
-list list aa
+lak list aa
 lak list al
 ```
 The **lak list** commands can also be chained:
