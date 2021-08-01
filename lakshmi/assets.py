@@ -87,6 +87,8 @@ class Asset(ABC):
         if delta < 0 and delta < -self.AdjustedValue():
             delta = - self.AdjustedValue()
         self._delta += delta
+        if abs(self._delta) < 1e-6:
+            self._delta = 0
         return delta
 
     def AdjustedValue(self):

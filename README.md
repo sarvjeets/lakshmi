@@ -47,7 +47,7 @@ Commands:
 ```
 
 A new portfolio can be created by either:
-1. Copying an [existing](data/portfolio.yaml) (TODO: Add file) portfolio file to
+1. Copying an [existing](data/portfolio.yaml) portfolio file to
 ~/portfolio.yaml and editing it.
 
 -- OR --

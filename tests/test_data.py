@@ -40,6 +40,10 @@ class DataTest(unittest.TestCase):
         self.assertIsNotNone(self.ParseDict('VanguardFund.yaml',
             lakshmi.assets.VanguardFund.FromDict))
 
+    def testPortfolio(self):
+        self.assertIsNotNone(self.ParseDict('portfolio.yaml',
+            lakshmi.Portfolio.FromDict))
+
 
 if __name__ == '__main__':
     unittest.main()

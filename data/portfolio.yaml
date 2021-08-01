@@ -1,0 +1,50 @@
+Asset Classes:
+  Name: All
+  Children:
+  - Ratio: 0.6
+    Name: Equity
+    Children:
+    - Ratio: 0.6
+      Name: US
+    - Ratio: 0.4
+      Name: Intl
+  - Ratio: 0.4
+    Name: Bonds
+Accounts:
+- Name: Schwab Taxable
+  Account Type: Taxable
+  Assets:
+  - TickerAsset:
+      Ticker: VTI
+      Shares: 1
+      Asset Mapping:
+        US: 1.0
+      Tax Lots:
+      - Date: 2021/07/31
+        Quantity: 1
+        Unit Cost: 226
+  - TickerAsset:
+      Ticker: VXUS
+      Shares: 1
+      Asset Mapping:
+        Intl: 1.0
+      Tax Lots:
+      - Date: 2021/07/31
+        Quantity: 1
+        Unit Cost: 64.94
+- Name: Roth IRA
+  Account Type: Tax-Exempt
+  Assets:
+  - TickerAsset:
+      Ticker: VXUS
+      Shares: 1
+      Asset Mapping:
+        Intl: 1.0
+- Name: Vanguard 401(k)
+  Account Type: Tax-Deferred
+  Assets:
+  - TickerAsset:
+      Ticker: VBMFX
+      Shares: 20
+      Asset Mapping:
+        Bonds: 1.0
