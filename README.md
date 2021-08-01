@@ -1,16 +1,49 @@
 # Lakshmi
 
-## Introduction
-This project is inspired by all the time I spent on
-[Bogleheads forum](bogleheads.org). The forum taught me to focus on important
+## Background
+This project is inspired by
+[Bogleheads forum](bogleheads.org). This forum taught me to focus on important
 things like asset allocation, location and minimizing costs. The focus is on
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to acheive above-average
 returns after costs. This tool is build around the same priciples to help
 an _average_ investor manage their investing portfolio.
 
+Lakshmi (meaning 'She who leads to one's goal') is one of the principal
+goddesses in Hinduism. She is the goddess of wealth, fortune, power, health,
+love, beauty, joy and prosperity.
+
+## Introduction
+This project consists of a library module (_lakshmi_) and a command-line
+tool (_lak_) that exposes some of the functionality of the library. The library
+provides useful abstractions and tools to manage your investing portfolio.
+
+[Bogleheads wiki](https://www.bogleheads.org/wiki/Main_Page) is a great
+resource for introduction to basic investing concepts like asset-allocation,
+asset-location, etc.
+
+Following features are currently available:
+- Specify and track asset allocation across accounts.
+- Ability to add/edit/delete accounts and assets (funds, stocks, etc.)
+inside those accounts.
+- Supports Manual assets, assets with ticker, Vanguard funds (that don't
+have associated ticker symbols),
+[EE Bonds](https://www.treasurydirect.gov/indiv/products/prod_eebonds_glance.htm)
+and
+[I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
+- Automatic fetching of market value various types of assets.
+- Listing current values of assets, printing detailed information,
+printing asset allocation, asset location, etc.
+- Tracking of tax-lot information for assets.
+- Support for running what-if scenarios to see how it impacts the asset
+allocation, etc.
+- Analysis of portfolio to identify if there is need to rebalance or
+if there are losses that can be
+[harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
+
 ## Installation
 
+This project can be installed via [pip](https://pip.pypa.io/en/stable/).
 To install the library and the lak command line tool, run:
 ```
 pip install lakshmi
