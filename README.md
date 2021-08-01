@@ -2,11 +2,11 @@
 
 ## Background
 This project is inspired by
-[Bogleheads forum](bogleheads.org). This forum taught me to focus on important
+[Bogleheads forum](http://bogleheads.org). This forum taught me to focus on important
 things like asset allocation, location and minimizing costs. The focus is on
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to acheive above-average
-returns after costs. This tool is build around the same priciples to help
+returns after costs. This tool is build around the same principles to help
 an _average_ investor manage their investing portfolio.
 
 Lakshmi (meaning 'She who leads to one's goal') is one of the principal
@@ -26,12 +26,12 @@ Following features are currently available:
 - Specify and track asset allocation across accounts.
 - Ability to add/edit/delete accounts and assets (funds, stocks, etc.)
 inside those accounts.
-- Supports Manual assets, assets with ticker, Vanguard funds (that don't
+- Supports manual assets, assets with ticker, Vanguard funds (that don't
 have associated ticker symbols),
 [EE Bonds](https://www.treasurydirect.gov/indiv/products/prod_eebonds_glance.htm)
 and
 [I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
-- Automatic fetching of market value various types of assets.
+- Automatic fetching of market value of various types of assets.
 - Listing current values of assets, printing detailed information,
 printing asset allocation, asset location, etc.
 - Tracking of tax-lot information for assets.
