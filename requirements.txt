@@ -13,4 +13,4 @@ requests==2.25.1
 six==1.16.0
 tabulate==0.8.9
 urllib3==1.26.5
-yfinance==0.1.59
+yfinance==0.1.63
