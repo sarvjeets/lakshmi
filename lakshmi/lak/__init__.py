@@ -463,7 +463,7 @@ def account():
     lakctx.SavePortfolio()
 
 
-@add.command
+@add.command()
 @click.option('--asset-type', '-p', required=True,
               type=click.Choice([c.__name__ for c in lakshmi.assets.CLASSES],
                                 case_sensitive=False),

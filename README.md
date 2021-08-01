@@ -47,7 +47,7 @@ Commands:
 ```
 
 A new portfolio can be created by either:
-1. Copying an [existing](data/portfolio.yaml) (TODO: Add file) portfolio file to 
+1. Copying an [existing](data/portfolio.yaml) (TODO: Add file) portfolio file to
 ~/portfolio.yaml and editing it.
 
 -- OR --
@@ -68,7 +68,27 @@ the **lak add account** command:
 ```
 lak add account
 ```
-Assets can be added to the account via the **lak add asset** command:
+Assets can be added to the account via the **lak add asset** command. Different
+kinds of assets can be added to a portfolio. For a complete list, pull up the
+help for the command:
+```
+lak add asset --help
+
+Usage: lak add asset [OPTIONS]
+
+  Edit assets in the portfolio.
+
+Options:
+  -p, --asset-type [ManualAsset|TickerAsset|VanguardFund|IBonds|EEBonds]
+                                  Add this type of asset.  [required]
+  -t, --account substr            Add asset to this account (a sub-string that
+                                  matches the account name).  [required]
+  --help                          Show this message and exit.
+```
+
+TickerAsset represents an asset with a ticker symbol. The value of these assets
+is pulled and updated automatically. To add a TickerAsset:
+
 ```
 lak add asset -p TickerAsset -t account_str
 ```
@@ -76,7 +96,7 @@ where account_str is a sub-string that uniquely matches an account added previou
 
 That's it. To view all the assets, asset allocation and asset location, run:
 ```
-lak list assets 
+lak list assets
 lak list total
 list list aa
 lak list al
