@@ -44,12 +44,6 @@ class LakContext:
 
         portfolio_filename = config.pop(
                 'portfolio', LakContext.DEFAULT_PORTFOLIO)
-        portfolio_file = Path(portfolio_filename).expanduser()
-        if not portfolio_file.exists():
-            raise click.ClickException(
-                f'Portfolio file {portfolio_file} does not exist. Please '
-                'use "lak init" to create a new portfolio.')
-
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
         # Setup cache directory.
@@ -94,6 +88,14 @@ class LakContext:
     def Portfolio(self):
         """Loads and returns the portfolio from self.portfolio_filename."""
         if not self.portfolio:
+            # Check if portfolio file doesn't exist and print helpful error
+            # message.
+            portfolio_file = Path(self.portfolio_filename).expanduser()
+            if not portfolio_file.exists():
+                raise click.ClickException(
+                    f'Portfolio file {portfolio_file} does not exist. Please '
+                    'use "lak init" to create a new portfolio.')
+
             self.portfolio = Portfolio.Load(self.portfolio_filename)
         return self.portfolio
 
