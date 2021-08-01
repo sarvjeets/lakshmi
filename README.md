@@ -25,7 +25,7 @@ The simplest way to use this project is via the **lak** command. To access the
 upto help, run:
 
 ```
-lak --help
+$ lak --help
 
 Usage: lak [OPTIONS] COMMAND [ARGS]...
 
@@ -72,7 +72,7 @@ Assets can be added to the account via the **lak add asset** command. Different
 kinds of assets can be added to a portfolio. For a complete list, pull up the
 help for the command:
 ```
-lak add asset --help
+$ lak add asset --help
 
 Usage: lak add asset [OPTIONS]
 
