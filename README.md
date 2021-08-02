@@ -2,14 +2,13 @@
 
 ## Background
 This project is inspired by
-[Bogleheads forum](http://bogleheads.org). This forum taught me to focus on important
-things like asset allocation, location and minimizing costs. The focus is on
+[Bogleheads forum](http://bogleheads.org). Bogleheads focus on
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to acheive above-average
 returns after costs. This tool is build around the same principles to help
 an _average_ investor manage their investing portfolio.
 
-Lakshmi (meaning 'She who leads to one's goal') is one of the principal
+Lakshmi (meaning "She who leads to one's goal") is one of the principal
 goddesses in Hinduism. She is the goddess of wealth, fortune, power, health,
 love, beauty, joy and prosperity.
 
@@ -144,10 +143,9 @@ TODO: Add details about the lakshmi module.
 
 ## Dedication
 
-I would like to thank my wife [Niharika](http://niharika.org), who encouraged me to
-start working on this package and supported me throughout the development.
-This project would not have been possible without her love and support.
-
+This project would not have been possible without my wife
+[Niharika](http://niharika.org), who encouraged me to
+start working on this project and continued encouraging and supporting me.
 In addition, I am indebted to the following folks whose wisdom has helped me
 tremendously in my investing journey:
 [John Bogle](https://en.wikipedia.org/wiki/John_C._Bogle),
@@ -156,3 +154,4 @@ tremendously in my investing journey:
 [Livesoft](https://www.bogleheads.org/forum/viewtopic.php?t=237269),
 [Mel Lindauer](https://www.bogleheads.org/wiki/Mel_Lindauer) and
 [LadyGeek](https://www.bogleheads.org/blog/2018/12/04/interview-with-ladygeek-bogleheads-site-administrator/).
+
