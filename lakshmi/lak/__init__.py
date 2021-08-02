@@ -317,7 +317,11 @@ def edit():
     pass
 
 
-def edit_and_parse(edit_dict, parse_fn, filename):
+_HELP_MSG_PREFIX = ('\n\n# # Lines starting with "#" are ignored and an '
+                    'empty message aborts this command.\n\n')
+
+
+def EditAndParse(edit_dict, parse_fn, filename):
     """Helper funtion to edit parts of portfolio.
 
     This function is used to add/edit parts of the portfolio. It converts
@@ -334,17 +338,16 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         being editted (inside lakshmi/data directory). If edit_dict is
         empty, this file is presented to the user so that the user can make
         changes inline. If edit_dict is set, this file is added as a
-        comment at the end of the edit_dict representation as a helping
+        comment at the end of the edit_dict representation as a helpful
         guide for the user.
     """
     # Change filename to absolute path.
     filepath = (Path(__file__).parents[2].absolute() /
                 'data' / filename)
     if edit_dict:
-        HELP_MSG = ('\n\n' + '# # Lines starting with "#" are ignored and an '
-                    'empty message aborts this command.\n\n' +
-                    filepath.read_text().replace('\n', '\n# '))
-        edit_str = yaml.dump(edit_dict, sort_keys=False) + HELP_MSG
+        help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
+            '\n', '\n# ')
+        edit_str = yaml.dump(edit_dict, sort_keys=False) + help_msg
     else:
         edit_str = filepath.read_text()
 
@@ -353,7 +356,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         if not edit_str:  # No changes or empty string.
             raise click.Abort()
         try:
-            parse_str = (edit_str.split(HELP_MSG, 1)[0].rstrip('\n')
+            parse_str = (edit_str.split(help_msg, 1)[0].rstrip('\n')
                          if edit_dict else edit_str)
             return parse_fn(yaml.load(parse_str, Loader=yaml.SafeLoader))
         except Exception as e:
@@ -371,11 +374,12 @@ def init():
         raise click.ClickException('Portfolio file already exists: ' +
                                    lakctx.portfolio_filename)
 
-    asset_class = edit_and_parse(
+    asset_class = EditAndParse(
         None,
         lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
         'AssetClass.yaml')
-    Portfolio(asset_class).Save(lakctx.portfolio_filename)
+    lakctx.portfolio = Portfolio(asset_class)
+    lakctx.SavePortfolio()
 
 
 @edit.command()
@@ -385,7 +389,7 @@ def assetclass():
     global lakctx
     portfolio = lakctx.Portfolio()
 
-    asset_classes = edit_and_parse(
+    asset_classes = EditAndParse(
         portfolio.asset_classes.ToDict(),
         lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
         'AssetClass.yaml')
@@ -403,10 +407,11 @@ def account(account):
 
     account_name = portfolio.GetAccountNameBySubStr(account)
     account_obj = portfolio.GetAccount(account_name)
+    # Save assets and restore them after the user is done editting.
     assets = account_obj.Assets()
     account_obj.SetAssets([])
 
-    account_obj = edit_and_parse(
+    account_obj = EditAndParse(
         account_obj.ToDict(),
         lakshmi.Account.FromDict,
         'Account.yaml')
@@ -435,7 +440,7 @@ def asset(asset, account):
     account_obj = portfolio.GetAccount(account_name)
     asset_obj = account_obj.GetAsset(asset_name)
 
-    asset_obj = edit_and_parse(asset_obj.ToDict(),
+    asset_obj = EditAndParse(asset_obj.ToDict(),
                                asset_obj.FromDict,
                                asset_obj.__class__.__name__ + '.yaml')
 
@@ -458,7 +463,7 @@ def account():
     global lakctx
     portfolio = lakctx.Portfolio()
 
-    account = edit_and_parse(None, lakshmi.Account.FromDict, 'Account.yaml')
+    account = EditAndParse(None, lakshmi.Account.FromDict, 'Account.yaml')
     portfolio.AddAccount(account)
     lakctx.SavePortfolio()
 
@@ -481,7 +486,7 @@ def asset(asset_type, account):
     asset_cls = [
         c for c in lakshmi.assets.CLASSES if c.__name__ == asset_type][0]
 
-    asset_obj = edit_and_parse(None, asset_cls.FromDict, asset_type + '.yaml')
+    asset_obj = EditAndParse(None, asset_cls.FromDict, asset_type + '.yaml')
     account_obj.AddAsset(asset_obj)
 
     lakctx.SavePortfolio()
