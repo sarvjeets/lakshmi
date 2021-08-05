@@ -77,7 +77,7 @@ Commands:
 
 A new portfolio can be created by either:
 1. Copying an
-[existing](https://sarvjeets.github.io/lakshmi/data/portfolio.yaml)
+[existing](https://sarvjeets.github.io/lakshmi/docs/portfolio.yaml)
 portfolio file to ~/portfolio.yaml and editing it.
 
 -- OR --
