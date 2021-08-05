@@ -8,7 +8,7 @@ import yaml
 class DataTest(unittest.TestCase):
     def ParseDict(self, filename, function):
         file_path = (Path(__file__).parents[1].absolute() /
-                'data' / filename)
+                'lakshmi' / 'data' / filename)
         d = yaml.load(file_path.read_text(), Loader=yaml.SafeLoader)
         return function(d)
 
