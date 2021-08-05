@@ -76,8 +76,9 @@ Commands:
 ```
 
 A new portfolio can be created by either:
-1. Copying an [existing](data/portfolio.yaml) portfolio file to
-~/portfolio.yaml and editing it.
+1. Copying an
+[existing](https://sarvjeets.github.io/lakshmi/data/portfolio.yaml)
+portfolio file to ~/portfolio.yaml and editing it.
 
 -- OR --
 
@@ -135,7 +136,7 @@ The **lak list** commands can also be chained:
 lak list assets total aa al
 ```
 
-[TODO: Detailed Description of the tool](docs/lak.md)
+[Lak User Guide](https://sarvjeets.github.io/lakshmi/docs/lak.md)
 
 ## Library
 
