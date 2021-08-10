@@ -231,10 +231,10 @@ def whatifs():
 
 @lak.command(context_settings={"ignore_unknown_options": True})
 @click.option('--asset', '-a', type=str, metavar='substr',
-              help='Make changes to this asset (a sub-string that matches '
+              help='Make changes to this asset (a substring that matches '
               'either the asset name or the short name)')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Make changes to this account (a sub-string that matches '
+              help='Make changes to this account (a substring that matches '
               'the account name)')
 @click.option('--reset', '-r', is_flag=True,
               help='Reset all hypothetical whatif amounts.')
@@ -281,10 +281,10 @@ def whatif(asset, account, reset, delta):
 
 @lak.command()
 @click.option('--asset', '-a', type=str, metavar='substr',
-              help='Get Info about this asset (a sub-string that matches '
+              help='Get Info about this asset (a substring that matches '
               'either the asset name or the short name)')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a sub-string that matches '
+              help='Get Info about this account (a substring that matches '
               'the account name)')
 def info(asset, account):
     """Prints detailed information about an asset or account. If only account
@@ -399,7 +399,7 @@ def assetclass():
 
 @edit.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Edit the account that matches this sub-string')
+              help='Edit the account that matches this substring')
 def account(account):
     """Edit an account in the portfolio."""
     global lakctx
@@ -425,11 +425,12 @@ def account(account):
 
 @edit.command()
 @click.option('--asset', '-a', type=str, metavar='substr', required=True,
-              help='Get Info about this asset (a sub-string that matches '
-              'either the asset name or the short name).')
+              help='Edit the asset whose name or short name matches this '
+              'substring.')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a sub-string that matches the '
-              'account name).')
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
 def asset(asset, account):
     """Edit an asset in the portfolio."""
     global lakctx
@@ -474,7 +475,7 @@ def account():
                                 case_sensitive=False),
               help='Add this type of asset.')
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Add asset to this account (a sub-string that matches the '
+              help='Add asset to this account (a substring that matches the '
               'account name).')
 def asset(asset_type, account):
     """Edit assets in the portfolio."""
@@ -500,7 +501,7 @@ def delete():
 
 @delete.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Delete the account that matches this sub-string')
+              help='Delete the account that matches this substring')
 @click.confirmation_option(prompt='This operation is not reversable. '
                            'Are you sure?')
 def account(account):
@@ -514,11 +515,12 @@ def account(account):
 
 @delete.command()
 @click.option('--asset', '-a', type=str, metavar='substr', required=True,
-              help='Delete this asset (a sub-string that matches either '
-              'the asset name or the short name).')
+              help='Delete the asset whose name or short name matches this '
+              'substring.')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Delete the specified asset from this account (a sub-string '
-              'that matches the account name).')
+              help='If the asset name is not unique across the portfolio, '
+              'optionally a substring to specify the account name '
+              'from which the asset should be deleted.')
 @click.confirmation_option(prompt='This operation is not reversable. '
                            'Are you sure?')
 def asset(asset, account):
