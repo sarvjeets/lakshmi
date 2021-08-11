@@ -136,7 +136,7 @@ class LakTest(unittest.TestCase):
         self.assertFalse(lak.lakctx.saved)
 
     def testWhatIf(self):
-        result = RunLak('whatif -a Test 100')
+        result = RunLak('whatif asset -a Test -100')
         self.assertEqual(0, result.exit_code)
         self.assertEqual('', result.output)
         self.assertTrue(lak.lakctx.saved)
@@ -166,23 +166,8 @@ class LakTest(unittest.TestCase):
         self.assertEqual('', result.output)
         self.assertFalse(lak.lakctx.saved)
 
-    def testWhatIfBadReset(self):
-        result = RunLak('whatif -r -a Test 100')
-        self.assertEqual(2, result.exit_code)
-        self.assertIn('Can\'t specify any', result.output)
-
-    def testWhatIfNoDelta(self):
-        result = RunLak('whatif -a Test')
-        self.assertEqual(2, result.exit_code)
-        self.assertIn('Must specify a value', result.output)
-
-    def testWhatIfNoAssetOrAccount(self):
-        result = RunLak('whatif 100')
-        self.assertEqual(2, result.exit_code)
-        self.assertIn('At least one of', result.output)
-
     def testWhatIfAccount(self):
-        result = RunLak('whatif -t Schwab 100')
+        result = RunLak('whatif account -t Schwab -100')
         self.assertEqual(0, result.exit_code)
         self.assertEqual('', result.output)
         self.assertTrue(lak.lakctx.saved)
@@ -196,13 +181,13 @@ class LakTest(unittest.TestCase):
         lak.lakctx.Reset()
 
     def testInfoAccount(self):
-        result = RunLak('info -t Schwab')
+        result = RunLak('info account -t Schwab')
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, 'Name: +Schwab\n')
         self.assertFalse(lak.lakctx.saved)
 
     def testInfoAsset(self):
-        result = RunLak('info -a Test')
+        result = RunLak('info asset -a Test')
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, 'Name: +Test Asset\n')
         self.assertFalse(lak.lakctx.saved)

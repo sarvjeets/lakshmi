@@ -229,86 +229,95 @@ def whatifs():
         click.echo(asset_whatifs.String(lakctx.tablefmt))
 
 
-@lak.command(context_settings={"ignore_unknown_options": True})
-@click.option('--asset', '-a', type=str, metavar='substr',
-              help='Make changes to this asset (a substring that matches '
-              'either the asset name or the short name)')
-@click.option('--account', '-t', type=str, metavar='substr',
-              help='Make changes to this account (a substring that matches '
-              'the account name)')
+@lak.group(chain=True,
+           invoke_without_command=True)
 @click.option('--reset', '-r', is_flag=True,
               help='Reset all hypothetical whatif amounts.')
-@click.argument('delta', type=float, required=False)
-def whatif(asset, account, reset, delta):
-    """Run hypothetical what if scenarios by adding DELTA to an account
-    or asset. This is useful to see how the asset allocation or location
-    will change if you make some changes without *actually* making those
-    changes. Once you are done playing around with the hypothetical changes,
-    you can reset them all by using --reset flag."""
-    global lakctx
-    portfolio = lakctx.Portfolio()
-
+def whatif(reset):
+    """Run hypothetical what if scenarios by modifying the total value of
+    an account or asset. This is useful to see how the asset allocation
+    or location will change if you make these changes. Once you are done
+    playing around with the hypothetical changes, you can reset them all
+    by using the --reset flag."""
     if reset:
-        # Sanity check the flags.
-        if asset or account or delta:
-            raise click.UsageError(
-                'Can\'t specify any other flags/arguments when --reset is '
-                'specified')
-        portfolio.ResetWhatIfs()
+        global lakctx
+        lakctx.Portfolio().ResetWhatIfs()
         lakctx.SavePortfolio()
-        return
-
-    if not delta:
-        raise click.UsageError('Must specify a value (delta) to add/subtract '
-                               'from an account or asset')
-
-    if not asset and account:  # Delta is applied to Account
-        account_name = portfolio.GetAccountNameBySubStr(account)
-        portfolio.WhatIfAddCash(account_name, delta)
-        lakctx.SavePortfolio()
-        return
-
-    if asset:
-        account_name, asset_name = portfolio.GetAssetNameBySubStr(
-            account if account is not None else '', asset)
-        portfolio.WhatIf(account_name, asset_name, delta)
-        lakctx.SavePortfolio()
-        return
-
-    raise click.UsageError('At least one of --asset or --account must '
-                           'be specified')
 
 
-@lak.command()
-@click.option('--asset', '-a', type=str, metavar='substr',
-              help='Get Info about this asset (a substring that matches '
-              'either the asset name or the short name)')
-@click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a substring that matches '
-              'the account name)')
-def info(asset, account):
-    """Prints detailed information about an asset or account. If only account
-    is specified, this command prints information about an account. If asset
-    or both asset and acccount is specified, it prints information about an
-    asset. In the second case, asset (and optionally account) must match
-    exactly one asset/account pair in the portfolio."""
+# ignore_unknown_options is there to make sure -100 is parsed as delta
+# and click doesn't think it is an option.
+@whatif.command(context_settings={"ignore_unknown_options": True})
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+              help='Change the value of account that matches this substring')
+@click.argument('delta', type=float, required=True)
+def account(account, delta):
+    """Run hypothetical what if scenario on an account.
+    This command adds DELTA to the value of account specified."""
     global lakctx
     portfolio = lakctx.Portfolio()
+    account_name = portfolio.GetAccountNameBySubStr(account)
+    portfolio.WhatIfAddCash(account_name, delta)
+    lakctx.SavePortfolio()
 
-    if not asset and account:  # Print info for account.
-        account_name = portfolio.GetAccountNameBySubStr(account)
-        click.echo(portfolio.GetAccount(account_name).String())
-        return
 
-    if asset:  # Print info for asset.
-        account_name, asset_name = portfolio.GetAssetNameBySubStr(
-            account if account is not None else '', asset)
-        click.echo(portfolio.GetAccount(
-            account_name).GetAsset(asset_name).String())
-        return
+# ignore_unknown_options is there to make sure -100 is parsed as delta
+# and click doesn't think it is an option.
+@whatif.command(context_settings={"ignore_unknown_options": True})
+@click.option('--asset', '-a', type=str, metavar='substr', required=True,
+              help='Change the value of asset that matches this substring')
+@click.option('--account', '-t', type=str, metavar='substr',
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
+@click.argument('delta', type=float, required=True)
+def asset(asset, account, delta):
+    """Run hypothetical what if scenario on an asset.
+    This command adds DELTA to the value of the asset specified."""
+    global lakctx
+    portfolio = lakctx.Portfolio()
+    account_name, asset_name = portfolio.GetAssetNameBySubStr(
+        account if account is not None else '', asset)
+    portfolio.WhatIf(account_name, asset_name, delta)
+    lakctx.SavePortfolio()
 
-    raise click.UsageError('At least one of --asset or --account must '
-                           'be specified')
+
+@lak.group(chain=True)
+def info():
+    """Print detailed information about an asset or account."""
+    pass
+
+
+@info.command()
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+              help='Print info about the account that matches this substring')
+def account(account):
+    """Print details of an account."""
+    global lakctx
+    lakctx.OptionalSeparator()
+
+    portfolio = lakctx.Portfolio()
+    account_name = portfolio.GetAccountNameBySubStr(account)
+    click.echo(portfolio.GetAccount(account_name).String())
+
+
+@info.command()
+@click.option('--asset', '-a', type=str, metavar='substr', required=True,
+              help='Print info about the asset that matches this substring')
+@click.option('--account', '-t', type=str, metavar='substr',
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
+def asset(asset, account):
+    """Print details of an asset."""
+    global lakctx
+    lakctx.OptionalSeparator()
+
+    portfolio = lakctx.Portfolio()
+    account_name, asset_name = portfolio.GetAssetNameBySubStr(
+        account if account is not None else '', asset)
+    click.echo(portfolio.GetAccount(
+        account_name).GetAsset(asset_name).String())
 
 
 @lak.group()
@@ -407,7 +416,7 @@ def account(account):
 
     account_name = portfolio.GetAccountNameBySubStr(account)
     account_obj = portfolio.GetAccount(account_name)
-    # Save assets and restore them after the user is done editting.
+    # Save assets and restore them after the user is done editing.
     assets = account_obj.Assets()
     account_obj.SetAssets([])
 
