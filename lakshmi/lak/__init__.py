@@ -116,7 +116,7 @@ lakctx = None
 @click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
               help='Re-fetch all data instead of using previously cached '
-              'data. For large portfolios this would be extremely slow.')
+              'data. For large portfolios, this would be extremely slow.')
 def lak(refresh):
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
@@ -132,7 +132,7 @@ def lak(refresh):
                     'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
                   case_sensitive=False),
               default='simple',
-              help='Set output table format. For more information on table'
+              help='Set output table format. For more information on table '
               'formats, please see "Table format" section on: '
               'https://pypi.org/project/tabulate/')
 def list(format):
@@ -171,7 +171,7 @@ def al():
               'compact format')
 @click.option('--asset-class', '-a', type=str,
               help='If provided, only print asset allocation for these asset '
-              'classes. This is comma seperated list of asset classes (not '
+              'classes. This is a comma separated list of asset classes (not '
               'necessarily leaf asset classes) and the allocation across '
               'these asset classes should sum to 100%.')
 def aa(compact, asset_class):
@@ -552,12 +552,12 @@ def analyze():
 @analyze.command()
 @click.option('--max-percentage', '-p', type=float, default=10,
               show_default=True,
-              help='The max percenatage loss for each lot before TLHing.')
+              help='The max percentage loss for each lot before TLHing.')
 @click.option('--max-dollars', '-d', type=int,
               help='The max absolute loss for an asset (across all tax lots) '
               'before TLHing.')
 def tlh(max_percentage, max_dollars):
-    """Shows which tax lots can be Tax-loss harvested."""
+    """Shows which tax lots can be Tax-loss harvested (TLH)."""
     global lakctx
     lakctx.OptionalSeparator()
     table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).Analyze(
@@ -573,7 +573,7 @@ def tlh(max_percentage, max_dollars):
               show_default=True,
               help='Max absolute difference before rebalancing.')
 @click.option('--max-relative-percentage', '-r', type=float, default=25,
-              help='The max relatve differnce before rebalancing.')
+              help='The max relative difference before rebalancing.')
 def rebalance(max_abs_percentage, max_relative_percentage):
     """Shows if assets needs to be rebalanced based on a band
     based rebalancing scheme. For more information, please refer to

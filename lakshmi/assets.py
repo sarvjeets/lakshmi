@@ -198,7 +198,7 @@ class TradedAsset(Asset):
 
     def ListLots(self):
         table = Table(5,
-                headers=['Date', 'Quanity', 'Cost', 'Gain', 'Gain%'],
+                headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
                 coltypes=['str', 'float', 'dollars', 'delta_dollars',
                     'percentage'])
         for lot in self.tax_lots:

@@ -1,6 +1,6 @@
-# Account represents a collection of Assets (e.g. ETFs or Funds)
+# An Account represents a collection of Assets (e.g. ETFs or Funds)
 
-# Name of the account, must be unique amoung all accounts in the portfolio.
+# Name of the account, must be unique among all accounts in the portfolio.
 Name: Unique-name-for-account
 
 # Type of the account, e.g. Taxable, Tax-Exempt, Tax-Deferred, etc. This
