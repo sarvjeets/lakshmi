@@ -393,8 +393,7 @@ def init():
 
 @edit.command()
 def assetclass():
-    """Edit the Asset classes and desired asset allocation across
-    those asset classes."""
+    """Edit the Asset classes and the desired asset allocation."""
     global lakctx
     portfolio = lakctx.Portfolio()
 
