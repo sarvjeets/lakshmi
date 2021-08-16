@@ -2,9 +2,9 @@
 
 ## Background
 This project is inspired by
-[Bogleheads forum](http://bogleheads.org). Bogleheads focus on
+[Bogleheads forum](http://bogleheads.org). Bogleheads focus on a
 simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
-that allows investors to acheive above-average
+that allows investors to achieve above-average
 returns after costs. This tool is build around the same principles to help
 an _average_ investor manage their investing portfolio.
 
@@ -21,7 +21,7 @@ provides useful abstractions and tools to manage your investing portfolio.
 resource for introduction to basic investing concepts like asset-allocation,
 asset-location, etc.
 
-Following features are currently available:
+The following features are currently available:
 - Specify and track asset allocation across accounts.
 - Ability to add/edit/delete accounts and assets (funds, stocks, etc.)
 inside those accounts.
@@ -51,7 +51,7 @@ pip install lakshmi
 ## Command-line interface
 
 The simplest way to use this project is via the **lak** command. To access the
-upto help, run:
+up to date help, run:
 
 ```
 $ lak --help
@@ -61,7 +61,7 @@ Usage: lak [OPTIONS] COMMAND [ARGS]...
 Options:
   --version      Show the version and exit.
   -r, --refresh  Re-fetch all data instead of using previously cached data.
-                 For large portfolios this would be extremely slow.
+                 For large portfolios, this would be extremely slow.
   --help         Show this message and exit.
 
 Commands:
