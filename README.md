@@ -44,11 +44,16 @@ if there are losses that can be
 
 This project can be installed via [pip](https://pip.pypa.io/en/stable/).
 To install the library and the lak command line tool, run:
+
 ```
 pip install lakshmi
 ```
 
 ## Command-line interface
+
+(For detailed help on the CLI tool, please see
+[lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.md))
+
 
 The simplest way to use this project is via the **lak** command. To access the
 up to date help, run:
@@ -84,23 +89,22 @@ portfolio file to ~/portfolio.yaml and editing it.
 
 2. Using the lak commands to create a new portfolio. The following command will
 open up an editor to input the desired asset allocation:
+
 ```
 lak init
 ```
 
-To view help for the init command, please run:
-```
-lak init --help
-```
-
 Accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) can be added via
 the **lak add account** command:
+
 ```
 lak add account
 ```
+
 Assets can be added to the account via the **lak add asset** command. Different
 kinds of assets can be added to a portfolio. For a complete list, pull up the
 help for the command:
+
 ```
 $ lak add asset --help
 
@@ -125,28 +129,26 @@ lak add asset -p TickerAsset -t account_str
 where account_str is a sub-string that uniquely matches an account added previously.
 
 That's it. To view all the assets, asset allocation and asset location, run:
-```
-lak list assets
-lak list total
-lak list aa
-lak list al
-```
-The **lak list** commands can also be chained:
+
 ```
 lak list assets total aa al
 ```
 
-[Lak User Guide](https://sarvjeets.github.io/lakshmi/docs/lak.md)
+For more detailed information about the tool, please see
+[lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.md).
 
 ## Library
 
-TODO: Add details about the lakshmi module.
+(TODO: Add details about the lakshmi module)
 
-## Dedication
+## License
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Acknowledgements
 
 This project would not have been possible without my wife
 [Niharika](http://niharika.org), who encouraged me to
-start working on this project and continued encouraging and supporting me.
+start working on this project and continued supporting me throughout the development.
 In addition, I am indebted to the following folks whose wisdom has helped me
 tremendously in my investing journey:
 [John Bogle](https://en.wikipedia.org/wiki/John_C._Bogle),
@@ -156,3 +158,19 @@ tremendously in my investing journey:
 [Mel Lindauer](https://www.bogleheads.org/wiki/Mel_Lindauer) and
 [LadyGeek](https://www.bogleheads.org/blog/2018/12/04/interview-with-ladygeek-bogleheads-site-administrator/).
 
+## The not-so-fine print
+
+_The author is not a financial adviser and you agree to treat this tool
+for informational purposes only. The author does not promise or guarantee
+that the information provided by this tool is correct, current, or complete,
+and it may contain technical inaccuracies or errors. The author is not
+liable for any losses that you might incur by acting on the information
+provided by this tool. Accordingly, you should confirm the accuracy and
+completeness of all content, and seek professional advice taking into
+account your own personal situation, before making any decision based
+on information from this tool._
+
+In a nutshell:
+* The information provided by this tool is not financial advice.
+* The author is not an expert or financial adviser.
+* Consult a financial and/or tax adviser before taking action.
