@@ -513,7 +513,7 @@ def delete():
 @click.confirmation_option(prompt='This operation is not reversable. '
                            'Are you sure?')
 def account(account):
-    """Delete an account in the portfolio."""
+    """Delete an account from the portfolio."""
     global lakctx
     portfolio = lakctx.Portfolio()
     account_name = portfolio.GetAccountNameBySubStr(account)
