@@ -1,5 +1,37 @@
 # lak user guide
 
+## Table of Contents
+
+* [Introduction](#introduction)
+* [Configuration files and directories](#configuration-files-and-directories)
+   * [Portfolio](#portfolio)
+   * [Cache](#cache)
+   * [lakrc](#lakrc)
+* [Portfolio file syntax](#portfolio-file-syntax)
+* [Creating a Portfolio](#creating-a-portfolio)
+   * [Editing the portfolio file directly](#editing-the-portfolio-file-directly)
+   * [Using lak command to create portfolio](#using-lak-command-to-create-portfolio)
+* [Help and usage](#help-and-usage)
+   * [lak](#lak)
+   * [lak init](#lak-init)
+   * [lak add](#lak-add)
+   * [lak list](#lak-list)
+      * [lak list assets](#lak-list-assets)
+      * [lak list total](#lak-list-total)
+      * [lak list aa](#lak-list-aa)
+      * [lak list al](#lak-list-al)
+      * [lak list whatifs](#lak-list-whatifs)
+   * [lak info](#lak-info)
+   * [lak whatif](#lak-whatif)
+   * [lak analyze](#lak-analyze)
+   * [lak edit](#lak-edit)
+   * [lak delete](#lak-delete)
+* [Miscellaneous](#miscellaneous)
+   * [How to reorder Accounts or Assets in the lak list assets view?](#how-to-reorder-accounts-or-assets-in-the-lak-list-assets-view)
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+
 ## Introduction
 lak provides a command-line interface to the lakshmi library. lak is meant
 as a tool for managing your investing portfolio. It is inspired by the
