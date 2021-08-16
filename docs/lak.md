@@ -67,7 +67,7 @@ $ lak --refresh ...
 ### lakrc
 Both the portfolio file and the cache directory locations can be overridden
 by an _optional_ **`~/.lakrc`** file. Like everything else in Lakshmi, this is
-a text file in [YAML](http://yaml.org/) format. An example `.lakrc.`
+a text file in [YAML](http://yaml.org/) format. An example `.lakrc`
 file looks like:
 
 ```yaml
@@ -210,8 +210,8 @@ should add up to 100%.
   in paper format via tax refund. This asset tracks value of multiple
   I Bonds or EE Bonds by pulling the current value from the Treasury Direct
   website. If you have a lot of bonds, this could be very slow.
-  [Example I Bonds section](../lakshmi/data/IBonds.yaml').
-  [Example EE Bonds section](../lakshmi/data/EEBonds.yaml').
+  [Example I Bonds section](../lakshmi/data/IBonds.yaml).
+  [Example EE Bonds section](../lakshmi/data/EEBonds.yaml).
 
 ## Creating a Portfolio
 
@@ -297,7 +297,7 @@ this initial file as your portfolio.**
 After saving, this creates a new portfolio file.
 
 #### Step 2: Add Accounts
-There are three accounts in the [example](./portolio.yaml) portfolio file.
+There are three accounts in the [example](./portfolio.yaml) portfolio file.
 Let's add them one by one.
 
 ```
@@ -804,7 +804,7 @@ to the asset allocation. When adding new money, asset classes with the largest
 value of _Difference_ should be prioritized and when withdrawing money, the
 asset classes with the lowest value of _Difference_ should be prioritized.
 Rebalancing can be achieved by just following the current values in this
-column (also see `lak analyze rebalance` [section](#lak-analyze-rebalance)).
+column (also see `lak analyze rebalance` [section](#lak-analyze)).
 
 ##### lak list aa --no-compact
 
@@ -1169,8 +1169,8 @@ advised to do their own research before using this tool.
 
 This command is used to edit various parts of the portfolio. The
 [portfolio file](#portfolio) can be directly edited if so desired,
-but `lak edit` makes it easier by only editing parts of it and
-providing help.
+but `lak edit` makes it easier to directly modify the relevant
+parts of the portfolio file.
 
 ```
 $ lak edit --help
