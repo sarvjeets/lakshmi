@@ -2,8 +2,8 @@
 
 ## Background
 This project is inspired by
-[Bogleheads forum](http://bogleheads.org). Bogleheads focus on a
-simple but [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
+[Bogleheads forum](http://bogleheads.org). Bogleheads focus on a simple but
+[powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to achieve above-average
 returns after costs. This tool is build around the same principles to help
 an _average_ investor manage their investing portfolio.
@@ -13,8 +13,8 @@ goddesses in Hinduism. She is the goddess of wealth, fortune, power, health,
 love, beauty, joy and prosperity.
 
 ## Introduction
-This project consists of a library module (_lakshmi_) and a command-line
-tool (_lak_) that exposes some of the functionality of the library. The library
+This project consists of a library module (`lakshmi`) and a command-line
+tool (`lak`) that exposes some of the functionality of the library. The library
 provides useful abstractions and tools to manage your investing portfolio.
 
 [Bogleheads wiki](https://www.bogleheads.org/wiki/Main_Page) is a great
@@ -51,11 +51,11 @@ pip install lakshmi
 
 ## Command-line interface
 
-(For detailed help on the CLI tool, please see
+(For detailed help, please see
 [lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.md))
 
 
-The simplest way to use this project is via the **lak** command. To access the
+The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:
 
 ```
@@ -77,7 +77,7 @@ Commands:
   info     Prints detailed information about an asset or account.
   init     Initializes a new portfolio by adding asset classes.
   list     Command to list various parts of the portfolio.
-  whatif   Run hypothetical what if scenarios by adding DELTA to an...
+  whatif   Run hypothetical what if scenarios by modifying the total...
 ```
 
 A new portfolio can be created by either:
@@ -87,21 +87,22 @@ portfolio file to ~/portfolio.yaml and editing it.
 
 -- OR --
 
-2. Using the lak commands to create a new portfolio. The following command will
+2. Using the `lak` commands to create a new portfolio. The following command will
 open up an editor to input the desired asset allocation:
 
 ```
-lak init
+$ lak init
 ```
 
 Accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) can be added via
-the **lak add account** command:
+the `lak add account` command:
 
 ```
-lak add account
+$ lak add account
+# Use the above command multiple times to add more accounts.
 ```
 
-Assets can be added to the account via the **lak add asset** command. Different
+Assets can be added to an account via the `lak add asset` command. Different
 kinds of assets can be added to a portfolio. For a complete list, pull up the
 help for the command:
 
@@ -148,7 +149,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 This project would not have been possible without my wife
 [Niharika](http://niharika.org), who encouraged me to
-start working on this project and continued supporting me throughout the development.
+start working on this project and continued supporting me throughout
+the development.
+
 In addition, I am indebted to the following folks whose wisdom has helped me
 tremendously in my investing journey:
 [John Bogle](https://en.wikipedia.org/wiki/John_C._Bogle),
