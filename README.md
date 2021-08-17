@@ -51,9 +51,7 @@ pip install lakshmi
 
 ## Command-line interface
 
-(For detailed help, please see
-[lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.md))
-
+(For detailed help, please see [lak user guide](./docs/lak.md))
 
 The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:
@@ -81,8 +79,7 @@ Commands:
 ```
 
 A new portfolio can be created by either:
-1. Copying an
-[existing](https://sarvjeets.github.io/lakshmi/docs/portfolio.yaml)
+1. Copying an [existing](./docs/portfolio.yaml)
 portfolio file to ~/portfolio.yaml and editing it.
 
 -- OR --
@@ -136,7 +133,7 @@ lak list assets total aa al
 ```
 
 For more detailed information about the tool, please see
-[lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.md).
+[lak user guide](./docs/lak.md).
 
 ## Library
 
