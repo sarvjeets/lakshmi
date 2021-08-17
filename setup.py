@@ -2,7 +2,9 @@ from setuptools import setup, find_packages
 from lakshmi.constants import NAME, VERSION
 
 with open('README.md', 'r', encoding='utf-8') as fh:
-    long_description = fh.read()
+    # Replace relative links to absolute links.
+    long_description = fh.read().replace(
+            '](./', '](https://sarvjeets.github.io/lakshmi/')
 
 setup(
     name=NAME,
@@ -15,6 +17,12 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/sarvjeets/lakshmi',
     platforms='any',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
+    ],
     py_modules=['lakshmi'],
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
