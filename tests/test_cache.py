@@ -16,7 +16,7 @@ class Cached(cache.Cacheable):
         return self.key
 
     @cache.cache(2)
-    def Value(self):
+    def get_value(self):
         return self.value
 
 
@@ -28,12 +28,12 @@ class CacheTest(unittest.TestCase):
 
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
-    def testDisabledCache(self, get_file_age, exists):
+    def test_disabled_cache(self, get_file_age, exists):
         cache.set_cache_dir(None)  # Disble caching.
         c = Cached('key1', 1)
-        self.assertEqual(1, c.Value())
+        self.assertEqual(1, c.get_value())
         c.value = 2
-        self.assertEqual(2, c.Value())
+        self.assertEqual(2, c.get_value())
         get_file_age.assert_not_called()
         exists.assert_not_called()
 
@@ -42,15 +42,16 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     @patch('lakshmi.cache.set_cache_dir')
-    def testDefaultCacheMiss(self, set_cache_dir, get_file_age, exists,
-                             write_bytes, read_bytes):
+    def test_default_cache_miss(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
         def side_effect(x):
             cache._ctx[cache._CACHE_STR] = x
         set_cache_dir.side_effect = side_effect
         exists.return_value = False
 
         c = Cached('key1', 1)
-        self.assertEqual(1, c.Value())
+        self.assertEqual(1, c.get_value())
 
         set_cache_dir.assert_called_once()
         get_file_age.assert_not_called()
@@ -63,8 +64,9 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     @patch('lakshmi.cache.set_cache_dir')
-    def testDefaultCacheHit(self, set_cache_dir, get_file_age, exists,
-                            write_bytes, read_bytes):
+    def test_default_cache_hit(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
         def side_effect(x):
             cache._ctx[cache._CACHE_STR] = x
         set_cache_dir.side_effect = side_effect
@@ -73,7 +75,7 @@ class CacheTest(unittest.TestCase):
         read_bytes.return_value = pickle.dumps(1)  # Cache 1.
 
         c = Cached('key2', 2)
-        self.assertEqual(1, c.Value())  # Cached value.
+        self.assertEqual(1, c.get_value())  # Cached value.
 
         set_cache_dir.assert_called_once()
         get_file_age.assert_called_once()
@@ -86,13 +88,14 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     @patch('lakshmi.cache.set_cache_dir')
-    def testSetCache(self, set_cache_dir, get_file_age, exists,
-                     write_bytes, read_bytes):
+    def test_set_cache(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
         cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
         exists.return_value = False
 
         c = Cached('key1', 1)
-        self.assertEqual(1, c.Value())
+        self.assertEqual(1, c.get_value())
 
         set_cache_dir.assert_not_called()
         get_file_age.assert_not_called()
@@ -105,13 +108,14 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     @patch('lakshmi.cache.set_cache_dir')
-    def testForceRefresh(self, set_cache_dir, get_file_age, exists,
-                         write_bytes, read_bytes):
+    def test_force_refresh(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
         cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
         cache.set_force_refresh(True)
 
         c = Cached('key2', 2)
-        self.assertEqual(2, c.Value())  # Cached value not used.
+        self.assertEqual(2, c.get_value())  # Cached value not used.
 
         set_cache_dir.assert_not_called()
         get_file_age.assert_not_called()
@@ -124,14 +128,15 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     @patch('lakshmi.cache.set_cache_dir')
-    def testOldCache(self, set_cache_dir, get_file_age, exists,
-                     write_bytes, read_bytes):
+    def test_old_cache(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
         cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
         exists.return_value = True
         get_file_age.return_value = 2
 
         c = Cached('key1', 1)
-        self.assertEqual(1, c.Value())
+        self.assertEqual(1, c.get_value())
 
         set_cache_dir.assert_not_called()
         get_file_age.assert_called_once()

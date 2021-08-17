@@ -12,7 +12,7 @@ class LakshmiTest(unittest.TestCase):
     def setUpClass(cls):
         lakshmi.cache.set_cache_dir(None)  # Disable caching.
 
-    def testEmptyPortfolio(self):
+    def test_empty_portfolio(self):
         portfolio = Portfolio(AssetClass('E'))
         self.assertAlmostEqual(0, portfolio.TotalValue())
         self.assertListEqual([], portfolio.Assets().List())
@@ -21,10 +21,10 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], portfolio.AssetAllocation([]).List())
         self.assertListEqual([], portfolio.AssetAllocationCompact().List())
 
-    def testOneAssetClass(self):
+    def test_one_asset_class(self):
         asset_class = AssetClass('Equity').Validate()
 
-    def testManyAssetClassDuplicate(self):
+    def test_many_asset_class_duplicate(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.8,
@@ -35,7 +35,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Found duplicate'):
             asset_class.Validate()
 
-    def testManyAssetClassBadRatioSum(self):
+    def test_many_asset_class_bad_ratio_sum(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.8,
@@ -47,7 +47,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Sum of sub-classes'):
             asset_class.Validate()
 
-    def testManyAssetClassBadRatioNeg(self):
+    def test_many_asset_class_bad_ratio_neg(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(-0.8,
@@ -59,7 +59,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
             asset_class.Validate()
 
-    def testManyAssetClassBadRatioHigh(self):
+    def test_many_asset_class_bad_ratio_high(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(1.5,
@@ -71,7 +71,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
             asset_class.Validate()
 
-    def testManyAssetClass(self):
+    def test_many_asset_class(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.8,
@@ -100,7 +100,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertEqual('Bonds', ret_class.name)
         self.assertAlmostEqual(0.2, ratio)
 
-    def testAssetClassDict(self):
+    def test_asset_class_dict(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.8,
@@ -117,7 +117,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertEqual('US', ret_class.name)
         self.assertAlmostEqual(0.48, ratio)
 
-    def testAssetClassCopy(self):
+    def test_asset_class_copy(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.8,
@@ -130,7 +130,7 @@ class LakshmiTest(unittest.TestCase):
         asset_class2.name = 'Changed'
         self.assertEqual('All', asset_class.name)
 
-    def testValueMapped(self):
+    def test_value_mapped(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.6, AssetClass('Equity')
@@ -154,7 +154,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(
             40.0, asset_class.children[1][0].ValueMapped(money_allocation))
 
-    def testBadAsset(self):
+    def test_bad_asset(self):
         portfolio = Portfolio(AssetClass('Equity'))
         account = Account('Roth IRA', 'Post-tax').AddAsset(
             ManualAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
@@ -163,7 +163,7 @@ class LakshmiTest(unittest.TestCase):
                 'Unknown or non-leaf asset class: Bad Equity'):
             portfolio.AddAccount(account)
 
-    def testGetSetAssetsFromAccount(self):
+    def test_get_set_assets_from_account(self):
         account = (Account('Roth IRA', 'Post-tax')
                 .AddAsset(ManualAsset('Test Asset 1', 100.0, {'All': 1.0}))
                 .AddAsset(ManualAsset('Test Asset 2', 200.0, {'All': 1.0})))
@@ -178,7 +178,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             account.GetAsset('Test Asset 1')
 
-    def testAccountDict(self):
+    def test_account_dict(self):
         account = Account('Roth IRA', 'Post-tax').AddAsset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
         account.AddCash(200)
@@ -187,7 +187,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertEqual('Test Asset', account.GetAsset('Test Asset').Name())
         self.assertAlmostEqual(200.0, account.AvailableCash())
 
-    def testAccountString(self):
+    def test_account_string(self):
         account = Account('Roth IRA', 'Post-tax').AddAsset(
                 ManualAsset('Test', 100.0, {'All': 1.0}))
         expected = (Table(2)
@@ -200,7 +200,7 @@ class LakshmiTest(unittest.TestCase):
         expected.AddRow(['Available Cash:', '-$10.00'])
         self.assertEqual(expected.String(tablefmt='plain'), account.String())
 
-    def testDuplicateAccount(self):
+    def test_duplicate_account(self):
         portfolio = Portfolio(AssetClass('All'))
         account = Account('Roth IRA', 'Post-tax').AddAsset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
@@ -209,7 +209,7 @@ class LakshmiTest(unittest.TestCase):
             portfolio.AddAccount(account)
         portfolio.AddAccount(account, replace=True)
 
-    def testRemoveAccount(self):
+    def test_remove_account(self):
         portfolio = Portfolio(AssetClass('All'))
         account = Account('Roth IRA', 'Post-tax').AddAsset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
@@ -217,7 +217,7 @@ class LakshmiTest(unittest.TestCase):
         portfolio.RemoveAccount('Roth IRA')
         self.assertEqual(0, len(portfolio.Accounts()))
 
-    def testOneAsset(self):
+    def test_one_asset(self):
         portfolio = Portfolio(AssetClass('Equity')).AddAccount(
             Account('401(k)', 'Pre-tax').AddAsset(
                 ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
@@ -235,14 +235,14 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], portfolio.AssetAllocationTree().List())
         self.assertListEqual([], portfolio.AssetAllocationCompact().List())
 
-    def testPortfolioDict(self):
+    def test_portfolio_dict(self):
         portfolio = Portfolio(AssetClass('Equity')).AddAccount(
             Account('401(k)', 'Pre-tax').AddAsset(
                 ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
         portfolio = Portfolio.FromDict(portfolio.ToDict())
         self.assertEqual(1, len(portfolio.Accounts()))
 
-    def testAssetWhatIf(self):
+    def test_asset_what_if(self):
         asset = ManualAsset('Test Asset', 100.0, {'Equity': 1.0})
         self.assertAlmostEqual(100, asset.AdjustedValue())
         asset.WhatIf(-10.0)
@@ -251,7 +251,7 @@ class LakshmiTest(unittest.TestCase):
         asset.WhatIf(10)
         self.assertAlmostEqual(100, asset.AdjustedValue())
 
-    def testOneAssetTwoClass(self):
+    def test_one_asset_two_class(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.5, AssetClass('Equity'))
@@ -283,7 +283,7 @@ class LakshmiTest(unittest.TestCase):
             portfolio.AssetAllocationCompact().StrList())
 
     @patch('yfinance.Ticker')
-    def testListAssets(self, MockTicker):
+    def test_list_assets(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
                        'regularMarketPrice': 1.0}
@@ -312,7 +312,7 @@ class LakshmiTest(unittest.TestCase):
                  ['Schwab', '', 'Cash', '$840.00']],
                 portfolio.Assets(quantity=True).StrList())
 
-    def testAssetLocation(self):
+    def test_asset_location(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.8,
@@ -334,7 +334,7 @@ class LakshmiTest(unittest.TestCase):
                  ['', 'Taxable', '20%', '$10.00']],
                 portfolio.AssetLocation().StrList())
 
-    def testFlatAssetAllocation(self):
+    def test_flat_asset_allocation(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.8,
@@ -361,7 +361,7 @@ class LakshmiTest(unittest.TestCase):
              ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
             portfolio.AssetAllocation(['Equity', 'Bonds']).StrList())
 
-    def testAssetAllocationCompact(self):
+    def test_asset_allocation_compact(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.8,
@@ -389,7 +389,7 @@ class LakshmiTest(unittest.TestCase):
              ['Intl', '33%', '40%', '$30.00']],
             portfolio.AssetAllocationTree().StrList())
 
-    def testMultipleAccountsAndAssets(self):
+    def test_multiple_accounts_and_assets(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
@@ -424,7 +424,7 @@ class LakshmiTest(unittest.TestCase):
              ['Account 2', 'Asset 2', '$400.00']],
             portfolio.Assets().StrList())
 
-    def testGetAccountNameBySubStr(self):
+    def test_get_account_name_by_substr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
@@ -442,7 +442,7 @@ class LakshmiTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'does not match'):
             portfolio.GetAccountNameBySubStr('God')
 
-    def testGetAssetNameBySubStr(self):
+    def test_get_asset_name_by_substr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
@@ -475,7 +475,7 @@ class LakshmiTest(unittest.TestCase):
             portfolio.GetAssetNameBySubStr(account_str='Acc', asset_str='Yolo')
 
 
-    def testWhatIfs(self):
+    def test_what_ifs(self):
         portfolio = Portfolio(AssetClass('All')
                               .AddSubClass(0.6, AssetClass('Equity'))
                               .AddSubClass(0.4, AssetClass('Bonds')))
@@ -562,7 +562,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], account_whatifs.StrList())
         self.assertListEqual([], asset_whatifs.StrList())
 
-    def testWhatIfsDoubleAdd(self):
+    def test_what_ifs_double_add(self):
         portfolio = Portfolio(AssetClass('All'))
 
         asset = ManualAsset('Asset', 100.0, {'All': 1.0})
@@ -582,7 +582,7 @@ class LakshmiTest(unittest.TestCase):
             [['Account', 'Asset', '+$50.00']],
             asset_whatifs.StrList())
 
-    def testReturnAllocationOneAsset(self):
+    def test_return_allocation_one_asset(self):
         asset_class = AssetClass('All').Validate()
         allocation = {'All': 10.0}
 
@@ -592,7 +592,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(10.0, ret[0].value)
         self.assertEqual([], ret[0].children)
 
-    def testReturnAllocationAssetTree(self):
+    def test_return_allocation_asset_tree(self):
         asset_class = (
             AssetClass('All')
             .AddSubClass(0.6, AssetClass('Equity')

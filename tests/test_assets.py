@@ -13,7 +13,7 @@ class AssetsTest(unittest.TestCase):
         lakshmi.cache.set_cache_dir(None)  # Disable caching.
         cls.data_dir = (pathlib.Path(__file__).parent / 'data')
 
-    def testDictManualAssetWithWhatIf(self):
+    def test_dict_manual_asset_with_what_if(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         manual_asset.WhatIf(100)
         manual_asset = assets.FromDict(assets.ToDict(manual_asset))
@@ -22,19 +22,19 @@ class AssetsTest(unittest.TestCase):
         self.assertAlmostEqual(200.5, manual_asset.AdjustedValue())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
-    def testAssetBadWhatIf(self):
+    def test_asset_bad_what_if(self):
         a = assets.ManualAsset('Cash', 100, {'All': 1.0})
         self.assertAlmostEqual(-100, a.WhatIf(-101))
         self.assertAlmostEqual(0, a.AdjustedValue())
 
-    def testDictManualAsset(self):
+    def test_dict_manual_asset(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         manual_asset = assets.FromDict(assets.ToDict(manual_asset))
         self.assertEqual('Cash', manual_asset.Name())
         self.assertAlmostEqual(100.5, manual_asset.AdjustedValue())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
-    def testManualAssetToTable(self):
+    def test_manual_asset_to_table(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         expected = [['Name:', 'Cash'],
                     ['Asset Class Mapping:', 'Fixed Income  100%'],
@@ -49,7 +49,7 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(expected, manual_asset.ToTable().StrList())
 
     @patch('yfinance.Ticker')
-    def testBadTicker(self, MockTicker):
+    def test_bad_ticker(self, MockTicker):
         bad_ticker = MagicMock()
         bad_ticker.info = {}
         MockTicker.return_value = bad_ticker
@@ -64,7 +64,7 @@ class AssetsTest(unittest.TestCase):
         MockTicker.assert_called_once()
 
     @patch('yfinance.Ticker')
-    def testGoodTicker(self, MockTicker):
+    def test_good_ticker(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
                        'regularMarketPrice': 1.0}
@@ -77,7 +77,7 @@ class AssetsTest(unittest.TestCase):
 
         MockTicker.assert_called_once()
 
-    def testTaxLotsTicker(self):
+    def test_tax_lots_ticker(self):
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2012/12/12', 50, 1.0),
                 assets.TaxLot('2013/12/12', 30, 0.9)]
@@ -90,8 +90,8 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(lots, vmmxx.tax_lots)
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testListLots(self, MockPrice):
-        MockPrice.return_value = 15.0
+    def test_list_lots(self, mock_price):
+        mock_price.return_value = 15.0
 
         vti = assets.TickerAsset('VTI', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2011/01/01', 50, 10.0),
@@ -105,9 +105,9 @@ class AssetsTest(unittest.TestCase):
 
     @patch('lakshmi.assets.TickerAsset.Name')
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testTickerAssetToTable(self, MockPrice, MockName):
-        MockPrice.return_value = 10.0
-        MockName.return_value = 'Google Inc'
+    def test_ticker_asset_to_table(self, mock_price, mock_name):
+        mock_price.return_value = 10.0
+        mock_name.return_value = 'Google Inc'
 
         goog = assets.TickerAsset('GOOG', 100.0, {'All': 1.0})
         expected = [['Ticker:', 'GOOG'],
@@ -118,7 +118,7 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(expected, goog.ToTable().StrList())
 
     @patch('yfinance.Ticker')
-    def testDictTicker(self, MockTicker):
+    def test_dict_ticker(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
                        'regularMarketPrice': 1.0}
@@ -137,41 +137,41 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual(2, len(vmmxx.tax_lots))
 
     @patch('requests.get')
-    def testVanguardFundsName(self, MockGet):
-        MockReq = MagicMock()
+    def test_vanguard_funds_name(self, mock_get):
+        mock_res = MagicMock()
 
         with open(self.data_dir / 'profile.json') as data_file:
-            MockReq.json.return_value = json.load(data_file)
+            mock_res.json.return_value = json.load(data_file)
 
-        MockGet.return_value = MockReq
+        mock_get.return_value = mock_res
 
         fund = assets.VanguardFund(7555, 10, {'All': 1.0})
         self.assertEqual(
             'Vanguard Institutional Total Bond Market Index Trust',
             fund.Name())
         self.assertEqual('7555', fund.ShortName())
-        MockGet.assert_called_once_with(
+        mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
 
     @patch('requests.get')
-    def testVanguardFundsValue(self, MockGet):
-        MockReq = MagicMock()
+    def test_vanguard_funds_value(self, mock_get):
+        mock_res = MagicMock()
 
         with open(self.data_dir / 'price.json') as data_file:
-            MockReq.json.return_value = json.load(data_file)
-        MockGet.return_value = MockReq
+            mock_res.json.return_value = json.load(data_file)
+        mock_get.return_value = mock_res
 
         fund = assets.VanguardFund(7555, 10, {'All': 1.0})
         self.assertEqual(1166.6, fund.Value())
-        MockGet.assert_called_once_with(
+        mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/price.json',
             headers={'Referer': 'https://vanguard.com/'})
         fund.SetLots([assets.TaxLot('2012/12/30', 10, 1.0)])
 
     @patch('lakshmi.assets.VanguardFund.Value')
-    def testDictVanguardFund(self, MockValue):
-        MockValue.return_value = 100.0
+    def test_dict_vanguard_fund(self, mock_value):
+        mock_value.return_value = 100.0
         fund = assets.VanguardFund(1234, 20, {'Bonds': 1.0})
         fund.SetLots([assets.TaxLot('2021/05/15', 20, 5.0)])
         fund.WhatIf(100)
@@ -184,9 +184,9 @@ class AssetsTest(unittest.TestCase):
 
     @patch('lakshmi.assets.VanguardFund.Name')
     @patch('lakshmi.assets.VanguardFund.Price')
-    def testVangurdFundAssetToTable(self, MockPrice, MockName):
-        MockPrice.return_value = 10.0
-        MockName.return_value = 'Vanguardy Fund'
+    def test_vangurd_fund_asset_to_table(self, mock_price, mock_name):
+        mock_price.return_value = 10.0
+        mock_name.return_value = 'Vanguardy Fund'
 
         fund = assets.VanguardFund(123, 100.0, {'All': 1.0})
         expected = [['Fund id:', '123'],
@@ -198,17 +198,17 @@ class AssetsTest(unittest.TestCase):
 
     @patch('datetime.datetime')
     @patch('requests.post')
-    def testIBonds(self, MockPost, MockDate):
-        MockReq = MagicMock()
+    def test_i_bonds(self, mock_post, mock_date):
+        mock_res = MagicMock()
         with open(self.data_dir / 'SBCPrice-I.html') as html_file:
-            MockReq.text = html_file.read()
-        MockPost.return_value = MockReq
-        MockDate.now.strftime.return_value = '04/2021'
+            mock_res.text = html_file.read()
+        mock_post.return_value = mock_res
+        mock_date.now.strftime.return_value = '04/2021'
 
         ibonds = assets.IBonds({'All': 1.0})
         ibonds.AddBond('03/2020', 10000)
 
-        MockPost.asset_called_once_with(
+        mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',
             data={
                 'RedemptionDate': '04/2021',
@@ -225,8 +225,8 @@ class AssetsTest(unittest.TestCase):
                 ibonds.ListBonds().StrList())
 
     @patch('lakshmi.assets.IBonds.Value')
-    def testDictIBonds(self, MockValue):
-        MockValue.return_value = 11000
+    def test_dict_i_bonds(self, mock_value):
+        mock_value.return_value = 11000
         ibonds = assets.IBonds({'B': 1.0})
         ibonds.AddBond('02/2020', 10000)
         ibonds.WhatIf(-100.0)
@@ -238,17 +238,17 @@ class AssetsTest(unittest.TestCase):
 
     @patch('datetime.datetime')
     @patch('requests.post')
-    def testEEBonds(self, MockPost, MockDate):
-        MockReq = MagicMock()
+    def test_ee_bonds(self, mock_post, mock_date):
+        mock_res = MagicMock()
         with open(self.data_dir / 'SBCPrice-EE.html') as html_file:
-            MockReq.text = html_file.read()
-        MockPost.return_value = MockReq
-        MockDate.now.strftime.return_value = '04/2021'
+            mock_res.text = html_file.read()
+        mock_post.return_value = mock_res
+        mock_date.now.strftime.return_value = '04/2021'
 
         eebonds = assets.EEBonds({'All': 1.0})
         eebonds.AddBond('03/2020', 10000)
 
-        MockPost.asset_called_once_with(
+        mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',
             data={
                 'RedemptionDate': '04/2021',
@@ -263,9 +263,10 @@ class AssetsTest(unittest.TestCase):
         self.assertListEqual(
                 [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
                 eebonds.ListBonds().StrList())
+
     @patch('lakshmi.assets.EEBonds.Value')
-    def testDictEEBonds(self, MockValue):
-        MockValue.return_value = 10010
+    def test_dict_ee_bonds(self, mock_value):
+        mock_value.return_value = 10010
         eebonds = assets.EEBonds({'B': 1.0})
         eebonds.AddBond('02/2020', 10000)
         eebonds.WhatIf(-100.0)

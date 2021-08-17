@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 
 class AnalyzeTest(unittest.TestCase):
-    def testTLHNolots(self):
+    def test_tlh_no_lots(self):
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable').AddAsset(
                 ManualAsset('Cash', 100.0, {'All': 1.0})))
@@ -16,7 +16,7 @@ class AnalyzeTest(unittest.TestCase):
             analyze.TLH(0.5, 10000).Analyze(portfolio).List())
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testTLHLossPercent(self, mock_price):
+    def test_tlh_loss_percent(self, mock_price):
         mock_price.return_value = 10.0
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable')
@@ -35,7 +35,7 @@ class AnalyzeTest(unittest.TestCase):
             analyze.TLH(0.5).Analyze(portfolio).StrList())
 
     @patch('lakshmi.assets.TickerAsset.Price')
-    def testTLHCombo(self, mock_price):
+    def test_tlh_combo(self, mock_price):
         mock_price.return_value = 10.0
         portfolio = Portfolio(AssetClass('All')).AddAccount(
             Account('Schwab', 'Taxable')
@@ -53,7 +53,7 @@ class AnalyzeTest(unittest.TestCase):
              ['Schwab', 'VXUS', '2020/01/25', '$2,000.00', '67%']],
             analyze.TLH(0.5, 1400).Analyze(portfolio).StrList())
 
-    def testRebalanceAnalyzeOutsideBounds(self):
+    def test_rebalance_outside_bounds(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.9,
@@ -72,7 +72,7 @@ class AnalyzeTest(unittest.TestCase):
              ['Intl', '30%', '36%', '$30.00', '+$6.00']],
             sorted(analyze.BandRebalance().Analyze(portfolio).StrList()))
 
-    def testRebalanceAnalyzeWithinBounds(self):
+    def test_rebalance_within_bounds(self):
         portfolio = Portfolio(
             AssetClass('All')
             .AddSubClass(0.9,

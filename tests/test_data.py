@@ -6,41 +6,41 @@ import unittest
 import yaml
 
 class DataTest(unittest.TestCase):
-    def ParseDict(self, filename, function):
+    def parse_dict(self, filename, function):
         file_path = (Path(__file__).parents[1].absolute() / filename)
         d = yaml.load(file_path.read_text(), Loader=yaml.SafeLoader)
         return function(d)
 
-    def testAccount(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/Account.yaml',
+    def test_account(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/Account.yaml',
             lakshmi.Account.FromDict))
 
-    def testAssetClass(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/AssetClass.yaml',
+    def test_asset_class(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/AssetClass.yaml',
             lakshmi.AssetClass.FromDict))
 
-    def testEEBonds(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/EEBonds.yaml',
+    def test_ee_bonds(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/EEBonds.yaml',
             lakshmi.assets.EEBonds.FromDict))
 
-    def testIBonds(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/IBonds.yaml',
+    def test_i_bonds(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/IBonds.yaml',
             lakshmi.assets.IBonds.FromDict))
 
-    def testManualAsset(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/ManualAsset.yaml',
+    def test_manual_asset(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/ManualAsset.yaml',
             lakshmi.assets.ManualAsset.FromDict))
 
-    def testTickerAsset(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/TickerAsset.yaml',
+    def test_ticker_asset(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/TickerAsset.yaml',
             lakshmi.assets.TickerAsset.FromDict))
 
-    def testVanguardFund(self):
-        self.assertIsNotNone(self.ParseDict('lakshmi/data/VanguardFund.yaml',
+    def test_vanguard_fund(self):
+        self.assertIsNotNone(self.parse_dict('lakshmi/data/VanguardFund.yaml',
             lakshmi.assets.VanguardFund.FromDict))
 
-    def testPortfolio(self):
-        self.assertIsNotNone(self.ParseDict('docs/portfolio.yaml',
+    def test_portfolio(self):
+        self.assertIsNotNone(self.parse_dict('docs/portfolio.yaml',
             lakshmi.Portfolio.FromDict))
 
 

@@ -4,13 +4,13 @@ import unittest
 
 
 class TableTest(unittest.TestCase):
-    def testEmptyTable(self):
+    def test_empty_table(self):
         t = Table(3)
         self.assertListEqual([], t.List())
         self.assertListEqual([], t.StrList())
         self.assertEqual('', t.String())
 
-    def testNoHeadersAndColTypes(self):
+    def test_no_headers_and_coltypes(self):
         t = Table(3)
         t.AddRow(['1', '2', '3'])
         self.assertListEqual([['1', '2', '3']],
@@ -19,16 +19,16 @@ class TableTest(unittest.TestCase):
                              t.StrList())
         self.assertGreater(len(t.String()), 0)
 
-    def testBadColType(self):
+    def test_bad_coltypes(self):
         with self.assertRaisesRegex(AssertionError, 'Bad column type in coltypes'):
             Table(2, coltypes=[None, 'str'])
 
-    def testSetRows(self):
+    def test_set_rows(self):
         t = Table(3)
         t.SetRows([['1', '2']])
         self.assertListEqual([['1', '2']], t.StrList())
 
-    def testHeadersAndDiffColTypes(self):
+    def test_headers_and_diff_coltypes(self):
         headers = ['1', '2', '3', '4', '5']
         t = Table(
             5,
@@ -51,7 +51,7 @@ class TableTest(unittest.TestCase):
             t.StrList())
         self.assertGreater(len(t.String()), 0)
 
-    def testMismatchedNumCols(self):
+    def test_mismatched_num_cols(self):
         with self.assertRaises(AssertionError):
             t = Table(2, headers=['1'])
         with self.assertRaises(AssertionError):
@@ -61,7 +61,7 @@ class TableTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             t = Table(2, headers=['str', 'str', 'str'])
 
-    def testTooManyCols(self):
+    def test_too_many_cols(self):
         t = Table(2)
         with self.assertRaises(AssertionError):
             t.AddRow(['1', '2', '3'])
@@ -69,7 +69,7 @@ class TableTest(unittest.TestCase):
             t.SetRows([['a', 'b'],
                        ['1', '2', '3']])
 
-    def testTooFewCols(self):
+    def test_too_few_cols(self):
         t = Table(2)
         t.AddRow(['1'])
         t.SetRows([['1', '2'], ['1'], ['a']])
