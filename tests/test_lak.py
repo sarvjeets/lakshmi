@@ -287,7 +287,7 @@ class LakTest(unittest.TestCase):
 
     @patch('lakshmi.lak.EditAndParse')
     @patch('pathlib.Path.exists')
-    def testInitPortfolioExists(self, mock_exists, MockParse):
+    def testInitPortfolio(self, mock_exists, MockParse):
         mock_exists.return_value = False
         MockParse.return_value = AssetClass('Money')
 
