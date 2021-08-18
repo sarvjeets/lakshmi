@@ -33,7 +33,12 @@ class TableTest(unittest.TestCase):
         t = Table(
             5,
             headers=headers,
-            coltypes=['str', 'dollars', 'delta_dollars', 'percentage', 'float'])
+            coltypes=[
+                'str',
+                'dollars',
+                'delta_dollars',
+                'percentage',
+                'float'])
 
         rows = [['r1', 3, 4.1, 0.5, 1],
                 ['r6', 8, -9.2, 0.1, 2.345]]

@@ -14,6 +14,7 @@ import yfinance
 def to_dict(asset):
     return {asset.__class__.__name__: asset.to_dict()}
 
+
 def from_dict(d):
     keys = list(d.keys())
     assert len(keys) == 1
@@ -28,6 +29,7 @@ def from_dict(d):
 
 class Asset(ABC):
     """Class representing an asset (fund, ETF, cash, etc.)."""
+
     def __init__(self, class2ratio):
         """
         Argments:
@@ -70,13 +72,17 @@ class Asset(ABC):
         asset_mapping_table = Table(2, coltypes=['str', 'percentage'])
         for asset_class, ratio in self.class2ratio.items():
             asset_mapping_table.add_row([f'{asset_class}', ratio])
-        table.add_row(['Asset Class Mapping:', f'{asset_mapping_table.string(tablefmt="plain")}'])
+        table.add_row(['Asset Class Mapping:',
+                       f'{asset_mapping_table.string(tablefmt="plain")}'])
 
         if self._delta:
-            table.add_row(['Adjusted Value:', f'{utils.format_money(self.adjusted_value())}'])
-            table.add_row(['What if:', f'{utils.format_money_delta(self._delta)}'])
+            table.add_row(['Adjusted Value:',
+                           f'{utils.format_money(self.adjusted_value())}'])
+            table.add_row(
+                ['What if:', f'{utils.format_money_delta(self._delta)}'])
         else:
-            table.add_row(['Value:', f'{utils.format_money(self.adjusted_value())}'])
+            table.add_row(
+                ['Value:', f'{utils.format_money(self.adjusted_value())}'])
 
         return table
 
@@ -198,16 +204,16 @@ class TradedAsset(Asset):
 
     def list_lots(self):
         table = Table(5,
-                headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
-                coltypes=['str', 'float', 'dollars', 'delta_dollars',
-                    'percentage'])
+                      headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
+                      coltypes=['str', 'float', 'dollars', 'delta_dollars',
+                                'percentage'])
         for lot in self.tax_lots:
             table.add_row(
-                    [lot.date,
-                     lot.quantity,
-                     lot.unit_cost * lot.quantity,
-                     (self.price() - lot.unit_cost) * lot.quantity,
-                     self.price() / lot.unit_cost - 1])
+                [lot.date,
+                 lot.quantity,
+                 lot.unit_cost * lot.quantity,
+                 (self.price() - lot.unit_cost) * lot.quantity,
+                 self.price() / lot.unit_cost - 1])
         return table
 
     def to_table(self):
@@ -243,7 +249,7 @@ class TickerAsset(TradedAsset, Cacheable):
         self.ticker = ticker
         session = requests.Session()
         session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
-            '{lakshmi.constants.VERSION}')
+                                         '{lakshmi.constants.VERSION}')
         self.yticker = yfinance.Ticker(ticker, session=session)
         super().__init__(shares, class2ratio)
 
@@ -350,6 +356,7 @@ class VanguardFund(TradedAsset, Cacheable):
 class _TreasuryBonds(Asset):
     class Bond(Cacheable):
         """A class representing individual I or EE Bond."""
+
         def __init__(self, series, issue_date, denom):
             self.series = series
             self.issue_date = issue_date
@@ -414,7 +421,8 @@ class _TreasuryBonds(Asset):
     def from_dict(self, d):
         for bond in d.pop('Bonds'):
             self.add_bond(bond.pop('Issue Date'), bond.pop('Denomination'))
-            assert len(bond) == 0, f'Extra attributes found: {list(bond.keys())}'
+            assert len(bond) == 0, (f'Extra attributes found: '
+                                    '{list(bond.keys())}')
         Asset.from_dict(self, d)
         return self
 
@@ -430,9 +438,9 @@ class _TreasuryBonds(Asset):
 
     def list_bonds(self):
         table = Table(
-                4,
-                headers=['Issue Date', 'Denom', 'Rate', 'Value'],
-                coltypes=['str', 'dollars', 'str', 'dollars'])
+            4,
+            headers=['Issue Date', 'Denom', 'Rate', 'Value'],
+            coltypes=['str', 'dollars', 'str', 'dollars'])
         for bond in self.bonds:
             table.add_row(bond.as_list())
         return table

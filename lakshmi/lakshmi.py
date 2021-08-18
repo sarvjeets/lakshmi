@@ -8,6 +8,7 @@ import yaml
 
 class Account:
     """Class representing an account."""
+
     def __init__(self, name, account_type):
         """
         Arguments:
@@ -23,7 +24,7 @@ class Account:
         d = {'Name': self._name,
              'Account Type': self.account_type}
         if self._assets:
-             d['Assets'] = [to_dict(asset) for asset in self._assets.values()]
+            d['Assets'] = [to_dict(asset) for asset in self._assets.values()]
         if self._cash != 0:
             d['Available Cash'] = self._cash
         return d
@@ -41,10 +42,12 @@ class Account:
         table = Table(2)
         table.add_row(['Name:', f'{self._name}'])
         table.add_row(['Type:', f'{self.account_type}'])
-        total = sum([asset.adjusted_value() for asset in self._assets.values()])
+        total = sum([asset.adjusted_value()
+                    for asset in self._assets.values()])
         table.add_row(['Total:', utils.format_money(total)])
         if self._cash:
-            table.add_row(['Available Cash:', utils.format_money_delta(self._cash)])
+            table.add_row(['Available Cash:',
+                           utils.format_money_delta(self._cash)])
         return table.string(tablefmt='plain')
 
     def add_asset(self, asset, replace=False):
@@ -79,6 +82,7 @@ class Account:
 
 class AssetClass:
     """(Tree of) Asset classes."""
+
     def __init__(self, name):
         self.name = name
         self.children = []
@@ -127,7 +131,7 @@ class AssetClass:
         total = 0.0
         for asset_class, ratio in self.children:
             assert ratio >= 0.0 and ratio <= 1.0, (
-                    f'Bad ratio provided to Asset Class ({ratio})')
+                f'Bad ratio provided to Asset Class ({ratio})')
             total += ratio
             temp_leafs, temp_classes = asset_class._validate()
             self._leaves.update(temp_leafs)
@@ -182,7 +186,7 @@ class AssetClass:
     class Allocation:
         class Children:
             def __init__(self, name, actual_allocation, desired_allocation,
-                    value, value_difference):
+                         value, value_difference):
                 self.name = name
                 self.actual_allocation = actual_allocation
                 self.desired_allocation = desired_allocation
@@ -197,7 +201,7 @@ class AssetClass:
         def add_child(self, name, actual, desired):
             self.children.append(
                 self.Children(name, actual, desired, actual * self.value,
-                    (desired - actual) * self.value))
+                              (desired - actual) * self.value))
 
     def return_allocation(self, money_allocation, levels=-1):
         """Returns actual and desired allocation based on how money is allocated.
@@ -296,14 +300,15 @@ class Portfolio:
         accounts match the account_str.
         """
 
-        matched_accounts = list(filter(lambda x: x.count(account_str),
-                [account.name() for account in self.accounts()]))
+        matched_accounts = list(
+            filter(lambda x: x.count(account_str),
+                   [account.name() for account in self.accounts()]))
         if len(matched_accounts) == 0:
             raise AssertionError(f'{account_str} does not match any account '
-                    'in the portfolio')
+                                 'in the portfolio')
         if len(matched_accounts) > 1:
             raise AssertionError(f'{account_str} matches more than one '
-                        'account in the portfolio')
+                                 'account in the portfolio')
         return matched_accounts[0]
 
     def get_asset_name_by_substr(self, account_str='', asset_str=''):
@@ -313,17 +318,19 @@ class Portfolio:
         Raises AssertionError if none or more than one asset matches the
         sub-strings."""
         matched_assets = list(filter(
-                lambda x: x[0].count(account_str) and (
-                    x[1].count(asset_str) or x[2] == asset_str),
-                [(account.name(), asset.name(), asset.short_name())
-                    for account in self.accounts()
-                    for asset in account.assets()]))
+            lambda x: x[0].count(account_str) and (
+                x[1].count(asset_str) or x[2] == asset_str),
+            [(account.name(), asset.name(), asset.short_name())
+             for account in self.accounts()
+             for asset in account.assets()]))
         if len(matched_assets) < 1:
-            raise AssertionError('Provided asset and account strings match none '
-                    'of the assets.')
+            raise AssertionError(
+                'Provided asset and account strings match none '
+                'of the assets.')
         if len(matched_assets) > 1:
-            raise AssertionError('Provided asset and account strings match more '
-                    'than one assets.')
+            raise AssertionError(
+                'Provided asset and account strings match more '
+                'than one assets.')
         return matched_assets[0][0], matched_assets[0][2]
 
     def what_if(self, account_name, asset_name, delta):
@@ -354,7 +361,8 @@ class Portfolio:
             for asset in account.assets():
                 delta = asset.adjusted_value() - asset.value()
                 if delta != 0.0:
-                    asset_whatifs.add_row([account.name(), asset.name(), delta])
+                    asset_whatifs.add_row(
+                        [account.name(), asset.name(), delta])
 
         return account_whatifs, asset_whatifs
 
@@ -376,23 +384,23 @@ class Portfolio:
     def assets(self, short_name=False, quantity=False):
         """Returns all the assets."""
         table = Table(
-                3 + short_name + quantity,
-                headers=['Account'] +
-                        (['Name'] if short_name else []) +
-                        (['Quantity'] if quantity else []) +
-                        ['Asset', 'Value'],
-                coltypes=['str'] +
-                         (['str'] if short_name else []) +
-                         (['float'] if quantity else []) +
-                         ['str', 'dollars'])
+            3 + short_name + quantity,
+            headers=['Account'] +
+            (['Name'] if short_name else []) +
+            (['Quantity'] if quantity else []) +
+            ['Asset', 'Value'],
+            coltypes=['str'] +
+            (['str'] if short_name else []) +
+            (['float'] if quantity else []) +
+            ['str', 'dollars'])
         for account in self.accounts():
             for asset in account.assets():
                 row = ([account.name()] +
-                        ([f'{asset.short_name()}'] if short_name else []) +
-                        [asset.name(), asset.adjusted_value()])
+                       ([f'{asset.short_name()}'] if short_name else []) +
+                       [asset.name(), asset.adjusted_value()])
                 if quantity:
                     row.insert(1 + short_name, asset.shares
-                            if hasattr(asset, 'shares') else None)
+                               if hasattr(asset, 'shares') else None)
                 table.add_row(row)
 
         return table
@@ -403,24 +411,27 @@ class Portfolio:
         for account in self.accounts():
             for asset in account.assets():
                 for name, ratio in asset.class2ratio.items():
-                    if not name in class2type:
+                    if name not in class2type:
                         class2type[name] = {}
                     class2type[name][account.account_type] = class2type[name].get(
-                            account.account_type, 0) + ratio * asset.adjusted_value()
+                        account.account_type, 0) + ratio * asset.adjusted_value()
 
         table = Table(
-                4,
-                headers=['Asset Class', 'Account Type', 'Percentage', 'Value'],
-                coltypes=['str', 'str', 'percentage', 'dollars'])
+            4,
+            headers=['Asset Class', 'Account Type', 'Percentage', 'Value'],
+            coltypes=['str', 'str', 'percentage', 'dollars'])
 
         for asset_class, type2value in class2type.items():
             first = True
             total = sum(type2value.values())
             if abs(total) < 1e-6:
                 continue
-            for account_type, value in sorted(type2value.items(), key=lambda x: x[1], reverse=True):
+            for account_type, value in sorted(
+                    type2value.items(),
+                    key=lambda x: x[1],
+                    reverse=True):
                 table.add_row([asset_class if first else '', account_type,
-                    value / total, value])
+                               value / total, value])
                 first = False
         return table
 
@@ -466,9 +477,10 @@ class Portfolio:
         try:
             flat_asset_class.validate()
         except AssertionError:
-            raise AssertionError('AssetAllocation called with overlapping '
-                    'Asset Classes or Asset Classes which does not cover the '
-                    'full tree.') from None
+            raise AssertionError(
+                'AssetAllocation called with overlapping '
+                'Asset Classes or Asset Classes which does not cover the '
+                'full tree.') from None
 
         alloc = flat_asset_class.return_allocation(
             self._get_asset_class_to_value(), 0)[0]

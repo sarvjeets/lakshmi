@@ -4,7 +4,7 @@ from lakshmi.constants import NAME, VERSION
 with open('README.md', 'r', encoding='utf-8') as fh:
     # Replace relative links to absolute links.
     long_description = fh.read().replace(
-            '](./', '](https://sarvjeets.github.io/lakshmi/')
+        '](./', '](https://sarvjeets.github.io/lakshmi/')
 
 setup(
     name=NAME,

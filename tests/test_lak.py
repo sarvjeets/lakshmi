@@ -7,9 +7,11 @@ from unittest.mock import patch
 from click.testing import CliRunner
 from pathlib import Path
 
+
 class TestLakContext(lak.LakContext):
     """A testing version of LakContext that doesn't load or save
     portfolio."""
+
     def __init__(self):
         self.portfolio_filename = 'test_portfolio.yaml'
         self.continued = False
@@ -21,8 +23,8 @@ class TestLakContext(lak.LakContext):
             AssetClass('All')
             .add_subclass(0.5, AssetClass('Stocks'))
             .add_subclass(0.5, AssetClass('Bonds'))).add_account(
-                    Account('Schwab', 'Taxable').add_asset(
-                        ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
+            Account('Schwab', 'Taxable').add_asset(
+                ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
 
     def get_portfolio(self):
         return self.portfolio
@@ -37,8 +39,10 @@ class TestLakContext(lak.LakContext):
         self.tablefmt = None
         self.saved = False
 
+
 def run_lak(args):
     return CliRunner().invoke(lak.lak, args.split(' '))
+
 
 class LakTest(unittest.TestCase):
     def setUp(self):
@@ -57,8 +61,8 @@ class LakTest(unittest.TestCase):
         self.assertIsNone(lakctx.whatifs)
         self.assertIsNone(lakctx.portfolio)
         self.assertEqual(
-                str(Path(lak.LakContext.DEFAULT_PORTFOLIO).expanduser()),
-                lakctx.portfolio_filename)
+            str(Path(lak.LakContext.DEFAULT_PORTFOLIO).expanduser()),
+            lakctx.portfolio_filename)
         mock_cache.set_cache_dir.assert_not_called()
 
     @patch('lakshmi.lak.LakContext._return_config')
@@ -200,7 +204,7 @@ class LakTest(unittest.TestCase):
 
         actual = lak.edit_and_parse(None, lambda x: x, 'test_file')
 
-        self.assertEqual({'c' : 'd'}, actual)
+        self.assertEqual({'c': 'd'}, actual)
         mock_read_text.assert_called_once()
         mock_edit.assert_called_with('a: b')
 
@@ -214,7 +218,8 @@ class LakTest(unittest.TestCase):
 
         self.assertEqual({'c': 'd'}, actual)
         mock_read_text.assert_called_once()
-        mock_edit.assert_called_with('e: f\n' + lak._HELP_MSG_PREFIX + '# a: b')
+        mock_edit.assert_called_with(
+            'e: f\n' + lak._HELP_MSG_PREFIX + '# a: b')
 
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
@@ -233,7 +238,7 @@ class LakTest(unittest.TestCase):
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
     def test_edit_and_parse_user_aborted(self, mock_read_text, mock_edit,
-            mock_confirm, mock_echo):
+                                         mock_confirm, mock_echo):
         mock_read_text.return_value = 'a: b'
         mock_edit.return_value = 'c: d'
         mock_confirm.return_value = False
@@ -248,14 +253,14 @@ class LakTest(unittest.TestCase):
         mock_edit.assert_called_with('a: b')
         mock_confirm.assert_called_once()
         mock_echo.assert_called_with('Error parsing file: '
-                                      "Exception('Better luck next time')")
+                                     "Exception('Better luck next time')")
 
     @patch('click.echo')
     @patch('click.confirm')
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
     def test_edit_and_parse_user_fixed(self, mock_read_text, mock_edit,
-            mock_confirm, mock_echo):
+                                       mock_confirm, mock_echo):
         mock_read_text.return_value = 'a: b'
         mock_edit.side_effect = ['c~~d', 'c: d']
         mock_confirm.return_value = True
@@ -274,7 +279,7 @@ class LakTest(unittest.TestCase):
                                     unittest.mock.call('c~~d')])
         mock_confirm.assert_called_once()
         mock_echo.assert_called_with('Error parsing file: '
-                                      "Exception('Better luck next time')")
+                                     "Exception('Better luck next time')")
 
     @patch('pathlib.Path.exists')
     def test_init_portfolio_exists(self, mock_exists):
@@ -352,7 +357,7 @@ class LakTest(unittest.TestCase):
     @patch('lakshmi.lak.edit_and_parse')
     def test_edit_asset(self, mock_parse):
         mock_parse.return_value = ManualAsset(
-            'Tasty Asset', 100.0, {'Stocks' : 1.0})
+            'Tasty Asset', 100.0, {'Stocks': 1.0})
 
         result = run_lak('edit asset -a Test')
         self.assertEqual(0, result.exit_code)
@@ -383,7 +388,7 @@ class LakTest(unittest.TestCase):
     @patch('lakshmi.lak.edit_and_parse')
     def test_add_asset(self, mock_parse):
         mock_parse.return_value = ManualAsset(
-            'Tasty Asset', 100.0, {'Stocks' : 1.0})
+            'Tasty Asset', 100.0, {'Stocks': 1.0})
 
         result = run_lak('add asset -t Schwab -p ManualAsset')
         self.assertEqual(0, result.exit_code)

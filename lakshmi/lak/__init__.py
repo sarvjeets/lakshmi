@@ -43,7 +43,7 @@ class LakContext:
         config = self._return_config()
 
         portfolio_filename = config.pop(
-                'portfolio', LakContext.DEFAULT_PORTFOLIO)
+            'portfolio', LakContext.DEFAULT_PORTFOLIO)
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
         # Setup cache directory.
@@ -124,12 +124,13 @@ def lak(refresh):
         # Setup a new context object for child commands.
         lakctx = LakContext()
 
+
 @lak.group(chain=True)
-@click.option('--format',  '-f',
+@click.option('--format', '-f',
               type=click.Choice(
                   ['plain', 'simple', 'github', 'grid', 'fancy_grid',
-                    'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex',
-                    'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
+                   'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex',
+                   'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
                   case_sensitive=False),
               default='simple',
               help='Set output table format. For more information on table '

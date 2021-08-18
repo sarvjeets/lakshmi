@@ -99,9 +99,9 @@ class AssetsTest(unittest.TestCase):
         vti.set_lots(lots)
 
         self.assertListEqual(
-                [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
-                 ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
-                vti.list_lots().str_list())
+            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
+             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
+            vti.list_lots().str_list())
 
     @patch('lakshmi.assets.TickerAsset.name')
     @patch('lakshmi.assets.TickerAsset.price')
@@ -221,8 +221,8 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('I Bonds', ibonds.short_name())
         self.assertAlmostEqual(10156.0, ibonds.value())
         self.assertListEqual(
-                [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
-                ibonds.list_bonds().str_list())
+            [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
+            ibonds.list_bonds().str_list())
 
     @patch('lakshmi.assets.IBonds.value')
     def test_dict_i_bonds(self, mock_value):
@@ -261,8 +261,8 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('EE Bonds', eebonds.short_name())
         self.assertAlmostEqual(10008.0, eebonds.value())
         self.assertListEqual(
-                [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
-                eebonds.list_bonds().str_list())
+            [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
+            eebonds.list_bonds().str_list())
 
     @patch('lakshmi.assets.EEBonds.value')
     def test_dict_ee_bonds(self, mock_value):

@@ -57,9 +57,9 @@ class AnalyzeTest(unittest.TestCase):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
-                         AssetClass('Equity')
-                         .add_subclass(0.6, AssetClass('US'))
-                         .add_subclass(0.4, AssetClass('Intl')))
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
             .add_subclass(0.1, AssetClass('Bond')).validate())
         portfolio.add_account(
             Account('Schwab', 'Taxable')
@@ -76,9 +76,9 @@ class AnalyzeTest(unittest.TestCase):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
-                         AssetClass('Equity')
-                         .add_subclass(0.6, AssetClass('US'))
-                         .add_subclass(0.4, AssetClass('Intl')))
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
             .add_subclass(0.1, AssetClass('Bond')).validate())
         portfolio.add_account(
             Account('Schwab', 'Taxable')

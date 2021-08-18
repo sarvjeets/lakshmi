@@ -3,6 +3,7 @@
 from tabulate import tabulate
 import lakshmi.utils as utils
 
+
 class Table():
     coltype2func = {
         'str': lambda x: x,
