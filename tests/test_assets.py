@@ -15,23 +15,23 @@ class AssetsTest(unittest.TestCase):
 
     def test_dict_manual_asset_with_what_if(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
-        manual_asset.WhatIf(100)
-        manual_asset = assets.FromDict(assets.ToDict(manual_asset))
-        self.assertEqual('Cash', manual_asset.Name())
-        self.assertAlmostEqual(100.5, manual_asset.Value())
-        self.assertAlmostEqual(200.5, manual_asset.AdjustedValue())
+        manual_asset.what_if(100)
+        manual_asset = assets.from_dict(assets.to_dict(manual_asset))
+        self.assertEqual('Cash', manual_asset.name())
+        self.assertAlmostEqual(100.5, manual_asset.value())
+        self.assertAlmostEqual(200.5, manual_asset.adjusted_value())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
     def test_asset_bad_what_if(self):
         a = assets.ManualAsset('Cash', 100, {'All': 1.0})
-        self.assertAlmostEqual(-100, a.WhatIf(-101))
-        self.assertAlmostEqual(0, a.AdjustedValue())
+        self.assertAlmostEqual(-100, a.what_if(-101))
+        self.assertAlmostEqual(0, a.adjusted_value())
 
     def test_dict_manual_asset(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
-        manual_asset = assets.FromDict(assets.ToDict(manual_asset))
-        self.assertEqual('Cash', manual_asset.Name())
-        self.assertAlmostEqual(100.5, manual_asset.AdjustedValue())
+        manual_asset = assets.from_dict(assets.to_dict(manual_asset))
+        self.assertEqual('Cash', manual_asset.name())
+        self.assertAlmostEqual(100.5, manual_asset.adjusted_value())
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
 
     def test_manual_asset_to_table(self):
@@ -39,14 +39,14 @@ class AssetsTest(unittest.TestCase):
         expected = [['Name:', 'Cash'],
                     ['Asset Class Mapping:', 'Fixed Income  100%'],
                     ['Value:', '$100.50']]
-        self.assertListEqual(expected, manual_asset.ToTable().StrList())
+        self.assertListEqual(expected, manual_asset.to_table().str_list())
 
-        manual_asset.WhatIf(-100)
+        manual_asset.what_if(-100)
         expected = [['Name:', 'Cash'],
                     ['Asset Class Mapping:', 'Fixed Income  100%'],
                     ['Adjusted Value:', '$0.50'],
                     ['What if:', '-$100.00']]
-        self.assertListEqual(expected, manual_asset.ToTable().StrList())
+        self.assertListEqual(expected, manual_asset.to_table().str_list())
 
     @patch('yfinance.Ticker')
     def test_bad_ticker(self, MockTicker):
@@ -57,9 +57,9 @@ class AssetsTest(unittest.TestCase):
         ticker_asset = assets.TickerAsset('bad', 10, {'All': 1.0})
 
         with self.assertRaisesRegex(assets.NotFoundError, 'Cannot retrieve ticker'):
-            ticker_asset.Name()
+            ticker_asset.name()
         with self.assertRaisesRegex(assets.NotFoundError, 'Cannot retrieve ticker'):
-            ticker_asset.Value()
+            ticker_asset.value()
 
         MockTicker.assert_called_once()
 
@@ -71,9 +71,9 @@ class AssetsTest(unittest.TestCase):
         MockTicker.return_value = ticker
 
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
-        self.assertAlmostEqual(100.0, vmmxx.Value())
-        self.assertEqual('Vanguard Cash Reserves Federal', vmmxx.Name())
-        self.assertEqual('VMMXX', vmmxx.ShortName())
+        self.assertAlmostEqual(100.0, vmmxx.value())
+        self.assertEqual('Vanguard Cash Reserves Federal', vmmxx.name())
+        self.assertEqual('VMMXX', vmmxx.short_name())
 
         MockTicker.assert_called_once()
 
@@ -83,28 +83,28 @@ class AssetsTest(unittest.TestCase):
                 assets.TaxLot('2013/12/12', 30, 0.9)]
         with self.assertRaisesRegex(AssertionError,
                                     'Lots provided should sum up to 100.0'):
-            vmmxx.SetLots(lots)
+            vmmxx.set_lots(lots)
 
         lots.append(assets.TaxLot('2014/12/31', 20, 0.9))
-        vmmxx.SetLots(lots)
+        vmmxx.set_lots(lots)
         self.assertListEqual(lots, vmmxx.tax_lots)
 
-    @patch('lakshmi.assets.TickerAsset.Price')
+    @patch('lakshmi.assets.TickerAsset.price')
     def test_list_lots(self, mock_price):
         mock_price.return_value = 15.0
 
         vti = assets.TickerAsset('VTI', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2011/01/01', 50, 10.0),
                 assets.TaxLot('2012/01/01', 50, 20.0)]
-        vti.SetLots(lots)
+        vti.set_lots(lots)
 
         self.assertListEqual(
                 [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
                  ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
-                vti.ListLots().StrList())
+                vti.list_lots().str_list())
 
-    @patch('lakshmi.assets.TickerAsset.Name')
-    @patch('lakshmi.assets.TickerAsset.Price')
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
     def test_ticker_asset_to_table(self, mock_price, mock_name):
         mock_price.return_value = 10.0
         mock_name.return_value = 'Google Inc'
@@ -115,7 +115,7 @@ class AssetsTest(unittest.TestCase):
                     ['Asset Class Mapping:', 'All  100%'],
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
-        self.assertListEqual(expected, goog.ToTable().StrList())
+        self.assertListEqual(expected, goog.to_table().str_list())
 
     @patch('yfinance.Ticker')
     def test_dict_ticker(self, MockTicker):
@@ -127,13 +127,13 @@ class AssetsTest(unittest.TestCase):
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2012/12/12', 50, 1.0),
                 assets.TaxLot('2013/12/12', 50, 0.9)]
-        vmmxx.SetLots(lots)
-        vmmxx.WhatIf(-10)
-        vmmxx = assets.FromDict(assets.ToDict(vmmxx))
+        vmmxx.set_lots(lots)
+        vmmxx.what_if(-10)
+        vmmxx = assets.from_dict(assets.to_dict(vmmxx))
         self.assertEqual('VMMXX', vmmxx.ticker)
         self.assertEqual(100.0, vmmxx.shares)
         self.assertEqual({'All': 1.0}, vmmxx.class2ratio)
-        self.assertAlmostEqual(90.0, vmmxx.AdjustedValue())
+        self.assertAlmostEqual(90.0, vmmxx.adjusted_value())
         self.assertEqual(2, len(vmmxx.tax_lots))
 
     @patch('requests.get')
@@ -148,8 +148,8 @@ class AssetsTest(unittest.TestCase):
         fund = assets.VanguardFund(7555, 10, {'All': 1.0})
         self.assertEqual(
             'Vanguard Institutional Total Bond Market Index Trust',
-            fund.Name())
-        self.assertEqual('7555', fund.ShortName())
+            fund.name())
+        self.assertEqual('7555', fund.short_name())
         mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
@@ -163,27 +163,27 @@ class AssetsTest(unittest.TestCase):
         mock_get.return_value = mock_res
 
         fund = assets.VanguardFund(7555, 10, {'All': 1.0})
-        self.assertEqual(1166.6, fund.Value())
+        self.assertEqual(1166.6, fund.value())
         mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/price.json',
             headers={'Referer': 'https://vanguard.com/'})
-        fund.SetLots([assets.TaxLot('2012/12/30', 10, 1.0)])
+        fund.set_lots([assets.TaxLot('2012/12/30', 10, 1.0)])
 
-    @patch('lakshmi.assets.VanguardFund.Value')
+    @patch('lakshmi.assets.VanguardFund.value')
     def test_dict_vanguard_fund(self, mock_value):
         mock_value.return_value = 100.0
         fund = assets.VanguardFund(1234, 20, {'Bonds': 1.0})
-        fund.SetLots([assets.TaxLot('2021/05/15', 20, 5.0)])
-        fund.WhatIf(100)
-        fund = assets.FromDict(assets.ToDict(fund))
+        fund.set_lots([assets.TaxLot('2021/05/15', 20, 5.0)])
+        fund.what_if(100)
+        fund = assets.from_dict(assets.to_dict(fund))
         self.assertEqual(1234, fund.fund_id)
         self.assertEqual(20, fund.shares)
         self.assertEqual({'Bonds': 1.0}, fund.class2ratio)
         self.assertEqual(1, len(fund.tax_lots))
         self.assertEqual(100, fund._delta)
 
-    @patch('lakshmi.assets.VanguardFund.Name')
-    @patch('lakshmi.assets.VanguardFund.Price')
+    @patch('lakshmi.assets.VanguardFund.name')
+    @patch('lakshmi.assets.VanguardFund.price')
     def test_vangurd_fund_asset_to_table(self, mock_price, mock_name):
         mock_price.return_value = 10.0
         mock_name.return_value = 'Vanguardy Fund'
@@ -194,7 +194,7 @@ class AssetsTest(unittest.TestCase):
                     ['Asset Class Mapping:', 'All  100%'],
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
-        self.assertListEqual(expected, fund.ToTable().StrList())
+        self.assertListEqual(expected, fund.to_table().str_list())
 
     @patch('datetime.datetime')
     @patch('requests.post')
@@ -206,7 +206,7 @@ class AssetsTest(unittest.TestCase):
         mock_date.now.strftime.return_value = '04/2021'
 
         ibonds = assets.IBonds({'All': 1.0})
-        ibonds.AddBond('03/2020', 10000)
+        ibonds.add_bond('03/2020', 10000)
 
         mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',
@@ -217,21 +217,21 @@ class AssetsTest(unittest.TestCase):
                 'IssueDate': '03/2020',
                 'btnAdd.x': 'CALCULATE'})
 
-        self.assertEqual('I Bonds', ibonds.Name())
-        self.assertEqual('I Bonds', ibonds.ShortName())
-        self.assertAlmostEqual(10156.0, ibonds.Value())
+        self.assertEqual('I Bonds', ibonds.name())
+        self.assertEqual('I Bonds', ibonds.short_name())
+        self.assertAlmostEqual(10156.0, ibonds.value())
         self.assertListEqual(
                 [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
-                ibonds.ListBonds().StrList())
+                ibonds.list_bonds().str_list())
 
-    @patch('lakshmi.assets.IBonds.Value')
+    @patch('lakshmi.assets.IBonds.value')
     def test_dict_i_bonds(self, mock_value):
         mock_value.return_value = 11000
         ibonds = assets.IBonds({'B': 1.0})
-        ibonds.AddBond('02/2020', 10000)
-        ibonds.WhatIf(-100.0)
-        ibonds = assets.FromDict(assets.ToDict(ibonds))
-        self.assertEqual('I Bonds', ibonds.Name())
+        ibonds.add_bond('02/2020', 10000)
+        ibonds.what_if(-100.0)
+        ibonds = assets.from_dict(assets.to_dict(ibonds))
+        self.assertEqual('I Bonds', ibonds.name())
         self.assertEqual({'B': 1.0}, ibonds.class2ratio)
         self.assertAlmostEqual(-100.0, ibonds._delta)
         self.assertEqual(1, len(ibonds.bonds))
@@ -246,7 +246,7 @@ class AssetsTest(unittest.TestCase):
         mock_date.now.strftime.return_value = '04/2021'
 
         eebonds = assets.EEBonds({'All': 1.0})
-        eebonds.AddBond('03/2020', 10000)
+        eebonds.add_bond('03/2020', 10000)
 
         mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',
@@ -257,21 +257,21 @@ class AssetsTest(unittest.TestCase):
                 'IssueDate': '03/2020',
                 'btnAdd.x': 'CALCULATE'})
 
-        self.assertEqual('EE Bonds', eebonds.Name())
-        self.assertEqual('EE Bonds', eebonds.ShortName())
-        self.assertAlmostEqual(10008.0, eebonds.Value())
+        self.assertEqual('EE Bonds', eebonds.name())
+        self.assertEqual('EE Bonds', eebonds.short_name())
+        self.assertAlmostEqual(10008.0, eebonds.value())
         self.assertListEqual(
                 [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
-                eebonds.ListBonds().StrList())
+                eebonds.list_bonds().str_list())
 
-    @patch('lakshmi.assets.EEBonds.Value')
+    @patch('lakshmi.assets.EEBonds.value')
     def test_dict_ee_bonds(self, mock_value):
         mock_value.return_value = 10010
         eebonds = assets.EEBonds({'B': 1.0})
-        eebonds.AddBond('02/2020', 10000)
-        eebonds.WhatIf(-100.0)
-        eebonds = assets.FromDict(assets.ToDict(eebonds))
-        self.assertEqual('EE Bonds', eebonds.Name())
+        eebonds.add_bond('02/2020', 10000)
+        eebonds.what_if(-100.0)
+        eebonds = assets.from_dict(assets.to_dict(eebonds))
+        self.assertEqual('EE Bonds', eebonds.name())
         self.assertEqual({'B': 1.0}, eebonds.class2ratio)
         self.assertAlmostEqual(-100.0, eebonds._delta)
         self.assertEqual(1, len(eebonds.bonds))

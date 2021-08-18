@@ -19,15 +19,15 @@ class TestLakContext(lak.LakContext):
 
         self.portfolio = Portfolio(
             AssetClass('All')
-            .AddSubClass(0.5, AssetClass('Stocks'))
-            .AddSubClass(0.5, AssetClass('Bonds'))).AddAccount(
-                    Account('Schwab', 'Taxable').AddAsset(
+            .add_subclass(0.5, AssetClass('Stocks'))
+            .add_subclass(0.5, AssetClass('Bonds'))).add_account(
+                    Account('Schwab', 'Taxable').add_asset(
                         ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
 
-    def Portfolio(self):
+    def get_portfolio(self):
         return self.portfolio
 
-    def SavePortfolio(self):
+    def save_portfolio(self):
         self.saved = True
 
     def reset(self):
@@ -44,7 +44,7 @@ class LakTest(unittest.TestCase):
     def setUp(self):
         lak.lakctx = TestLakContext()
 
-    @patch('lakshmi.lak.LakContext._ReturnConfig')
+    @patch('lakshmi.lak.LakContext._return_config')
     @patch('lakshmi.cache')
     @patch('pathlib.Path.exists')
     def test_lak_context_init_with_no_config(
@@ -61,7 +61,7 @@ class LakTest(unittest.TestCase):
                 lakctx.portfolio_filename)
         mock_cache.set_cache_dir.assert_not_called()
 
-    @patch('lakshmi.lak.LakContext._ReturnConfig')
+    @patch('lakshmi.lak.LakContext._return_config')
     @patch('lakshmi.cache')
     @patch('pathlib.Path.exists')
     def test_lak_context_init_file_not_found(
@@ -77,7 +77,7 @@ class LakTest(unittest.TestCase):
         with self.assertRaisesRegex(
                 click.ClickException,
                 'Portfolio file portfolio.yaml does not'):
-            lakctx.Portfolio()
+            lakctx.get_portfolio()
 
         mock_cache.set_cache_dir.assert_not_called()
         mock_exists.assert_called_with()
@@ -198,7 +198,7 @@ class LakTest(unittest.TestCase):
         mock_read_text.return_value = 'a: b'
         mock_edit.return_value = 'c: d'
 
-        actual = lak.EditAndParse(None, lambda x: x, 'test_file')
+        actual = lak.edit_and_parse(None, lambda x: x, 'test_file')
 
         self.assertEqual({'c' : 'd'}, actual)
         mock_read_text.assert_called_once()
@@ -210,7 +210,7 @@ class LakTest(unittest.TestCase):
         mock_read_text.return_value = 'a: b'
         mock_edit.return_value = 'c: d\n\n' + lak._HELP_MSG_PREFIX
 
-        actual = lak.EditAndParse({'e': 'f'}, lambda x: x, 'test_file')
+        actual = lak.edit_and_parse({'e': 'f'}, lambda x: x, 'test_file')
 
         self.assertEqual({'c': 'd'}, actual)
         mock_read_text.assert_called_once()
@@ -223,7 +223,7 @@ class LakTest(unittest.TestCase):
         mock_edit.return_value = None
 
         with self.assertRaises(click.Abort):
-            lak.EditAndParse(None, lambda x: x, 'test_file')
+            lak.edit_and_parse(None, lambda x: x, 'test_file')
 
         mock_read_text.assert_called_once()
         mock_edit.assert_called_with('a: b')
@@ -242,7 +242,7 @@ class LakTest(unittest.TestCase):
             raise Exception('Better luck next time')
 
         with self.assertRaises(click.Abort):
-            actual = lak.EditAndParse(None, parse_fn, 'test_file')
+            actual = lak.edit_and_parse(None, parse_fn, 'test_file')
 
         mock_read_text.assert_called_once()
         mock_edit.assert_called_with('a: b')
@@ -266,7 +266,7 @@ class LakTest(unittest.TestCase):
             else:
                 return x
 
-        actual = lak.EditAndParse(None, parse_fn, 'test_file')
+        actual = lak.edit_and_parse(None, parse_fn, 'test_file')
         self.assertEqual({'c': 'd'}, actual)
 
         mock_read_text.assert_called_once()
@@ -285,7 +285,7 @@ class LakTest(unittest.TestCase):
         self.assertIn('Portfolio file already', result.output)
         self.assertFalse(lak.lakctx.saved)
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     @patch('pathlib.Path.exists')
     def test_init_portfolio(self, mock_exists, mock_parse):
         mock_exists.return_value = False
@@ -296,11 +296,11 @@ class LakTest(unittest.TestCase):
         self.assertTrue(lak.lakctx.saved)
         self.assertEqual('Money', lak.lakctx.portfolio.asset_classes.name)
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_edit_asset_class(self, mock_parse):
         mock_parse.return_value = AssetClass('Money')
 
-        previous_ac_dict = lak.lakctx.portfolio.asset_classes.ToDict()
+        previous_ac_dict = lak.lakctx.portfolio.asset_classes.to_dict()
         result = run_lak('edit assetclass')
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
@@ -315,7 +315,7 @@ class LakTest(unittest.TestCase):
         self.assertEqual(1, result.exit_code)
         self.assertFalse(lak.lakctx.saved)
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_edit_account_change_type(self, mock_parse):
         mock_parse.return_value = Account('Schwab', 'Tax-exempt')
 
@@ -323,16 +323,16 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
 
-        accounts = list(lak.lakctx.portfolio.Accounts())
+        accounts = list(lak.lakctx.portfolio.accounts())
         self.assertEqual(1, len(accounts))
         self.assertEqual('Tax-exempt', accounts[0].account_type)
-        self.assertEqual(1, len(accounts[0].Assets()))
+        self.assertEqual(1, len(accounts[0].assets()))
 
-        mock_parse.assert_called_with(Account('Schwab', 'Taxable').ToDict(),
+        mock_parse.assert_called_with(Account('Schwab', 'Taxable').to_dict(),
                                       unittest.mock.ANY,
                                       'Account.yaml')
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_edit_account_change_name(self, mock_parse):
         mock_parse.return_value = Account('Vanguard', 'Taxable')
 
@@ -340,16 +340,16 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
 
-        accounts = list(lak.lakctx.portfolio.Accounts())
+        accounts = list(lak.lakctx.portfolio.accounts())
         self.assertEqual(1, len(accounts))
-        self.assertEqual('Vanguard', accounts[0].Name())
-        self.assertEqual(1, len(accounts[0].Assets()))
+        self.assertEqual('Vanguard', accounts[0].name())
+        self.assertEqual(1, len(accounts[0].assets()))
 
-        mock_parse.assert_called_with(Account('Schwab', 'Taxable').ToDict(),
+        mock_parse.assert_called_with(Account('Schwab', 'Taxable').to_dict(),
                                       unittest.mock.ANY,
                                       'Account.yaml')
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_edit_asset(self, mock_parse):
         mock_parse.return_value = ManualAsset(
             'Tasty Asset', 100.0, {'Stocks' : 1.0})
@@ -358,16 +358,16 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
 
-        account = lak.lakctx.portfolio.GetAccount('Schwab')
-        self.assertEqual(1, len(account.Assets()))
-        self.assertEqual('Tasty Asset', list(account.Assets())[0].Name())
+        account = lak.lakctx.portfolio.get_account('Schwab')
+        self.assertEqual(1, len(account.assets()))
+        self.assertEqual('Tasty Asset', list(account.assets())[0].name())
 
         mock_parse.assert_called_with(
-            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}).ToDict(),
+            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}).to_dict(),
             unittest.mock.ANY,
             'ManualAsset.yaml')
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_add_account(self, mock_parse):
         mock_parse.return_value = Account('Vanguard', 'Taxable')
 
@@ -375,12 +375,12 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
 
-        self.assertEqual(2, len(lak.lakctx.portfolio.Accounts()))
+        self.assertEqual(2, len(lak.lakctx.portfolio.accounts()))
         mock_parse.assert_called_with(None,
-                                      Account.FromDict,
+                                      Account.from_dict,
                                       'Account.yaml')
 
-    @patch('lakshmi.lak.EditAndParse')
+    @patch('lakshmi.lak.edit_and_parse')
     def test_add_asset(self, mock_parse):
         mock_parse.return_value = ManualAsset(
             'Tasty Asset', 100.0, {'Stocks' : 1.0})
@@ -389,26 +389,26 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
 
-        account = lak.lakctx.portfolio.GetAccount('Schwab')
-        self.assertEqual(2, len(account.Assets()))
+        account = lak.lakctx.portfolio.get_account('Schwab')
+        self.assertEqual(2, len(account.assets()))
 
         mock_parse.assert_called_with(
             None,
-            ManualAsset.FromDict,
+            ManualAsset.from_dict,
             'ManualAsset.yaml')
 
     def test_delete_account(self):
         result = run_lak('delete account -t Schwab --yes')
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
-        self.assertEqual(0, len(lak.lakctx.portfolio.Accounts()))
+        self.assertEqual(0, len(lak.lakctx.portfolio.accounts()))
 
     def test_delete_asset(self):
         result = run_lak('delete asset -a Test --yes')
         self.assertEqual(0, result.exit_code)
         self.assertTrue(lak.lakctx.saved)
         self.assertEqual(
-            0, len(lak.lakctx.portfolio.GetAccount('Schwab').Assets()))
+            0, len(lak.lakctx.portfolio.get_account('Schwab').assets()))
 
     def test_analyze_tlh(self):
         result = run_lak('analyze tlh')

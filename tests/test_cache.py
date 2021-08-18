@@ -12,7 +12,7 @@ class Cached(cache.Cacheable):
         self.key = key
         self.value = value
 
-    def CacheKey(self):
+    def cache_key(self):
         return self.key
 
     @cache.cache(2)

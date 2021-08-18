@@ -10,7 +10,7 @@ from lakshmi.table import Table
 
 class Analyzer(ABC):
     @abstractmethod
-    def Analyze(self, portfolio):
+    def analyze(self, portfolio):
         pass
 
 
@@ -32,7 +32,7 @@ class TLH(Analyzer):
             assert max_dollars > 0, 'max_dollars should be positive.'
         self.max_dollars = max_dollars
 
-    def _ReturnLotsToSell(self, price, tax_lots):
+    def _return_lots_to_sell(self, price, tax_lots):
         percent_lots = []
         negative_lots = []
         total_loss = 0.0
@@ -51,20 +51,21 @@ class TLH(Analyzer):
         else:
             return percent_lots
 
-    def Analyze(self, portfolio):
+    def analyze(self, portfolio):
         ret_val = Table(
             5,
             headers=['Account', 'Asset', 'Date', 'Loss', 'Loss%'],
             coltypes=['str', 'str', 'str', 'dollars', 'percentage'])
-        for account in portfolio.Accounts():
-            for asset in account.Assets():
+        for account in portfolio.accounts():
+            for asset in account.assets():
                 if hasattr(asset, 'tax_lots') and asset.tax_lots:
                     assert hasattr(
-                        asset, 'Price'), 'Asset has tax lots but no Price'
-                    price = asset.Price()
-                    for lot in self._ReturnLotsToSell(price, asset.tax_lots):
-                        ret_val.AddRow(
-                            [account.Name(), asset.ShortName()] + lot)
+                        asset, 'price'), 'Asset has tax_lots but no price'
+                    price = asset.price()
+                    for lot in self._return_lots_to_sell(
+                            price, asset.tax_lots):
+                        ret_val.add_row(
+                            [account.name(), asset.short_name()] + lot)
         return ret_val
 
 
@@ -81,19 +82,19 @@ class BandRebalance(Analyzer):
         self.max_abs_percent = max_abs_percent
         self.max_relative_percent = max_relative_percent
 
-    def Analyze(self, portfolio):
-        aa = portfolio.AssetAllocation(portfolio.asset_classes.Leaves())
+    def analyze(self, portfolio):
+        aa = portfolio.asset_allocation(portfolio.asset_classes.leaves())
         headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference']
-        assert headers == aa.Headers()
+        assert headers == aa.headers()
         ret_val = Table(
             5,
             headers,
             ['str', 'percentage', 'percentage', 'dollars', 'delta_dollars'])
-        for row in aa.List():
+        for row in aa.list():
             abs_percent = abs(row[1] - row[2])
             rel_percent = abs_percent / row[2] if row[2] != 0 else 0
             if (abs_percent >= self.max_abs_percent or
                     rel_percent >= self.max_relative_percent):
-                ret_val.AddRow(row)
+                ret_val.add_row(row)
 
         return ret_val
