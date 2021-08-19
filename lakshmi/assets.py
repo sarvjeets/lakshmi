@@ -11,23 +11,25 @@ import requests
 import yfinance
 
 
-def ToDict(asset):
-    return {asset.__class__.__name__: asset.ToDict()}
+def to_dict(asset):
+    return {asset.__class__.__name__: asset.to_dict()}
 
-def FromDict(d):
+
+def from_dict(d):
     keys = list(d.keys())
     assert len(keys) == 1
     class_name = keys[0]
 
     for c in CLASSES:
         if c.__name__ == class_name:
-            return c.FromDict(d.pop(class_name))
+            return c.from_dict(d.pop(class_name))
 
     raise AssertionError(f'Class {class_name} not found.')
 
 
 class Asset(ABC):
     """Class representing an asset (fund, ETF, cash, etc.)."""
+
     def __init__(self, class2ratio):
         """
         Argments:
@@ -45,7 +47,7 @@ class Asset(ABC):
         assert abs(total - 1.0) < 1e-6, (
             f'Total allocation to classes must be 100% (actual = {total * 100}%)')
 
-    def ToDict(self):
+    def to_dict(self):
         """Encodes this class into a dictionary.
 
         This method for non-abstract Asset classes encodes all data.
@@ -55,89 +57,93 @@ class Asset(ABC):
             return {'What if': self._delta}
         return dict()
 
-    def FromDict(self, d):
-        """Reverse of ToDict.
+    def from_dict(self, d):
+        """Reverse of to_dict.
 
         This method for non-abstract Asset classes is a factory method.
         This method for abstract Asset classes decodes non-constructor data (if any).
         """
-        self.WhatIf(d.pop('What if', 0))
+        self.what_if(d.pop('What if', 0))
         return self
 
-    def ToTable(self):
-        table = Table(2).AddRow(['Name:', f'{self.Name()}'])
+    def to_table(self):
+        table = Table(2).add_row(['Name:', f'{self.name()}'])
 
         asset_mapping_table = Table(2, coltypes=['str', 'percentage'])
         for asset_class, ratio in self.class2ratio.items():
-            asset_mapping_table.AddRow([f'{asset_class}', ratio])
-        table.AddRow(['Asset Class Mapping:', f'{asset_mapping_table.String(tablefmt="plain")}'])
+            asset_mapping_table.add_row([f'{asset_class}', ratio])
+        table.add_row(['Asset Class Mapping:',
+                       f'{asset_mapping_table.string(tablefmt="plain")}'])
 
         if self._delta:
-            table.AddRow(['Adjusted Value:', f'{utils.FormatMoney(self.AdjustedValue())}'])
-            table.AddRow(['What if:', f'{utils.FormatMoneyDelta(self._delta)}'])
+            table.add_row(['Adjusted Value:',
+                           f'{utils.format_money(self.adjusted_value())}'])
+            table.add_row(
+                ['What if:', f'{utils.format_money_delta(self._delta)}'])
         else:
-            table.AddRow(['Value:', f'{utils.FormatMoney(self.AdjustedValue())}'])
+            table.add_row(
+                ['Value:', f'{utils.format_money(self.adjusted_value())}'])
 
         return table
 
-    def String(self):
-        return self.ToTable().String(tablefmt='plain')
+    def string(self):
+        return self.to_table().string(tablefmt='plain')
 
-    def WhatIf(self, delta):
-        if delta < 0 and delta < -self.AdjustedValue():
-            delta = - self.AdjustedValue()
+    def what_if(self, delta):
+        if delta < 0 and delta < -self.adjusted_value():
+            delta = - self.adjusted_value()
         self._delta += delta
         if abs(self._delta) < 1e-6:
             self._delta = 0
         return delta
 
-    def AdjustedValue(self):
-        return self.Value() + self._delta
+    def adjusted_value(self):
+        return self.value() + self._delta
 
     @abstractmethod
-    def Value(self):
+    def value(self):
         pass
 
     @abstractmethod
-    def Name(self):
+    def name(self):
         pass
 
     @abstractmethod
-    def ShortName(self):
+    def short_name(self):
         pass
 
 
 class ManualAsset(Asset):
     def __init__(self, name, value, class2ratio):
         assert value >= 0, 'Value of an asset can not be negative.'
-        self.name = name
-        self.value = value
+        self._name = name
+        self._value = value
         super().__init__(class2ratio)
 
-    def ToDict(self):
-        d = {'Name': self.name,
-             'Value': self.value,
+    def to_dict(self):
+        d = {'Name': self._name,
+             'Value': self._value,
              'Asset Mapping': self.class2ratio}
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = ManualAsset(d.pop('Name'),
                               d.pop('Value', 0),
                               d.pop('Asset Mapping'))
-        Asset.FromDict(ret_obj, d)
+        Asset.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def Value(self):
-        return self.value
+    def value(self):
+        return self._value
 
-    def Name(self):
-        return self.name
+    def name(self):
+        return self._name
 
-    def ShortName(self):
-        return self.name
+    def short_name(self):
+        return self._name
 
 
 class TaxLot:
@@ -153,13 +159,13 @@ class TaxLot:
         self.quantity = quantity
         self.unit_cost = unit_cost
 
-    def ToDict(self):
+    def to_dict(self):
         return {'Date': self.date,
                 'Quantity': self.quantity,
                 'Unit Cost': self.unit_cost}
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = TaxLot(d.pop('Date'), d.pop('Quantity'), d.pop('Unit Cost'))
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
@@ -173,62 +179,62 @@ class TradedAsset(Asset):
         self.tax_lots = None
         super().__init__(class2ratio)
 
-    def ToDict(self):
+    def to_dict(self):
         d = dict()
         if self.tax_lots:
-            d.update({'Tax Lots': [lot.ToDict() for lot in self.tax_lots]})
-        d.update(super().ToDict())
+            d.update({'Tax Lots': [lot.to_dict() for lot in self.tax_lots]})
+        d.update(super().to_dict())
         return d
 
-    def FromDict(self, d):
-        super().FromDict(d)
+    def from_dict(self, d):
+        super().from_dict(d)
         if 'Tax Lots' not in d:
             return
-        tax_lots_list = [TaxLot.FromDict(lot_dict)
+        tax_lots_list = [TaxLot.from_dict(lot_dict)
                          for lot_dict in d.pop('Tax Lots')]
-        self.SetLots(tax_lots_list)
+        self.set_lots(tax_lots_list)
         return self
 
-    def SetLots(self, tax_lots_list):
+    def set_lots(self, tax_lots_list):
         sum_lots = sum([t.quantity for t in tax_lots_list])
         assert abs(sum_lots - self.shares) < 1e-6, (
             f'Lots provided should sum up to {self.shares}')
         self.tax_lots = tax_lots_list
         return self
 
-    def ListLots(self):
+    def list_lots(self):
         table = Table(5,
-                headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
-                coltypes=['str', 'float', 'dollars', 'delta_dollars',
-                    'percentage'])
+                      headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
+                      coltypes=['str', 'float', 'dollars', 'delta_dollars',
+                                'percentage'])
         for lot in self.tax_lots:
-            table.AddRow(
-                    [lot.date,
-                     lot.quantity,
-                     lot.unit_cost * lot.quantity,
-                     (self.Price() - lot.unit_cost) * lot.quantity,
-                     self.Price() / lot.unit_cost - 1])
+            table.add_row(
+                [lot.date,
+                 lot.quantity,
+                 lot.unit_cost * lot.quantity,
+                 (self.price() - lot.unit_cost) * lot.quantity,
+                 self.price() / lot.unit_cost - 1])
         return table
 
-    def ToTable(self):
-        table = super().ToTable()
-        table.AddRow(['Price:', f'{utils.FormatMoney(self.Price())}'])
+    def to_table(self):
+        table = super().to_table()
+        table.add_row(['Price:', f'{utils.format_money(self.price())}'])
         return table
 
-    def String(self):
+    def string(self):
         if not self.tax_lots:
-            return super().String()
+            return super().string()
 
-        return (super().String() + '\n\nTax lots:\n' +
-                f'{self.ListLots().String()}')
+        return (super().string() + '\n\nTax lots:\n' +
+                f'{self.list_lots().string()}')
 
-    def Value(self):
-        return self.shares * self.Price()
+    def value(self):
+        return self.shares * self.price()
 
-    # This class inherits abstract methods Name & ShortName from Asset.
+    # This class inherits abstract methods Name & short_name from Asset.
 
     @abstractmethod
-    def Price(self):
+    def price(self):
         pass
 
 
@@ -243,49 +249,49 @@ class TickerAsset(TradedAsset, Cacheable):
         self.ticker = ticker
         session = requests.Session()
         session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
-            '{lakshmi.constants.VERSION}')
+                                         '{lakshmi.constants.VERSION}')
         self.yticker = yfinance.Ticker(ticker, session=session)
         super().__init__(shares, class2ratio)
 
-    def ToDict(self):
+    def to_dict(self):
         d = {'Ticker': self.ticker,
              'Shares': self.shares,
              'Asset Mapping': self.class2ratio}
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = TickerAsset(
             d.pop('Ticker'),
             d.pop('Shares'),
             d.pop('Asset Mapping'))
-        TradedAsset.FromDict(ret_obj, d)
+        TradedAsset.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def ToTable(self):
-        table = super().ToTable()
-        rows = table.List()
+    def to_table(self):
+        table = super().to_table()
+        rows = table.list()
         rows.insert(0, ['Ticker:', f'{self.ticker}'])
-        table.SetRows(rows)
+        table.set_rows(rows)
         return table
 
-    def CacheKey(self):
+    def cache_key(self):
         return self.ticker
 
     @cache(365)  # Name changes are rare.
-    def Name(self):
+    def name(self):
         if self.yticker.info.get('longName') is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
         return self.yticker.info['longName']
 
-    def ShortName(self):
+    def short_name(self):
         return self.ticker
 
     @cache(1)
-    def Price(self):
+    def price(self):
         if self.yticker.info.get('regularMarketPrice') is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
@@ -299,46 +305,46 @@ class VanguardFund(TradedAsset, Cacheable):
         self.fund_id = fund_id
         super().__init__(shares, class2ratio)
 
-    def ToDict(self):
+    def to_dict(self):
         d = {'Fund Id': self.fund_id,
              'Shares': self.shares,
              'Asset Mapping': self.class2ratio}
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = VanguardFund(
             d.pop('Fund Id'),
             d.pop('Shares'),
             d.pop('Asset Mapping'))
-        TradedAsset.FromDict(ret_obj, d)
+        TradedAsset.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def ToTable(self):
-        table = super().ToTable()
-        rows = table.List()
+    def to_table(self):
+        table = super().to_table()
+        rows = table.list()
         rows.insert(0, ['Fund id:', f'{self.fund_id}'])
-        table.SetRows(rows)
+        table.set_rows(rows)
         return table
 
-    def CacheKey(self):
+    def cache_key(self):
         return str(self.fund_id)
 
     @cache(365)  # Name changes are very rare.
-    def Name(self):
+    def name(self):
         req = requests.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return req.json()['fundProfile']['longName']
 
-    def ShortName(self):
+    def short_name(self):
         return str(self.fund_id)
 
     @cache(1)
-    def Price(self):
+    def price(self):
         req = requests.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/price.json',
             headers={'Referer': 'https://vanguard.com/'})
@@ -350,20 +356,21 @@ class VanguardFund(TradedAsset, Cacheable):
 class _TreasuryBonds(Asset):
     class Bond(Cacheable):
         """A class representing individual I or EE Bond."""
+
         def __init__(self, series, issue_date, denom):
             self.series = series
             self.issue_date = issue_date
             self.denom = denom
             self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 
-        def CacheKey(self):
+        def cache_key(self):
             return '{}_{}_{}'.format(
                 self.series,
                 self.issue_date.replace('/', '.'),
                 self.redemption_date.replace('/', '.'))
 
         @cache(32)  # The value of a Bond doesn't change in a month.
-        def _GetBondInfo(self):
+        def _get_bond_info(self):
             """Returns the rate and value of a $1000 bond."""
             data = {
                 'RedemptionDate': self.redemption_date,
@@ -384,16 +391,16 @@ class _TreasuryBonds(Asset):
             # assumes paper bonds)
             return rate, value * (2.0 if self.series == 'EE' else 1.0)
 
-        def Value(self):
-            unused_rate, value = self._GetBondInfo()
+        def value(self):
+            unused_rate, value = self._get_bond_info()
             return value * (self.denom / 1000.0)
 
-        def Rate(self):
-            rate, unused_value = self._GetBondInfo()
+        def rate(self):
+            rate, unused_value = self._get_bond_info()
             return rate
 
-        def AsList(self):
-            rate, value = self._GetBondInfo()
+        def as_list(self):
+            rate, value = self._get_bond_info()
             value *= (self.denom / 1000.0)
             return [self.issue_date, self.denom, rate, value]
 
@@ -402,90 +409,91 @@ class _TreasuryBonds(Asset):
         super().__init__(class2ratio)
         self.bonds = []
 
-    def ToDict(self):
+    def to_dict(self):
         d = {}
         d['Bonds'] = []
         for bond in self.bonds:
             d['Bonds'].append(
                 {'Issue Date': bond.issue_date, 'Denomination': bond.denom})
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
-    def FromDict(self, d):
+    def from_dict(self, d):
         for bond in d.pop('Bonds'):
-            self.AddBond(bond.pop('Issue Date'), bond.pop('Denomination'))
-            assert len(bond) == 0, f'Extra attributes found: {list(bond.keys())}'
-        Asset.FromDict(self, d)
+            self.add_bond(bond.pop('Issue Date'), bond.pop('Denomination'))
+            assert len(bond) == 0, (f'Extra attributes found: '
+                                    '{list(bond.keys())}')
+        Asset.from_dict(self, d)
         return self
 
-    def AddBond(self, issue_date, denom):
+    def add_bond(self, issue_date, denom):
         self.bonds.append(self.Bond(self.series, issue_date, denom))
         return self
 
-    def Value(self):
+    def value(self):
         value = 0.0
         for bond in self.bonds:
-            value += bond.Value()
+            value += bond.value()
         return value
 
-    def ListBonds(self):
+    def list_bonds(self):
         table = Table(
-                4,
-                headers=['Issue Date', 'Denom', 'Rate', 'Value'],
-                coltypes=['str', 'dollars', 'str', 'dollars'])
+            4,
+            headers=['Issue Date', 'Denom', 'Rate', 'Value'],
+            coltypes=['str', 'dollars', 'str', 'dollars'])
         for bond in self.bonds:
-            table.AddRow(bond.AsList())
+            table.add_row(bond.as_list())
         return table
 
-    def String(self):
-        return (super().String() + '\n\nBonds:\n' +
-                f'{self.ListBonds().String()}')
+    def string(self):
+        return (super().string() + '\n\nBonds:\n' +
+                f'{self.list_bonds().string()}')
 
 
 class IBonds(_TreasuryBonds):
     def __init__(self, class2ratio):
         super().__init__('I', class2ratio)
 
-    def ToDict(self):
+    def to_dict(self):
         d = {'Asset Mapping': self.class2ratio}
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = IBonds(d.pop('Asset Mapping'))
-        _TreasuryBonds.FromDict(ret_obj, d)
+        _TreasuryBonds.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def Name(self):
+    def name(self):
         return 'I Bonds'
 
-    def ShortName(self):
-        return self.Name()
+    def short_name(self):
+        return self.name()
 
 
 class EEBonds(_TreasuryBonds):
     def __init__(self, class2ratio):
         super().__init__('EE', class2ratio)
 
-    def ToDict(self):
+    def to_dict(self):
         d = {'Asset Mapping': self.class2ratio}
-        d.update(super().ToDict())
+        d.update(super().to_dict())
         return d
 
     @classmethod
-    def FromDict(cls, d):
+    def from_dict(cls, d):
         ret_obj = EEBonds(d.pop('Asset Mapping'))
-        _TreasuryBonds.FromDict(ret_obj, d)
+        _TreasuryBonds.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def Name(self):
+    def name(self):
         return 'EE Bonds'
 
-    def ShortName(self):
-        return self.Name()
+    def short_name(self):
+        return self.name()
 
 
 CLASSES = [ManualAsset, TickerAsset, VanguardFund, IBonds, EEBonds]
