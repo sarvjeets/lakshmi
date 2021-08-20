@@ -151,9 +151,9 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(
             70.0, asset_class.value_mapped(money_allocation))
         self.assertAlmostEqual(
-            30.0, asset_class.children[0][0].value_mapped(money_allocation))
+            30.0, asset_class.children()[0][0].value_mapped(money_allocation))
         self.assertAlmostEqual(
-            40.0, asset_class.children[1][0].value_mapped(money_allocation))
+            40.0, asset_class.children()[1][0].value_mapped(money_allocation))
 
     def test_bad_asset(self):
         portfolio = Portfolio(AssetClass('Equity'))
