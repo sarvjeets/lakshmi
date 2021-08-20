@@ -1,5 +1,9 @@
 # Lakshmi
 
+![Screenshot of lak in action](./docs/lak.png)
+(Screenshot of the `lak` command. See the
+[section below](#command-line-interface) for more details)
+
 ## Background
 This project is inspired by
 [Bogleheads forum](http://bogleheads.org). Bogleheads focus on a simple but
