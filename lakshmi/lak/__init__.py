@@ -170,7 +170,7 @@ def al():
 @click.option('--compact/--no-compact', default=True, show_default=True,
               help='Print the Asset allocation tree in a vertically '
               'compact format')
-@click.option('--asset-class', '-a', type=str,
+@click.option('--asset-class', '-c', type=str,
               help='If provided, only print asset allocation for these asset '
               'classes. This is a comma separated list of asset classes (not '
               'necessarily leaf asset classes) and the allocation across '

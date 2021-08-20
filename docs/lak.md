@@ -776,7 +776,7 @@ Usage: lak list aa [OPTIONS]
 Options:
   --compact / --no-compact  Print the Asset allocation tree in a vertically
                             compact format  [default: compact]
-  -a, --asset-class TEXT    If provided, only print asset allocation for these
+  -c, --asset-class TEXT    If provided, only print asset allocation for these
                             asset classes. This is a comma separated list of
                             asset classes (not necessarily leaf asset classes)
                             and the allocation across these asset classes
