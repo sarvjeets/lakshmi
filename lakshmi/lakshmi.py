@@ -85,15 +85,18 @@ class AssetClass:
 
     def __init__(self, name):
         self.name = name
-        self.children = []
+        self._children = []
         # Populated when _validate is called.
         self._leaves = None
 
+    def children(self):
+        return self._children
+
     def to_dict(self):
         d = {'Name': self.name}
-        if self.children:
+        if self._children:
             d['Children'] = [{'Ratio': ratio} | child.to_dict()
-                             for child, ratio in self.children]
+                             for child, ratio in self._children]
         return d
 
     @classmethod
@@ -109,12 +112,12 @@ class AssetClass:
     def copy(self):
         """Returns a copy of this AssetClass and its sub-classes."""
         ret_val = AssetClass(self.name)
-        for child, ratio in self.children:
+        for child, ratio in self._children:
             ret_val.add_subclass(ratio, child.copy())
         return ret_val
 
     def add_subclass(self, ratio, asset_class):
-        self.children.append((asset_class, ratio))
+        self._children.append((asset_class, ratio))
         # leaves is not upto date now, need validation again.
         self._leaves = None
         return self
@@ -122,14 +125,14 @@ class AssetClass:
     def _validate(self):
         """Returns a tuple (leaf names, class names) for the subtree."""
         # Check if all percentages add up to 100%
-        if not self.children:
+        if not self._children:
             self._leaves = {self.name}
             return self._leaves, [self.name]
 
         self._leaves = set()
         class_names = [self.name]
         total = 0.0
-        for asset_class, ratio in self.children:
+        for asset_class, ratio in self._children:
             assert ratio >= 0.0 and ratio <= 1.0, (
                 f'Bad ratio provided to Asset Class ({ratio})')
             total += ratio
@@ -162,7 +165,7 @@ class AssetClass:
         if self.name == asset_class_name:
             return self, 1.0
 
-        for asset_class, ratio in self.children:
+        for asset_class, ratio in self._children:
             ret_value = asset_class.find_asset_class(asset_class_name)
             if ret_value:
                 return ret_value[0], ret_value[1] * ratio
@@ -220,7 +223,7 @@ class AssetClass:
         if value == 0:
             return [actual_alloc]
 
-        for asset_class, desired_ratio in self.children:
+        for asset_class, desired_ratio in self._children:
             actual_ratio = asset_class.value_mapped(money_allocation) / value
             actual_alloc.add_child(
                 asset_class.name,
@@ -235,7 +238,7 @@ class AssetClass:
         if levels > 0:
             levels -= 1
 
-        for asset_class, unused_ratio in self.children:
+        for asset_class, unused_ratio in self._children:
             ret_val += asset_class.return_allocation(money_allocation, levels)
 
         return ret_val
@@ -399,7 +402,7 @@ class Portfolio:
                        ([f'{asset.short_name()}'] if short_name else []) +
                        [asset.name(), asset.adjusted_value()])
                 if quantity:
-                    row.insert(1 + short_name, asset.shares
+                    row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)
                 table.add_row(row)
 

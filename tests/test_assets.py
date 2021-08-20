@@ -87,7 +87,7 @@ class AssetsTest(unittest.TestCase):
 
         lots.append(assets.TaxLot('2014/12/31', 20, 0.9))
         vmmxx.set_lots(lots)
-        self.assertListEqual(lots, vmmxx.tax_lots)
+        self.assertListEqual(lots, vmmxx.get_lots())
 
     @patch('lakshmi.assets.TickerAsset.price')
     def test_list_lots(self, mock_price):
@@ -130,11 +130,11 @@ class AssetsTest(unittest.TestCase):
         vmmxx.set_lots(lots)
         vmmxx.what_if(-10)
         vmmxx = assets.from_dict(assets.to_dict(vmmxx))
-        self.assertEqual('VMMXX', vmmxx.ticker)
-        self.assertEqual(100.0, vmmxx.shares)
+        self.assertEqual('VMMXX', vmmxx.short_name())
+        self.assertEqual(100.0, vmmxx.shares())
         self.assertEqual({'All': 1.0}, vmmxx.class2ratio)
         self.assertAlmostEqual(90.0, vmmxx.adjusted_value())
-        self.assertEqual(2, len(vmmxx.tax_lots))
+        self.assertEqual(2, len(vmmxx.get_lots()))
 
     @patch('requests.get')
     def test_vanguard_funds_name(self, mock_get):
@@ -176,10 +176,10 @@ class AssetsTest(unittest.TestCase):
         fund.set_lots([assets.TaxLot('2021/05/15', 20, 5.0)])
         fund.what_if(100)
         fund = assets.from_dict(assets.to_dict(fund))
-        self.assertEqual(1234, fund.fund_id)
-        self.assertEqual(20, fund.shares)
+        self.assertEqual('1234', fund.short_name())
+        self.assertEqual(20, fund.shares())
         self.assertEqual({'Bonds': 1.0}, fund.class2ratio)
-        self.assertEqual(1, len(fund.tax_lots))
+        self.assertEqual(1, len(fund.get_lots()))
         self.assertEqual(100, fund._delta)
 
     @patch('lakshmi.assets.VanguardFund.name')
@@ -234,7 +234,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('I Bonds', ibonds.name())
         self.assertEqual({'B': 1.0}, ibonds.class2ratio)
         self.assertAlmostEqual(-100.0, ibonds._delta)
-        self.assertEqual(1, len(ibonds.bonds))
+        self.assertEqual(1, len(ibonds.bonds()))
 
     @patch('datetime.datetime')
     @patch('requests.post')
@@ -274,7 +274,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('EE Bonds', eebonds.name())
         self.assertEqual({'B': 1.0}, eebonds.class2ratio)
         self.assertAlmostEqual(-100.0, eebonds._delta)
-        self.assertEqual(1, len(eebonds.bonds))
+        self.assertEqual(1, len(eebonds.bonds()))
 
 
 if __name__ == '__main__':
