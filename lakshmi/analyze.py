@@ -58,12 +58,9 @@ class TLH(Analyzer):
             coltypes=['str', 'str', 'str', 'dollars', 'percentage'])
         for account in portfolio.accounts():
             for asset in account.assets():
-                if hasattr(asset, 'tax_lots') and asset.tax_lots:
-                    assert hasattr(
-                        asset, 'price'), 'Asset has tax_lots but no price'
-                    price = asset.price()
+                if hasattr(asset, 'get_lots') and asset.get_lots():
                     for lot in self._return_lots_to_sell(
-                            price, asset.tax_lots):
+                            asset.price(), asset.get_lots()):
                         ret_val.add_row(
                             [account.name(), asset.short_name()] + lot)
         return ret_val

@@ -175,14 +175,14 @@ class TradedAsset(Asset):
     """An abstract class representing an asset with units and per unit price."""
 
     def __init__(self, shares, class2ratio):
-        self.shares = shares
-        self.tax_lots = None
+        self._shares = shares
+        self._tax_lots = None
         super().__init__(class2ratio)
 
     def to_dict(self):
         d = dict()
-        if self.tax_lots:
-            d.update({'Tax Lots': [lot.to_dict() for lot in self.tax_lots]})
+        if self._tax_lots:
+            d.update({'Tax Lots': [lot.to_dict() for lot in self._tax_lots]})
         d.update(super().to_dict())
         return d
 
@@ -195,11 +195,17 @@ class TradedAsset(Asset):
         self.set_lots(tax_lots_list)
         return self
 
+    def shares(self):
+        return self._shares
+
+    def get_lots(self):
+        return self._tax_lots
+
     def set_lots(self, tax_lots_list):
         sum_lots = sum([t.quantity for t in tax_lots_list])
-        assert abs(sum_lots - self.shares) < 1e-6, (
-            f'Lots provided should sum up to {self.shares}')
-        self.tax_lots = tax_lots_list
+        assert abs(sum_lots - self._shares) < 1e-6, (
+            f'Lots provided should sum up to {self._shares}')
+        self._tax_lots = tax_lots_list
         return self
 
     def list_lots(self):
@@ -207,7 +213,10 @@ class TradedAsset(Asset):
                       headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
                       coltypes=['str', 'float', 'dollars', 'delta_dollars',
                                 'percentage'])
-        for lot in self.tax_lots:
+        if not self._tax_lots:
+            return table
+
+        for lot in self._tax_lots:
             table.add_row(
                 [lot.date,
                  lot.quantity,
@@ -222,14 +231,14 @@ class TradedAsset(Asset):
         return table
 
     def string(self):
-        if not self.tax_lots:
+        if not self._tax_lots:
             return super().string()
 
         return (super().string() + '\n\nTax lots:\n' +
                 f'{self.list_lots().string()}')
 
     def value(self):
-        return self.shares * self.price()
+        return self.shares() * self.price()
 
     # This class inherits abstract methods Name & short_name from Asset.
 
@@ -246,7 +255,7 @@ class TickerAsset(TradedAsset, Cacheable):
     """An asset class representing a Ticker whose price can be pulled."""
 
     def __init__(self, ticker, shares, class2ratio):
-        self.ticker = ticker
+        self._ticker = ticker
         session = requests.Session()
         session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
                                          '{lakshmi.constants.VERSION}')
@@ -254,8 +263,8 @@ class TickerAsset(TradedAsset, Cacheable):
         super().__init__(shares, class2ratio)
 
     def to_dict(self):
-        d = {'Ticker': self.ticker,
-             'Shares': self.shares,
+        d = {'Ticker': self._ticker,
+             'Shares': self.shares(),
              'Asset Mapping': self.class2ratio}
         d.update(super().to_dict())
         return d
@@ -273,28 +282,28 @@ class TickerAsset(TradedAsset, Cacheable):
     def to_table(self):
         table = super().to_table()
         rows = table.list()
-        rows.insert(0, ['Ticker:', f'{self.ticker}'])
+        rows.insert(0, ['Ticker:', f'{self._ticker}'])
         table.set_rows(rows)
         return table
 
     def cache_key(self):
-        return self.ticker
+        return self._ticker
 
     @cache(365)  # Name changes are rare.
     def name(self):
         if self.yticker.info.get('longName') is None:
             raise NotFoundError(
-                f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
+                f'Cannot retrieve ticker ("{self._ticker}") from Yahoo Finance')
         return self.yticker.info['longName']
 
     def short_name(self):
-        return self.ticker
+        return self._ticker
 
     @cache(1)
     def price(self):
         if self.yticker.info.get('regularMarketPrice') is None:
             raise NotFoundError(
-                f'Cannot retrieve ticker ("{self.ticker}") from Yahoo Finance')
+                f'Cannot retrieve ticker ("{self._ticker}") from Yahoo Finance')
         return self.yticker.info['regularMarketPrice']
 
 
@@ -302,12 +311,12 @@ class VanguardFund(TradedAsset, Cacheable):
     """An asset class representing Vanguard trust fund represented by a numeric ID."""
 
     def __init__(self, fund_id, shares, class2ratio):
-        self.fund_id = fund_id
+        self._fund_id = fund_id
         super().__init__(shares, class2ratio)
 
     def to_dict(self):
-        d = {'Fund Id': self.fund_id,
-             'Shares': self.shares,
+        d = {'Fund Id': self._fund_id,
+             'Shares': self.shares(),
              'Asset Mapping': self.class2ratio}
         d.update(super().to_dict())
         return d
@@ -325,28 +334,28 @@ class VanguardFund(TradedAsset, Cacheable):
     def to_table(self):
         table = super().to_table()
         rows = table.list()
-        rows.insert(0, ['Fund id:', f'{self.fund_id}'])
+        rows.insert(0, ['Fund id:', f'{self._fund_id}'])
         table.set_rows(rows)
         return table
 
     def cache_key(self):
-        return str(self.fund_id)
+        return str(self._fund_id)
 
     @cache(365)  # Name changes are very rare.
     def name(self):
         req = requests.get(
-            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/profile.json',
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return req.json()['fundProfile']['longName']
 
     def short_name(self):
-        return str(self.fund_id)
+        return str(self._fund_id)
 
     @cache(1)
     def price(self):
         req = requests.get(
-            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self.fund_id}/price.json',
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}/price.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return float(req.json()['currentPrice']
@@ -405,14 +414,14 @@ class _TreasuryBonds(Asset):
             return [self.issue_date, self.denom, rate, value]
 
     def __init__(self, series, class2ratio):
-        self.series = series
+        self._series = series
         super().__init__(class2ratio)
-        self.bonds = []
+        self._bonds = []
 
     def to_dict(self):
         d = {}
         d['Bonds'] = []
-        for bond in self.bonds:
+        for bond in self._bonds:
             d['Bonds'].append(
                 {'Issue Date': bond.issue_date, 'Denomination': bond.denom})
         d.update(super().to_dict())
@@ -426,13 +435,16 @@ class _TreasuryBonds(Asset):
         Asset.from_dict(self, d)
         return self
 
+    def bonds(self):
+        return self._bonds
+
     def add_bond(self, issue_date, denom):
-        self.bonds.append(self.Bond(self.series, issue_date, denom))
+        self._bonds.append(self.Bond(self._series, issue_date, denom))
         return self
 
     def value(self):
         value = 0.0
-        for bond in self.bonds:
+        for bond in self._bonds:
             value += bond.value()
         return value
 
@@ -441,13 +453,19 @@ class _TreasuryBonds(Asset):
             4,
             headers=['Issue Date', 'Denom', 'Rate', 'Value'],
             coltypes=['str', 'dollars', 'str', 'dollars'])
-        for bond in self.bonds:
+        for bond in self._bonds:
             table.add_row(bond.as_list())
         return table
 
     def string(self):
         return (super().string() + '\n\nBonds:\n' +
                 f'{self.list_bonds().string()}')
+
+    def name(self):
+        return f'{self._series} Bonds'
+
+    def short_name(self):
+        return self.name()
 
 
 class IBonds(_TreasuryBonds):
@@ -466,12 +484,6 @@ class IBonds(_TreasuryBonds):
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
-    def name(self):
-        return 'I Bonds'
-
-    def short_name(self):
-        return self.name()
-
 
 class EEBonds(_TreasuryBonds):
     def __init__(self, class2ratio):
@@ -488,12 +500,6 @@ class EEBonds(_TreasuryBonds):
         _TreasuryBonds.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
-
-    def name(self):
-        return 'EE Bonds'
-
-    def short_name(self):
-        return self.name()
 
 
 CLASSES = [ManualAsset, TickerAsset, VanguardFund, IBonds, EEBonds]

@@ -402,7 +402,7 @@ class Portfolio:
                        ([f'{asset.short_name()}'] if short_name else []) +
                        [asset.name(), asset.adjusted_value()])
                 if quantity:
-                    row.insert(1 + short_name, asset.shares
+                    row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)
                 table.add_row(row)
 
