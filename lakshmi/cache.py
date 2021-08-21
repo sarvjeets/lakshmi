@@ -14,7 +14,7 @@ import pickle
 
 class Cacheable(ABC):
     @abstractmethod
-    def CacheKey(self):
+    def cache_key(self):
         """Unique string value used as key for caching."""
         pass
 
@@ -76,7 +76,7 @@ def cache(days):
                 return func(class_obj)
             force_refresh = _ctx[_FORCE_STR]
 
-            key = f'{func.__qualname__}_{class_obj.CacheKey()}'
+            key = f'{func.__qualname__}_{class_obj.cache_key()}'
             filename = f'{days}_{md5(key.encode("utf8")).hexdigest()}.lkc'
             file = cache_dir / filename
 

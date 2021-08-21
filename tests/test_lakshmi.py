@@ -12,373 +12,375 @@ class LakshmiTest(unittest.TestCase):
     def setUpClass(cls):
         lakshmi.cache.set_cache_dir(None)  # Disable caching.
 
-    def testEmptyPortfolio(self):
+    def test_empty_portfolio(self):
         portfolio = Portfolio(AssetClass('E'))
-        self.assertAlmostEqual(0, portfolio.TotalValue())
-        self.assertListEqual([], portfolio.Assets().List())
-        self.assertListEqual([], portfolio.AssetLocation().List())
-        self.assertListEqual([], portfolio.AssetAllocationTree().List())
-        self.assertListEqual([], portfolio.AssetAllocation([]).List())
-        self.assertListEqual([], portfolio.AssetAllocationCompact().List())
+        self.assertAlmostEqual(0, portfolio.total_value())
+        self.assertListEqual([], portfolio.assets().list())
+        self.assertListEqual([], portfolio.asset_location().list())
+        self.assertListEqual([], portfolio.asset_allocation_tree().list())
+        self.assertListEqual([], portfolio.asset_allocation([]).list())
+        self.assertListEqual([], portfolio.asset_allocation_compact().list())
 
-    def testOneAssetClass(self):
-        asset_class = AssetClass('Equity').Validate()
+    def test_one_asset_class(self):
+        asset_class = AssetClass('Equity').validate()
 
-    def testManyAssetClassDuplicate(self):
+    def test_many_asset_class_duplicate(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('US')))
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('US')))
         with self.assertRaisesRegex(AssertionError, 'Found duplicate'):
-            asset_class.Validate()
+            asset_class.validate()
 
-    def testManyAssetClassBadRatioSum(self):
+    def test_many_asset_class_bad_ratio_sum(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.5, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds')))
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.5, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds')))
 
         with self.assertRaisesRegex(AssertionError, 'Sum of sub-classes'):
-            asset_class.Validate()
+            asset_class.validate()
 
-    def testManyAssetClassBadRatioNeg(self):
+    def test_many_asset_class_bad_ratio_neg(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(-0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds')))
+            .add_subclass(-0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds')))
 
         with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
-            asset_class.Validate()
+            asset_class.validate()
 
-    def testManyAssetClassBadRatioHigh(self):
+    def test_many_asset_class_bad_ratio_high(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(1.5,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds')))
+            .add_subclass(1.5,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds')))
 
         with self.assertRaisesRegex(AssertionError, 'Bad ratio'):
-            asset_class.Validate()
+            asset_class.validate()
 
-    def testManyAssetClass(self):
+    def test_many_asset_class(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds'))).validate()
 
         self.assertEqual(
             {'US', 'International', 'Bonds'},
-            asset_class.Leaves())
+            asset_class.leaves())
 
-        ret_class, ratio = asset_class.FindAssetClass('All')
+        ret_class, ratio = asset_class.find_asset_class('All')
         self.assertEqual('All', ret_class.name)
         self.assertAlmostEqual(1.0, ratio)
-        ret_class, ratio = asset_class.FindAssetClass('Equity')
+        ret_class, ratio = asset_class.find_asset_class('Equity')
         self.assertEqual('Equity', ret_class.name)
         self.assertAlmostEqual(0.8, ratio)
-        ret_class, ratio = asset_class.FindAssetClass('US')
+        ret_class, ratio = asset_class.find_asset_class('US')
         self.assertEqual('US', ret_class.name)
         self.assertAlmostEqual(0.48, ratio)
-        ret_class, ratio = asset_class.FindAssetClass('International')
+        ret_class, ratio = asset_class.find_asset_class('International')
         self.assertEqual('International', ret_class.name)
         self.assertAlmostEqual(0.32, ratio)
-        ret_class, ratio = asset_class.FindAssetClass('Bonds')
+        ret_class, ratio = asset_class.find_asset_class('Bonds')
         self.assertEqual('Bonds', ret_class.name)
         self.assertAlmostEqual(0.2, ratio)
 
-    def testAssetClassDict(self):
+    def test_asset_class_dict(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds'))).validate()
 
-        asset_class = AssetClass.FromDict(asset_class.ToDict())
+        asset_class = AssetClass.from_dict(asset_class.to_dict())
         self.assertEqual(
             {'US', 'International', 'Bonds'},
-            asset_class.Leaves())
-        ret_class, ratio = asset_class.FindAssetClass('US')
+            asset_class.leaves())
+        ret_class, ratio = asset_class.find_asset_class('US')
         self.assertEqual('US', ret_class.name)
         self.assertAlmostEqual(0.48, ratio)
 
-    def testAssetClassCopy(self):
+    def test_asset_class_copy(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('International')))
-            .AddSubClass(0.2, AssetClass('Bonds'))).Validate()
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('International')))
+            .add_subclass(0.2, AssetClass('Bonds'))).validate()
 
-        asset_class2 = asset_class.Copy().Validate()
+        asset_class2 = asset_class.copy().validate()
         asset_class2.name = 'Changed'
         self.assertEqual('All', asset_class.name)
 
-    def testValueMapped(self):
+    def test_value_mapped(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.6, AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('Intl')))
-            .AddSubClass(0.4, AssetClass('Bonds')))
+            .add_subclass(0.6, AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.4, AssetClass('Bonds')))
 
         with self.assertRaisesRegex(AssertionError, 'Need to validate'):
-            asset_class.ValueMapped({})
+            asset_class.value_mapped({})
 
-        asset_class.Validate()
+        asset_class.validate()
         money_allocation = {
             'US': 10.0,
             'Intl': 20.0,
             'Bonds': 40.0,
             'Unused': 50.0}
 
-        self.assertAlmostEqual(70.0, asset_class.ValueMapped(money_allocation))
         self.assertAlmostEqual(
-            30.0, asset_class.children[0][0].ValueMapped(money_allocation))
+            70.0, asset_class.value_mapped(money_allocation))
         self.assertAlmostEqual(
-            40.0, asset_class.children[1][0].ValueMapped(money_allocation))
+            30.0, asset_class.children()[0][0].value_mapped(money_allocation))
+        self.assertAlmostEqual(
+            40.0, asset_class.children()[1][0].value_mapped(money_allocation))
 
-    def testBadAsset(self):
+    def test_bad_asset(self):
         portfolio = Portfolio(AssetClass('Equity'))
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
+        account = Account('Roth IRA', 'Post-tax').add_asset(
             ManualAsset('Test Asset', 100.0, {'Bad Equity': 1.0}))
         with self.assertRaisesRegex(
                 AssertionError,
                 'Unknown or non-leaf asset class: Bad Equity'):
-            portfolio.AddAccount(account)
+            portfolio.add_account(account)
 
-    def testGetSetAssetsFromAccount(self):
+    def test_get_set_assets_from_account(self):
         account = (Account('Roth IRA', 'Post-tax')
-                .AddAsset(ManualAsset('Test Asset 1', 100.0, {'All': 1.0}))
-                .AddAsset(ManualAsset('Test Asset 2', 200.0, {'All': 1.0})))
-        asset = account.GetAsset('Test Asset 1')
-        self.assertEqual('Test Asset 1', asset.Name())
-        self.assertAlmostEqual(100.0, asset.Value())
+                   .add_asset(ManualAsset('Test 1', 100.0, {'All': 1.0}))
+                   .add_asset(ManualAsset('Test 2', 200.0, {'All': 1.0})))
+        asset = account.get_asset('Test 1')
+        self.assertEqual('Test 1', asset.name())
+        self.assertAlmostEqual(100.0, asset.value())
 
-        account.AddAsset(ManualAsset('Test Asset 1', 300.0, {'All': 1.0}), replace=True)
-        account.SetAssets(account.Assets())
-        self.assertEqual(2, len(account.Assets()))
-        account.RemoveAsset('Test Asset 1')
+        account.add_asset(ManualAsset('Test 1', 300.0, {'All': 1.0}),
+                          replace=True)
+        account.set_assets(account.assets())
+        self.assertEqual(2, len(account.assets()))
+        account.remove_asset('Test 1')
         with self.assertRaises(KeyError):
-            account.GetAsset('Test Asset 1')
+            account.get_asset('Test 1')
 
-    def testAccountDict(self):
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
+    def test_account_dict(self):
+        account = Account('Roth IRA', 'Post-tax').add_asset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
-        account.AddCash(200)
-        account = Account.FromDict(account.ToDict())
+        account.add_cash(200)
+        account = Account.from_dict(account.to_dict())
         self.assertEqual(1, len(account._assets))
-        self.assertEqual('Test Asset', account.GetAsset('Test Asset').Name())
-        self.assertAlmostEqual(200.0, account.AvailableCash())
+        self.assertEqual('Test Asset', account.get_asset('Test Asset').name())
+        self.assertAlmostEqual(200.0, account.available_cash())
 
-    def testAccountString(self):
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
-                ManualAsset('Test', 100.0, {'All': 1.0}))
+    def test_account_string(self):
+        account = Account('Roth IRA', 'Post-tax').add_asset(
+            ManualAsset('Test', 100.0, {'All': 1.0}))
         expected = (Table(2)
-                .AddRow(['Name:', 'Roth IRA'])
-                .AddRow(['Type:','Post-tax'])
-                .AddRow(['Total:', '$100.00']))
-        self.assertEqual(expected.String(tablefmt='plain'), account.String())
+                    .add_row(['Name:', 'Roth IRA'])
+                    .add_row(['Type:', 'Post-tax'])
+                    .add_row(['Total:', '$100.00']))
+        self.assertEqual(expected.string(tablefmt='plain'), account.string())
 
-        account.AddCash(-10)
-        expected.AddRow(['Available Cash:', '-$10.00'])
-        self.assertEqual(expected.String(tablefmt='plain'), account.String())
+        account.add_cash(-10)
+        expected.add_row(['Available Cash:', '-$10.00'])
+        self.assertEqual(expected.string(tablefmt='plain'), account.string())
 
-    def testDuplicateAccount(self):
+    def test_duplicate_account(self):
         portfolio = Portfolio(AssetClass('All'))
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
+        account = Account('Roth IRA', 'Post-tax').add_asset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
-        portfolio.AddAccount(account)
+        portfolio.add_account(account)
         with self.assertRaisesRegex(AssertionError, 'Attempting to add'):
-            portfolio.AddAccount(account)
-        portfolio.AddAccount(account, replace=True)
+            portfolio.add_account(account)
+        portfolio.add_account(account, replace=True)
 
-    def testRemoveAccount(self):
+    def test_remove_account(self):
         portfolio = Portfolio(AssetClass('All'))
-        account = Account('Roth IRA', 'Post-tax').AddAsset(
+        account = Account('Roth IRA', 'Post-tax').add_asset(
             ManualAsset('Test Asset', 100.0, {'All': 1.0}))
-        portfolio.AddAccount(account)
-        portfolio.RemoveAccount('Roth IRA')
-        self.assertEqual(0, len(portfolio.Accounts()))
+        portfolio.add_account(account)
+        portfolio.remove_account('Roth IRA')
+        self.assertEqual(0, len(portfolio.accounts()))
 
-    def testOneAsset(self):
-        portfolio = Portfolio(AssetClass('Equity')).AddAccount(
-            Account('401(k)', 'Pre-tax').AddAsset(
+    def test_one_asset(self):
+        portfolio = Portfolio(AssetClass('Equity')).add_account(
+            Account('401(k)', 'Pre-tax').add_asset(
                 ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
 
-        self.assertEqual(1, len(portfolio.Accounts()))
+        self.assertEqual(1, len(portfolio.accounts()))
         self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
-                             portfolio.Assets().StrList())
-        self.assertAlmostEqual(100.0, portfolio.TotalValue())
+                             portfolio.assets().str_list())
+        self.assertAlmostEqual(100.0, portfolio.total_value())
         self.assertListEqual([['Equity', 'Pre-tax', '100%', '$100.00']],
-                             portfolio.AssetLocation().StrList())
-        self.assertListEqual([], portfolio.AssetAllocationTree().List())
+                             portfolio.asset_location().str_list())
+        self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual(
             [['Equity', '100%', '100%', '$100.00', '+$0.00']],
-            portfolio.AssetAllocation(['Equity']).StrList())
-        self.assertListEqual([], portfolio.AssetAllocationTree().List())
-        self.assertListEqual([], portfolio.AssetAllocationCompact().List())
+            portfolio.asset_allocation(['Equity']).str_list())
+        self.assertListEqual([], portfolio.asset_allocation_tree().list())
+        self.assertListEqual([], portfolio.asset_allocation_compact().list())
 
-    def testPortfolioDict(self):
-        portfolio = Portfolio(AssetClass('Equity')).AddAccount(
-            Account('401(k)', 'Pre-tax').AddAsset(
+    def test_portfolio_dict(self):
+        portfolio = Portfolio(AssetClass('Equity')).add_account(
+            Account('401(k)', 'Pre-tax').add_asset(
                 ManualAsset('Test Asset', 100.0, {'Equity': 1.0})))
-        portfolio = Portfolio.FromDict(portfolio.ToDict())
-        self.assertEqual(1, len(portfolio.Accounts()))
+        portfolio = Portfolio.from_dict(portfolio.to_dict())
+        self.assertEqual(1, len(portfolio.accounts()))
 
-    def testAssetWhatIf(self):
+    def test_asset_what_if(self):
         asset = ManualAsset('Test Asset', 100.0, {'Equity': 1.0})
-        self.assertAlmostEqual(100, asset.AdjustedValue())
-        asset.WhatIf(-10.0)
-        self.assertAlmostEqual(100, asset.Value())
-        self.assertAlmostEqual(90, asset.AdjustedValue())
-        asset.WhatIf(10)
-        self.assertAlmostEqual(100, asset.AdjustedValue())
+        self.assertAlmostEqual(100, asset.adjusted_value())
+        asset.what_if(-10.0)
+        self.assertAlmostEqual(100, asset.value())
+        self.assertAlmostEqual(90, asset.adjusted_value())
+        asset.what_if(10)
+        self.assertAlmostEqual(100, asset.adjusted_value())
 
-    def testOneAssetTwoClass(self):
+    def test_one_asset_two_class(self):
         portfolio = Portfolio(
             AssetClass('All')
-            .AddSubClass(0.5, AssetClass('Equity'))
-            .AddSubClass(0.5, AssetClass('Fixed Income'))).AddAccount(
-            Account('Vanguard', 'Taxable').AddAsset(
+            .add_subclass(0.5, AssetClass('Equity'))
+            .add_subclass(0.5, AssetClass('Fixed Income'))).add_account(
+            Account('Vanguard', 'Taxable').add_asset(
                 ManualAsset('Test Asset', 100.0,
                             {'Equity': 0.6, 'Fixed Income': 0.4})))
 
         self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
-                             portfolio.Assets().StrList())
-        self.assertAlmostEqual(100.0, portfolio.TotalValue())
+                             portfolio.assets().str_list())
+        self.assertAlmostEqual(100.0, portfolio.total_value())
         self.assertListEqual(
-                [['Equity', 'Taxable', '100%', '$60.00'],
-                 ['Fixed Income', 'Taxable', '100%', '$40.00']],
-                portfolio.AssetLocation().StrList())
+            [['Equity', 'Taxable', '100%', '$60.00'],
+             ['Fixed Income', 'Taxable', '100%', '$40.00']],
+            portfolio.asset_location().str_list())
 
         self.assertListEqual(
             [['All:'],
              ['Equity', '60%', '50%', '$60.00'],
                 ['Fixed Income', '40%', '50%', '$40.00']],
-            portfolio.AssetAllocationTree().StrList())
+            portfolio.asset_allocation_tree().str_list())
         self.assertListEqual(
             [['Equity', '60%', '50%', '$60.00', '-$10.00'],
              ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
-            portfolio.AssetAllocation(['Equity', 'Fixed Income']).StrList())
+            portfolio.asset_allocation(['Equity', 'Fixed Income']).str_list())
         self.assertListEqual(
             [['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
              ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
-            portfolio.AssetAllocationCompact().StrList())
+            portfolio.asset_allocation_compact().str_list())
 
     @patch('yfinance.Ticker')
-    def testListAssets(self, MockTicker):
+    def test_list_assets(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
                        'regularMarketPrice': 1.0}
         MockTicker.return_value = ticker
 
-        portfolio = Portfolio(AssetClass('All')).AddAccount(
-                Account('Schwab', 'Taxable')
-                    .AddAsset(TickerAsset('VMMXX', 420.0, {'All': 1.0}))
-                    .AddAsset(ManualAsset('Cash', 840.0, {'All': 1.0})))
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(TickerAsset('VMMXX', 420.0, {'All': 1.0}))
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0})))
 
         self.assertListEqual(
-                [['Schwab', 'Vanguard Cash Reserves Federal', '$420.00'],
-                 ['Schwab', 'Cash', '$840.00']],
-                portfolio.Assets().StrList())
+            [['Schwab', 'Vanguard Cash Reserves Federal', '$420.00'],
+             ['Schwab', 'Cash', '$840.00']],
+            portfolio.assets().str_list())
         self.assertListEqual(
-                [['Schwab', 'VMMXX', 'Vanguard Cash Reserves Federal', '$420.00'],
-                 ['Schwab', 'Cash', 'Cash', '$840.00']],
-                portfolio.Assets(short_name=True).StrList())
+            [['Schwab', 'VMMXX', 'Vanguard Cash Reserves Federal', '$420.00'],
+             ['Schwab', 'Cash', 'Cash', '$840.00']],
+            portfolio.assets(short_name=True).str_list())
         self.assertListEqual(
-                [['Schwab', 'VMMXX', '420.0', 'Vanguard Cash Reserves Federal',
-                    '$420.00'],
-                 ['Schwab', 'Cash', '', 'Cash', '$840.00']],
-                portfolio.Assets(short_name=True, quantity=True).StrList())
+            [['Schwab', 'VMMXX', '420.0', 'Vanguard Cash Reserves Federal',
+              '$420.00'],
+             ['Schwab', 'Cash', '', 'Cash', '$840.00']],
+            portfolio.assets(short_name=True, quantity=True).str_list())
         self.assertListEqual(
-                [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
-                 ['Schwab', '', 'Cash', '$840.00']],
-                portfolio.Assets(quantity=True).StrList())
+            [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
+             ['Schwab', '', 'Cash', '$840.00']],
+            portfolio.assets(quantity=True).str_list())
 
-    def testAssetLocation(self):
+    def test_asset_location(self):
         portfolio = Portfolio(
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('Intl')))
-            .AddSubClass(0.2, AssetClass('Bonds')).Validate())
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.2, AssetClass('Bonds')).validate())
         (portfolio
-                .AddAccount(Account('Account1', 'Taxable')
-                    .AddAsset(ManualAsset('US A', 60.0, {'US': 1.0}))
-                    .AddAsset(ManualAsset('Intl A', 30.0, {'Intl': 1.0}))
-                    .AddAsset(ManualAsset('Bond A', 10.0, {'Bonds': 1.0})))
-                .AddAccount(Account('Account2', 'Pre-tax')
-                    .AddAsset(ManualAsset('Bond A', 40.0, {'Bonds': 1.0}))))
+         .add_account(Account('Account1', 'Taxable')
+                      .add_asset(ManualAsset('US A', 60.0, {'US': 1.0}))
+                      .add_asset(ManualAsset('Intl A', 30.0, {'Intl': 1.0}))
+                      .add_asset(ManualAsset('Bond A', 10.0, {'Bonds': 1.0})))
+         .add_account(Account('Account2', 'Pre-tax')
+                      .add_asset(ManualAsset('Bond A', 40.0, {'Bonds': 1.0}))))
         self.assertEqual(
-                [['US', 'Taxable', '100%', '$60.00'],
-                 ['Intl', 'Taxable', '100%', '$30.00'],
-                 ['Bonds', 'Pre-tax', '80%', '$40.00'],
-                 ['', 'Taxable', '20%', '$10.00']],
-                portfolio.AssetLocation().StrList())
+            [['US', 'Taxable', '100%', '$60.00'],
+             ['Intl', 'Taxable', '100%', '$30.00'],
+             ['Bonds', 'Pre-tax', '80%', '$40.00'],
+             ['', 'Taxable', '20%', '$10.00']],
+            portfolio.asset_location().str_list())
 
-    def testFlatAssetAllocation(self):
+    def test_flat_asset_allocation(self):
         portfolio = Portfolio(
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('Intl')))
-            .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.2, AssetClass('Bonds')).validate()).add_account(
             Account('Account', 'Taxable')
-            .AddAsset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
-            .AddAsset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
-            .AddAsset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
+            .add_asset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+            .add_asset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
         with self.assertRaisesRegex(AssertionError,
                                     'AssetAllocation called with'):
-            portfolio.AssetAllocation(['Equity', 'Intl'])
+            portfolio.asset_allocation(['Equity', 'Intl'])
 
         self.assertListEqual(
             [['US', '60%', '48%', '$60.00', '-$12.00'],
              ['Intl', '30%', '32%', '$30.00', '+$2.00'],
                 ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
-            portfolio.AssetAllocation(['US', 'Intl', 'Bonds']).StrList())
+            portfolio.asset_allocation(['US', 'Intl', 'Bonds']).str_list())
         self.assertListEqual(
             [['Equity', '90%', '80%', '$90.00', '-$10.00'],
              ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
-            portfolio.AssetAllocation(['Equity', 'Bonds']).StrList())
+            portfolio.asset_allocation(['Equity', 'Bonds']).str_list())
 
-    def testAssetAllocationCompact(self):
+    def test_asset_allocation_compact(self):
         portfolio = Portfolio(
             AssetClass('All')
-            .AddSubClass(0.8,
-                         AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('Intl')))
-            .AddSubClass(0.2, AssetClass('Bonds')).Validate()).AddAccount(
+            .add_subclass(0.8,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.2, AssetClass('Bonds')).validate()).add_account(
             Account('Account', 'Taxable')
-            .AddAsset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
-            .AddAsset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
-            .AddAsset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
+            .add_asset(ManualAsset('US Asset', 60.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Intl Asset', 30.0, {'Intl': 1.0}))
+            .add_asset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
         self.assertListEqual(
             [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%', '$60.00', '-$12.00'],
              ['', '', '', 'Intl', '33%', '40%', '30%', '32%', '$30.00', '+$2.00'],
              ['Bonds', '10%', '20%', '', '', '', '10%', '20%', '$10.00', '+$10.00']],
-            portfolio.AssetAllocationCompact().StrList())
+            portfolio.asset_allocation_compact().str_list())
         self.assertListEqual(
             [['All:'],
              ['Equity', '90%', '80%', '$90.00'],
@@ -387,221 +389,229 @@ class LakshmiTest(unittest.TestCase):
              ['Equity:'],
              ['US', '67%', '60%', '$60.00'],
              ['Intl', '33%', '40%', '$30.00']],
-            portfolio.AssetAllocationTree().StrList())
+            portfolio.asset_allocation_tree().str_list())
 
-    def testMultipleAccountsAndAssets(self):
+    def test_multiple_accounts_and_assets(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
-         .AddAccount(
+         .add_account(
              Account('Account 1', 'Taxable')
-             .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
-             .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
-         .AddAccount(
+             .add_asset(ManualAsset('Asset 1', 100.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+         .add_account(
              Account('Account 2', 'Roth IRA')
-             .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
-             .AddAsset(ManualAsset('Asset 2', 400.0, asset_class_map))))
+             .add_asset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 2', 400.0, asset_class_map))))
 
-        self.assertAlmostEqual(1000.0, portfolio.TotalValue())
-        self.assertEqual('Account 1', portfolio.GetAccount('Account 1').Name())
-        self.assertEqual('Account 2', portfolio.GetAccount('Account 2').Name())
+        self.assertAlmostEqual(1000.0, portfolio.total_value())
+        self.assertEqual(
+            'Account 1',
+            portfolio.get_account('Account 1').name())
+        self.assertEqual(
+            'Account 2',
+            portfolio.get_account('Account 2').name())
         self.assertAlmostEqual(
             100.0,
-            portfolio.GetAccount('Account 1').GetAsset('Asset 1').Value())
+            portfolio.get_account('Account 1').get_asset('Asset 1').value())
         self.assertAlmostEqual(
             200.0,
-            portfolio.GetAccount('Account 1').GetAsset('Asset 2').Value())
+            portfolio.get_account('Account 1').get_asset('Asset 2').value())
         self.assertAlmostEqual(
             300.0,
-            portfolio.GetAccount('Account 2').GetAsset('Asset 1').Value())
+            portfolio.get_account('Account 2').get_asset('Asset 1').value())
         self.assertAlmostEqual(
             400.0,
-            portfolio.GetAccount('Account 2').GetAsset('Asset 2').Value())
+            portfolio.get_account('Account 2').get_asset('Asset 2').value())
         self.assertListEqual(
             [['Account 1', 'Asset 1', '$100.00'],
              ['Account 1', 'Asset 2', '$200.00'],
              ['Account 2', 'Asset 1', '$300.00'],
              ['Account 2', 'Asset 2', '$400.00']],
-            portfolio.Assets().StrList())
+            portfolio.assets().str_list())
 
-    def testGetAccountNameBySubStr(self):
+    def test_get_account_name_by_substr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
-         .AddAccount(
+         .add_account(
              Account('Account 1', 'Taxable')
-             .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
-             .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
-         .AddAccount(
+             .add_asset(ManualAsset('Asset 1', 100.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+         .add_account(
              Account('Account 2', 'Roth IRA')
-             .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
-             .AddAsset(ManualAsset('Asset 2', 400.0, asset_class_map))))
-        self.assertEqual('Account 1', portfolio.GetAccountNameBySubStr('1'))
+             .add_asset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 2', 400.0, asset_class_map))))
+        self.assertEqual(
+            'Account 1',
+            portfolio.get_account_name_by_substr('1'))
         with self.assertRaisesRegex(AssertionError, 'matches more than'):
-            portfolio.GetAccountNameBySubStr('Acc')
+            portfolio.get_account_name_by_substr('Acc')
         with self.assertRaisesRegex(AssertionError, 'does not match'):
-            portfolio.GetAccountNameBySubStr('God')
+            portfolio.get_account_name_by_substr('God')
 
-    def testGetAssetNameBySubStr(self):
+    def test_get_asset_name_by_substr(self):
         portfolio = Portfolio(AssetClass('All'))
         asset_class_map = {'All': 1.0}
         (portfolio
-         .AddAccount(
+         .add_account(
              Account('Account 1', 'Taxable')
-             .AddAsset(ManualAsset('Asset 1', 100.0, asset_class_map))
-             .AddAsset(ManualAsset('Asset 2', 200.0, asset_class_map)))
-         .AddAccount(
+             .add_asset(ManualAsset('Asset 1', 100.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+         .add_account(
              Account('Account 2', 'Roth IRA')
-             .AddAsset(ManualAsset('Asset 1', 300.0, asset_class_map))
-             .AddAsset(ManualAsset('Funky Asset', 400.0, asset_class_map))))
+             .add_asset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .add_asset(ManualAsset('Funky Asset', 400.0, asset_class_map))))
         self.assertTupleEqual(('Account 2', 'Asset 1'),
-                portfolio.GetAssetNameBySubStr(
-                    account_str='2', asset_str='1'))
+                              portfolio.get_asset_name_by_substr(
+            account_str='2', asset_str='1'))
         self.assertAlmostEqual(('Account 1', 'Asset 2'),
-                portfolio.GetAssetNameBySubStr(
-                    account_str='Account', asset_str='2'))
+                               portfolio.get_asset_name_by_substr(
+            account_str='Account', asset_str='2'))
         self.assertAlmostEqual(('Account 1', 'Asset 1'),
-                portfolio.GetAssetNameBySubStr(
-                    account_str='1', asset_str='Asset 1'))
+                               portfolio.get_asset_name_by_substr(
+            account_str='1', asset_str='Asset 1'))
         self.assertAlmostEqual(('Account 2', 'Funky Asset'),
-                portfolio.GetAssetNameBySubStr(
-                    asset_str='Funky'))
+                               portfolio.get_asset_name_by_substr(
+            asset_str='Funky'))
 
         with self.assertRaisesRegex(AssertionError, 'more than one'):
-            portfolio.GetAssetNameBySubStr(account_str='Acc', asset_str='Ass')
+            portfolio.get_asset_name_by_substr(
+                account_str='Acc', asset_str='Ass')
         with self.assertRaisesRegex(AssertionError, 'match none of'):
-            portfolio.GetAssetNameBySubStr(account_str='1', asset_str='Funky')
+            portfolio.get_asset_name_by_substr(
+                account_str='1', asset_str='Funky')
         with self.assertRaisesRegex(AssertionError, 'match none of'):
-            portfolio.GetAssetNameBySubStr(account_str='Acc', asset_str='Yolo')
+            portfolio.get_asset_name_by_substr(
+                account_str='Acc', asset_str='Yolo')
 
-
-    def testWhatIfs(self):
+    def test_what_ifs(self):
         portfolio = Portfolio(AssetClass('All')
-                              .AddSubClass(0.6, AssetClass('Equity'))
-                              .AddSubClass(0.4, AssetClass('Bonds')))
+                              .add_subclass(0.6, AssetClass('Equity'))
+                              .add_subclass(0.4, AssetClass('Bonds')))
         asset1 = ManualAsset('Asset 1', 100.0, {'Equity': 1.0})
         asset2 = ManualAsset('Asset 2', 100.0, {'Bonds': 1.0})
         account1 = Account('Account 1', 'Taxable')
-        account1.AddAsset(asset1).AddAsset(asset2)
+        account1.add_asset(asset1).add_asset(asset2)
         account2 = Account('Account 2', 'Pre-tax')
-        portfolio.AddAccount(account1).AddAccount(account2)
+        portfolio.add_account(account1).add_account(account2)
 
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-        self.assertListEqual([], account_whatifs.List())
-        self.assertListEqual([], asset_whatifs.List())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
+        self.assertListEqual([], account_whatifs.list())
+        self.assertListEqual([], asset_whatifs.list())
 
-        portfolio.WhatIf('Account 1', 'Asset 2', -20)
-        self.assertAlmostEqual(80, asset2.AdjustedValue())
-        self.assertAlmostEqual(20, account1.AvailableCash())
-        self.assertAlmostEqual(200, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
+        portfolio.what_if('Account 1', 'Asset 2', -20)
+        self.assertAlmostEqual(80, asset2.adjusted_value())
+        self.assertAlmostEqual(20, account1.available_cash())
+        self.assertAlmostEqual(200, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual([['Account 1', '+$20.00']],
-                             account_whatifs.StrList())
+                             account_whatifs.str_list())
         self.assertListEqual([['Account 1', 'Asset 2', '-$20.00']],
-                             asset_whatifs.StrList())
+                             asset_whatifs.str_list())
 
-        portfolio.WhatIf('Account 1', 'Asset 1', 20)
-        self.assertAlmostEqual(120, asset1.AdjustedValue())
-        self.assertAlmostEqual(0, account1.AvailableCash())
-        self.assertAlmostEqual(200, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-        self.assertListEqual([], account_whatifs.StrList())
+        portfolio.what_if('Account 1', 'Asset 1', 20)
+        self.assertAlmostEqual(120, asset1.adjusted_value())
+        self.assertAlmostEqual(0, account1.available_cash())
+        self.assertAlmostEqual(200, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
+        self.assertListEqual([], account_whatifs.str_list())
         self.assertListEqual(
             [['Account 1', 'Asset 1', '+$20.00'],
              ['Account 1', 'Asset 2', '-$20.00']],
-            asset_whatifs.StrList())
+            asset_whatifs.str_list())
 
         self.assertListEqual(
             [['Account 1', 'Asset 1', '$120.00'],
              ['Account 1', 'Asset 2', '$80.00']],
-            portfolio.Assets().StrList())
+            portfolio.assets().str_list())
 
         self.assertListEqual(
             [['All:'],
              ['Equity', '60%', '60%', '$120.00'],
              ['Bonds', '40%', '40%', '$80.00']],
-            portfolio.AssetAllocationTree().StrList())
+            portfolio.asset_allocation_tree().str_list())
 
-        portfolio.WhatIfAddCash('Account 1', 30)
-        self.assertAlmostEqual(30, account1.AvailableCash())
-        self.assertAlmostEqual(230, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
+        portfolio.what_if_add_cash('Account 1', 30)
+        self.assertAlmostEqual(30, account1.available_cash())
+        self.assertAlmostEqual(230, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual(
             [['Account 1', '+$30.00']],
-            account_whatifs.StrList())
+            account_whatifs.str_list())
         self.assertListEqual(
             [['Account 1', 'Asset 1', '+$20.00'],
              ['Account 1', 'Asset 2', '-$20.00']],
-            asset_whatifs.StrList())
+            asset_whatifs.str_list())
 
-        portfolio.WhatIfAddCash('Account 2', 460)
-        self.assertAlmostEqual(460, account2.AvailableCash())
-        self.assertAlmostEqual(690, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
+        portfolio.what_if_add_cash('Account 2', 460)
+        self.assertAlmostEqual(460, account2.available_cash())
+        self.assertAlmostEqual(690, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual(
             [['Account 1', '+$30.00'],
              ['Account 2', '+$460.00']],
-            account_whatifs.StrList())
+            account_whatifs.str_list())
         self.assertListEqual(
             [['Account 1', 'Asset 1', '+$20.00'],
              ['Account 1', 'Asset 2', '-$20.00']],
-            asset_whatifs.StrList())
+            asset_whatifs.str_list())
 
         self.assertListEqual(
             [['Equity', 'Taxable', '100%', '$120.00'],
              ['Bonds', 'Taxable', '100%', '$80.00']],
-            portfolio.AssetLocation().StrList())
+            portfolio.asset_location().str_list())
 
-        portfolio.ResetWhatIfs()
-        self.assertAlmostEqual(100, asset1.AdjustedValue())
-        self.assertAlmostEqual(100, asset2.AdjustedValue())
-        self.assertAlmostEqual(0, account1.AvailableCash())
-        self.assertAlmostEqual(0, account2.AvailableCash())
-        self.assertAlmostEqual(200, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
-        self.assertListEqual([], account_whatifs.StrList())
-        self.assertListEqual([], asset_whatifs.StrList())
+        portfolio.reset_what_ifs()
+        self.assertAlmostEqual(100, asset1.adjusted_value())
+        self.assertAlmostEqual(100, asset2.adjusted_value())
+        self.assertAlmostEqual(0, account1.available_cash())
+        self.assertAlmostEqual(0, account2.available_cash())
+        self.assertAlmostEqual(200, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
+        self.assertListEqual([], account_whatifs.str_list())
+        self.assertListEqual([], asset_whatifs.str_list())
 
-    def testWhatIfsDoubleAdd(self):
+    def test_what_ifs_double_add(self):
         portfolio = Portfolio(AssetClass('All'))
 
         asset = ManualAsset('Asset', 100.0, {'All': 1.0})
         account = Account('Account', 'Taxable')
-        portfolio.AddAccount(account.AddAsset(asset))
+        portfolio.add_account(account.add_asset(asset))
 
-        portfolio.WhatIf('Account', 'Asset', 20)
-        portfolio.WhatIf('Account', 'Asset', 30)
-        self.assertAlmostEqual(150, asset.AdjustedValue())
-        self.assertAlmostEqual(-50, account.AvailableCash())
-        self.assertAlmostEqual(100, portfolio.TotalValue())
-        account_whatifs, asset_whatifs = portfolio.GetWhatIfs()
+        portfolio.what_if('Account', 'Asset', 20)
+        portfolio.what_if('Account', 'Asset', 30)
+        self.assertAlmostEqual(150, asset.adjusted_value())
+        self.assertAlmostEqual(-50, account.available_cash())
+        self.assertAlmostEqual(100, portfolio.total_value())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual(
             [['Account', '-$50.00']],
-            account_whatifs.StrList())
+            account_whatifs.str_list())
         self.assertListEqual(
             [['Account', 'Asset', '+$50.00']],
-            asset_whatifs.StrList())
+            asset_whatifs.str_list())
 
-    def testReturnAllocationOneAsset(self):
-        asset_class = AssetClass('All').Validate()
+    def test_return_allocation_one_asset(self):
+        asset_class = AssetClass('All').validate()
         allocation = {'All': 10.0}
 
-        ret = asset_class.ReturnAllocation(allocation)
+        ret = asset_class.return_allocation(allocation)
         self.assertEqual(1, len(ret))
         self.assertEqual('All', ret[0].name)
         self.assertAlmostEqual(10.0, ret[0].value)
         self.assertEqual([], ret[0].children)
 
-    def testReturnAllocationAssetTree(self):
+    def test_return_allocation_asset_tree(self):
         asset_class = (
             AssetClass('All')
-            .AddSubClass(0.6, AssetClass('Equity')
-                         .AddSubClass(0.6, AssetClass('US'))
-                         .AddSubClass(0.4, AssetClass('Intl')))
-            .AddSubClass(0.4, AssetClass('Bonds'))).Validate()
+            .add_subclass(0.6, AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.4, AssetClass('Bonds'))).validate()
         allocation = {'US': 10.0, 'Intl': 20.0, 'Bonds': 40.0}
 
-        ret = asset_class.ReturnAllocation(allocation, levels=0)
+        ret = asset_class.return_allocation(allocation, levels=0)
 
         self.assertEqual(1, len(ret))
         self.assertEqual('All', ret[0].name)
@@ -621,16 +631,16 @@ class LakshmiTest(unittest.TestCase):
 
         self.assertEqual(
             3, len(
-                asset_class.ReturnAllocation(
+                asset_class.return_allocation(
                     allocation, levels=1)))
         self.assertEqual(
             5, len(
-                asset_class.ReturnAllocation(
+                asset_class.return_allocation(
                     allocation, levels=2)))
-        self.assertEqual(5, len(asset_class.ReturnAllocation(allocation)))
+        self.assertEqual(5, len(asset_class.return_allocation(allocation)))
         self.assertEqual(
             5, len(
-                asset_class.ReturnAllocation(
+                asset_class.return_allocation(
                     allocation, levels=5)))
 
 

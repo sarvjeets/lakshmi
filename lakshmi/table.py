@@ -3,11 +3,12 @@
 from tabulate import tabulate
 import lakshmi.utils as utils
 
+
 class Table():
     coltype2func = {
         'str': lambda x: x,
-        'dollars': lambda x: utils.FormatMoney(x),
-        'delta_dollars': lambda x: utils.FormatMoneyDelta(x),
+        'dollars': lambda x: utils.format_money(x),
+        'delta_dollars': lambda x: utils.format_money_delta(x),
         'percentage': lambda x: f'{round(100*x)}%',
         'float': lambda x: str(float(x)),
     }
@@ -38,27 +39,27 @@ class Table():
 
         self._rows = []
 
-    def AddRow(self, row):
+    def add_row(self, row):
         assert len(row) <= self._numcols
         self._rows.append(row)
         return self
 
-    def SetRows(self, rows):
+    def set_rows(self, rows):
         assert max(map(len, rows)) <= self._numcols
         self._rows = rows
 
-    def Headers(self):
+    def headers(self):
         return self._headers
 
-    def ColAlign(self):
+    def col_align(self):
         return list(map(lambda x: self.coltype2align[x], self._coltypes))
 
-    def List(self):
+    def list(self):
         return self._rows
 
-    def StrList(self):
+    def str_list(self):
         ret_list = []
-        for row in self.List():
+        for row in self.list():
             ret_row = []
             for col_num in range(len(row)):
                 if row[col_num] is None:
@@ -69,12 +70,12 @@ class Table():
             ret_list.append(ret_row)
         return ret_list
 
-    def String(self, tablefmt='simple'):
-        str_list = self.StrList()
+    def string(self, tablefmt='simple'):
+        str_list = self.str_list()
         if not str_list:
             return ''
 
         return tabulate(str_list,
-                        headers=self.Headers(),
+                        headers=self.headers(),
                         tablefmt=tablefmt,
-                        colalign=self.ColAlign())
+                        colalign=self.col_align())

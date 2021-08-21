@@ -1,7 +1,7 @@
 # A TickerAsset represents an asset with a ticker symbol. The value of
-# these assets can be pulled and updated from internet (Yahoo finance).
+# these assets can be pulled and updated from the internet (Yahoo Finance).
 
-# The tikcer symbol, e.g. 'VTI' or 'VXUS'
+# The ticker symbol, e.g. 'VTI' or 'VXUS'
 Ticker: ITOT
 
 # The number of shares owned.

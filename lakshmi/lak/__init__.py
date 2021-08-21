@@ -20,7 +20,7 @@ class LakContext:
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
 
-    def _ReturnConfig(self):
+    def _return_config(self):
         """Internal function to read and return .lakrc file."""
         lakrcfile = Path(self.lakrc).expanduser()
 
@@ -31,19 +31,19 @@ class LakContext:
 
     def __init__(self, lakrc='~/.lakrc'):
         self.lakrc = lakrc
-        # Used in self.OptionalSeparator()
+        # Used in self.optional_separator()
         self.continued = False
-        # List of hypothetical whatifs. Used in self.GetWhatIfs() and
-        # self.WarnForWhatIfs()
+        # List of hypothetical whatifs. Used in self.get_what_ifs() and
+        # self.warn_for_what_ifs()
         self.whatifs = None
         # The loaded portfolio.
         self.portfolio = None
         self.tablefmt = None
 
-        config = self._ReturnConfig()
+        config = self._return_config()
 
         portfolio_filename = config.pop(
-                'portfolio', LakContext.DEFAULT_PORTFOLIO)
+            'portfolio', LakContext.DEFAULT_PORTFOLIO)
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
         # Setup cache directory.
@@ -59,7 +59,7 @@ class LakContext:
             raise click.ClickException(f'Extra entries found in config file: '
                                        '{list(config.keys())}')
 
-    def OptionalSeparator(self):
+    def optional_separator(self):
         """Prints a newline between multiple commands. Used to add a newline
         between cmd1, cmd2, cmd3, etc. in 'lak list cmd1 cmd2 cmd3'."""
         # Don't print separator if this is the first time we are called.
@@ -68,24 +68,24 @@ class LakContext:
         # Set it up so that separator is printed for the next command.
         self.continued = True
 
-    def GetWhatIfs(self):
+    def get_what_ifs(self):
         """Load and return a list of hypothetical whatifs in the portfolio."""
         if not self.whatifs:
-            self.whatifs = self.Portfolio().GetWhatIfs()
+            self.whatifs = self.get_portfolio().get_what_ifs()
         return self.whatifs
 
-    def WarnForWhatIfs(self):
+    def warn_for_what_ifs(self):
         """Prints a warning if whatifs are set."""
         # Make sure we don't print warning multiple times if commands are
         # chained.
         if self.continued:
             return
 
-        self.GetWhatIfs()
-        if self.whatifs[0].List() or self.whatifs[1].List():
+        self.get_what_ifs()
+        if self.whatifs[0].list() or self.whatifs[1].list():
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
 
-    def Portfolio(self):
+    def get_portfolio(self):
         """Loads and returns the portfolio from self.portfolio_filename."""
         if not self.portfolio:
             # Check if portfolio file doesn't exist and print helpful error
@@ -96,12 +96,12 @@ class LakContext:
                     f'Portfolio file {portfolio_file} does not exist. Please '
                     'use "lak init" to create a new portfolio.')
 
-            self.portfolio = Portfolio.Load(self.portfolio_filename)
+            self.portfolio = Portfolio.load(self.portfolio_filename)
         return self.portfolio
 
-    def SavePortfolio(self):
+    def save_portfolio(self):
         """Save self.portfolio back to file."""
-        self.portfolio.Save(self.portfolio_filename)
+        self.portfolio.save(self.portfolio_filename)
 
 
 # Global variable to save and pass context between click commands.
@@ -116,7 +116,7 @@ lakctx = None
 @click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
               help='Re-fetch all data instead of using previously cached '
-              'data. For large portfolios this would be extremely slow.')
+              'data. For large portfolios, this would be extremely slow.')
 def lak(refresh):
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
@@ -124,15 +124,16 @@ def lak(refresh):
         # Setup a new context object for child commands.
         lakctx = LakContext()
 
+
 @lak.group(chain=True)
-@click.option('--format',  '-f',
+@click.option('--format', '-f',
               type=click.Choice(
                   ['plain', 'simple', 'github', 'grid', 'fancy_grid',
-                    'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex',
-                    'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
+                   'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex',
+                   'latex_raw', 'latex_booktabs', 'latex_longtable', 'tsv'],
                   case_sensitive=False),
               default='simple',
-              help='Set output table format. For more information on table'
+              help='Set output table format. For more information on table '
               'formats, please see "Table format" section on: '
               'https://pypi.org/project/tabulate/')
 def list(format):
@@ -145,12 +146,12 @@ def list(format):
 def total():
     """Prints the total value of the portfolio."""
     global lakctx
-    lakctx.WarnForWhatIfs()
-    lakctx.OptionalSeparator()
-    portfolio = lakctx.Portfolio()
+    lakctx.warn_for_what_ifs()
+    lakctx.optional_separator()
+    portfolio = lakctx.get_portfolio()
     click.echo(
-        Table(2, coltypes=['str', 'dollars']).AddRow(
-            ['Total Assets', portfolio.TotalValue()]).String(lakctx.tablefmt))
+        Table(2, coltypes=['str', 'dollars']).add_row(
+            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt))
 
 
 @list.command()
@@ -159,43 +160,43 @@ def al():
     please see
     https://www.bogleheads.org/wiki/Tax-efficient_fund_placement"""
     global lakctx
-    lakctx.WarnForWhatIfs()
-    lakctx.OptionalSeparator()
-    portfolio = lakctx.Portfolio()
-    click.echo(portfolio.AssetLocation().String(lakctx.tablefmt))
+    lakctx.warn_for_what_ifs()
+    lakctx.optional_separator()
+    portfolio = lakctx.get_portfolio()
+    click.echo(portfolio.asset_location().string(lakctx.tablefmt))
 
 
 @list.command()
 @click.option('--compact/--no-compact', default=True, show_default=True,
               help='Print the Asset allocation tree in a vertically '
               'compact format')
-@click.option('--asset-class', '-a', type=str,
+@click.option('--asset-class', '-c', type=str,
               help='If provided, only print asset allocation for these asset '
-              'classes. This is comma seperated list of asset classes (not '
+              'classes. This is a comma separated list of asset classes (not '
               'necessarily leaf asset classes) and the allocation across '
               'these asset classes should sum to 100%.')
 def aa(compact, asset_class):
     """Prints the Asset Allocation of the portfolio. For more information,
     please see https://www.bogleheads.org/wiki/Asset_allocation"""
     global lakctx
-    lakctx.WarnForWhatIfs()
-    lakctx.OptionalSeparator()
+    lakctx.warn_for_what_ifs()
+    lakctx.optional_separator()
 
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
     if asset_class:
         if not compact:
             raise click.UsageError(
                 '--no-compact is only supported when --asset-class '
                 'is not specified.')
         classes_list = [c.strip() for c in asset_class.split(',')]
-        click.echo(portfolio.AssetAllocation(classes_list).String(
+        click.echo(portfolio.asset_allocation(classes_list).string(
             lakctx.tablefmt))
     else:
         if compact:
-            click.echo(portfolio.AssetAllocationCompact().String(
+            click.echo(portfolio.asset_allocation_compact().string(
                 lakctx.tablefmt))
         else:
-            click.echo(portfolio.AssetAllocationTree().String(
+            click.echo(portfolio.asset_allocation_tree().string(
                 lakctx.tablefmt))
 
 
@@ -209,112 +210,125 @@ def aa(compact, asset_class):
 def assets(short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     global lakctx
-    lakctx.WarnForWhatIfs()
-    lakctx.OptionalSeparator()
-    portfolio = lakctx.Portfolio()
-    click.echo(portfolio.Assets(short_name=short_name,
-                                quantity=quantity).String(lakctx.tablefmt))
+    lakctx.warn_for_what_ifs()
+    lakctx.optional_separator()
+    portfolio = lakctx.get_portfolio()
+    click.echo(portfolio.assets(short_name=short_name,
+                                quantity=quantity).string(lakctx.tablefmt))
 
 
 @list.command()
 def whatifs():
     """Print hypothetical what ifs for assets and accounts."""
     global lakctx
-    account_whatifs, asset_whatifs = lakctx.GetWhatIfs()
-    if account_whatifs.List():
-        lakctx.OptionalSeparator()
-        click.echo(account_whatifs.String(lakctx.tablefmt))
-    if asset_whatifs.List():
-        lakctx.OptionalSeparator()
-        click.echo(asset_whatifs.String(lakctx.tablefmt))
+    account_whatifs, asset_whatifs = lakctx.get_what_ifs()
+    if account_whatifs.list():
+        lakctx.optional_separator()
+        click.echo(account_whatifs.string(lakctx.tablefmt))
+    if asset_whatifs.list():
+        lakctx.optional_separator()
+        click.echo(asset_whatifs.string(lakctx.tablefmt))
 
 
-@lak.command(context_settings={"ignore_unknown_options": True})
-@click.option('--asset', '-a', type=str, metavar='substr',
-              help='Make changes to this asset (a sub-string that matches '
-              'either the asset name or the short name)')
-@click.option('--account', '-t', type=str, metavar='substr',
-              help='Make changes to this account (a sub-string that matches '
-              'the account name)')
+@lak.group(chain=True,
+           invoke_without_command=True)
 @click.option('--reset', '-r', is_flag=True,
               help='Reset all hypothetical whatif amounts.')
-@click.argument('delta', type=float, required=False)
-def whatif(asset, account, reset, delta):
-    """Run hypothetical what if scenarios by adding DELTA to an account
-    or asset. This is useful to see how the asset allocation or location
-    will change if you make some changes without *actually* making those
-    changes. Once you are done playing around with the hypothetical changes,
-    you can reset them all by using --reset flag."""
-    global lakctx
-    portfolio = lakctx.Portfolio()
-
+def whatif(reset):
+    """Run hypothetical what if scenarios by modifying the total value of
+    an account or asset. This is useful to see how the asset allocation
+    or location will change if you make these changes. Once you are done
+    playing around with the hypothetical changes, you can reset them all
+    by using the --reset flag."""
     if reset:
-        # Sanity check the flags.
-        if asset or account or delta:
-            raise click.UsageError(
-                'Can\'t specify any other flags/arguments when --reset is '
-                'specified')
-        portfolio.ResetWhatIfs()
-        lakctx.SavePortfolio()
-        return
-
-    if not delta:
-        raise click.UsageError('Must specify a value (delta) to add/subtract '
-                               'from an account or asset')
-
-    if not asset and account:  # Delta is applied to Account
-        account_name = portfolio.GetAccountNameBySubStr(account)
-        portfolio.WhatIfAddCash(account_name, delta)
-        lakctx.SavePortfolio()
-        return
-
-    if asset:
-        account_name, asset_name = portfolio.GetAssetNameBySubStr(
-            account if account is not None else '', asset)
-        portfolio.WhatIf(account_name, asset_name, delta)
-        lakctx.SavePortfolio()
-        return
-
-    raise click.UsageError('At least one of --asset or --account must '
-                           'be specified')
+        global lakctx
+        lakctx.get_portfolio().reset_what_ifs()
+        lakctx.save_portfolio()
 
 
-@lak.command()
-@click.option('--asset', '-a', type=str, metavar='substr',
-              help='Get Info about this asset (a sub-string that matches '
-              'either the asset name or the short name)')
-@click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a sub-string that matches '
-              'the account name)')
-def info(asset, account):
-    """Prints detailed information about an asset or account. If only account
-    is specified, this command prints information about an account. If asset
-    or both asset and acccount is specified, it prints information about an
-    asset. In the second case, asset (and optionally account) must match
-    exactly one asset/account pair in the portfolio."""
+# ignore_unknown_options is there to make sure -100 is parsed as delta
+# and click doesn't think it is an option.
+@whatif.command(context_settings={"ignore_unknown_options": True})
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+              help='Change the value of account that matches this substring')
+@click.argument('delta', type=float, required=True)
+def account(account, delta):
+    """Run hypothetical what if scenario on an account.
+    This command adds DELTA to the value of account specified."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
+    account_name = portfolio.get_account_name_by_substr(account)
+    portfolio.what_if_add_cash(account_name, delta)
+    lakctx.save_portfolio()
 
-    if not asset and account:  # Print info for account.
-        account_name = portfolio.GetAccountNameBySubStr(account)
-        click.echo(portfolio.GetAccount(account_name).String())
-        return
 
-    if asset:  # Print info for asset.
-        account_name, asset_name = portfolio.GetAssetNameBySubStr(
-            account if account is not None else '', asset)
-        click.echo(portfolio.GetAccount(
-            account_name).GetAsset(asset_name).String())
-        return
+# ignore_unknown_options is there to make sure -100 is parsed as delta
+# and click doesn't think it is an option.
+@whatif.command(context_settings={"ignore_unknown_options": True})
+@click.option('--asset', '-a', type=str, metavar='substr', required=True,
+              help='Change the value of asset that matches this substring')
+@click.option('--account', '-t', type=str, metavar='substr',
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
+@click.argument('delta', type=float, required=True)
+def asset(asset, account, delta):
+    """Run hypothetical what if scenario on an asset.
+    This command adds DELTA to the value of the asset specified."""
+    global lakctx
+    portfolio = lakctx.get_portfolio()
+    account_name, asset_name = portfolio.get_asset_name_by_substr(
+        account if account is not None else '', asset)
+    portfolio.what_if(account_name, asset_name, delta)
+    lakctx.save_portfolio()
 
-    raise click.UsageError('At least one of --asset or --account must '
-                           'be specified')
+
+@lak.group(chain=True)
+def info():
+    """Print detailed information about an asset or account."""
+    pass
+
+
+@info.command()
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+              help='Print info about the account that matches this substring')
+def account(account):
+    """Print details of an account."""
+    global lakctx
+    lakctx.optional_separator()
+
+    portfolio = lakctx.get_portfolio()
+    account_name = portfolio.get_account_name_by_substr(account)
+    click.echo(portfolio.get_account(account_name).string())
+
+
+@info.command()
+@click.option('--asset', '-a', type=str, metavar='substr', required=True,
+              help='Print info about the asset that matches this substring')
+@click.option('--account', '-t', type=str, metavar='substr',
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
+def asset(asset, account):
+    """Print details of an asset."""
+    global lakctx
+    lakctx.optional_separator()
+
+    portfolio = lakctx.get_portfolio()
+    account_name, asset_name = portfolio.get_asset_name_by_substr(
+        account if account is not None else '', asset)
+    click.echo(portfolio.get_account(
+        account_name).get_asset(asset_name).string())
 
 
 @lak.group()
 def edit():
     """Edit parts of the portfolio."""
     pass
+
+
+_HELP_MSG_PREFIX = ('\n\n# # Lines starting with "#" are ignored and an '
+                    'empty message aborts this command.\n\n')
 
 
 def edit_and_parse(edit_dict, parse_fn, filename):
@@ -327,24 +341,23 @@ def edit_and_parse(edit_dict, parse_fn, filename):
 
     Arguments:
         edit_dict: Dictionary representing an object that is being
-        editted. This is usually the output of ToDict() of an object.
+        editted. This is usually the output of to_dict() of an object.
         parse_fn: The function used to parse the resulting dict generated
         by parsing the yaml file.
         filename: The file containing a template YAML file for the object
         being editted (inside lakshmi/data directory). If edit_dict is
         empty, this file is presented to the user so that the user can make
         changes inline. If edit_dict is set, this file is added as a
-        comment at the end of the edit_dict representation as a helping
+        comment at the end of the edit_dict representation as a helpful
         guide for the user.
     """
     # Change filename to absolute path.
     filepath = (Path(__file__).parents[1].absolute() /
                 'data' / filename)
     if edit_dict:
-        HELP_MSG = ('\n\n' + '# # Lines starting with "#" are ignored and an '
-                    'empty message aborts this command.\n\n' +
-                    filepath.read_text().replace('\n', '\n# '))
-        edit_str = yaml.dump(edit_dict, sort_keys=False) + HELP_MSG
+        help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
+            '\n', '\n# ')
+        edit_str = yaml.dump(edit_dict, sort_keys=False) + help_msg
     else:
         edit_str = filepath.read_text()
 
@@ -353,7 +366,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         if not edit_str:  # No changes or empty string.
             raise click.Abort()
         try:
-            parse_str = (edit_str.split(HELP_MSG, 1)[0].rstrip('\n')
+            parse_str = (edit_str.split(help_msg, 1)[0].rstrip('\n')
                          if edit_dict else edit_str)
             return parse_fn(yaml.load(parse_str, Loader=yaml.SafeLoader))
         except Exception as e:
@@ -373,77 +386,79 @@ def init():
 
     asset_class = edit_and_parse(
         None,
-        lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
+        lambda x: lakshmi.AssetClass.from_dict(x).validate(),
         'AssetClass.yaml')
-    Portfolio(asset_class).Save(lakctx.portfolio_filename)
+    lakctx.portfolio = Portfolio(asset_class)
+    lakctx.save_portfolio()
 
 
 @edit.command()
 def assetclass():
-    """Edit the Asset classes and desired asset allocation across
-    those asset classes."""
+    """Edit the Asset classes and the desired asset allocation."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
     asset_classes = edit_and_parse(
-        portfolio.asset_classes.ToDict(),
-        lambda x: lakshmi.AssetClass.FromDict(x).Validate(),
+        portfolio.asset_classes.to_dict(),
+        lambda x: lakshmi.AssetClass.from_dict(x).validate(),
         'AssetClass.yaml')
     portfolio.asset_classes = asset_classes
-    lakctx.SavePortfolio()
+    lakctx.save_portfolio()
 
 
 @edit.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Edit the account that matches this sub-string')
+              help='Edit the account that matches this substring')
 def account(account):
     """Edit an account in the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
-    account_name = portfolio.GetAccountNameBySubStr(account)
-    account_obj = portfolio.GetAccount(account_name)
-    assets = account_obj.Assets()
-    account_obj.SetAssets([])
+    account_name = portfolio.get_account_name_by_substr(account)
+    account_obj = portfolio.get_account(account_name)
+    # Save assets and restore them after the user is done editing.
+    assets = account_obj.assets()
+    account_obj.set_assets([])
 
     account_obj = edit_and_parse(
-        account_obj.ToDict(),
-        lakshmi.Account.FromDict,
+        account_obj.to_dict(),
+        lakshmi.Account.from_dict,
         'Account.yaml')
-    account_obj.SetAssets(assets)
+    account_obj.set_assets(assets)
 
-    if account_obj.Name() != account_name:
-        portfolio.RemoveAccount(account_name)
-    portfolio.AddAccount(account_obj, replace=True)
-    lakctx.SavePortfolio()
+    if account_obj.name() != account_name:
+        portfolio.remove_account(account_name)
+    portfolio.add_account(account_obj, replace=True)
+    lakctx.save_portfolio()
 
 
 @edit.command()
 @click.option('--asset', '-a', type=str, metavar='substr', required=True,
-              help='Get Info about this asset (a sub-string that matches '
-              'either the asset name or the short name).')
+              help='Edit the asset whose name or short name matches this '
+              'substring.')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Get Info about this account (a sub-string that matches the '
-              'account name).')
+              help='If the asset name is not unique across the portfolio, '
+              'an optional substring to specify the account to which the '
+              'asset belongs.')
 def asset(asset, account):
     """Edit an asset in the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
-    account_name, asset_name = portfolio.GetAssetNameBySubStr(
+    account_name, asset_name = portfolio.get_asset_name_by_substr(
         account if account is not None else '', asset)
-    account_obj = portfolio.GetAccount(account_name)
-    asset_obj = account_obj.GetAsset(asset_name)
+    account_obj = portfolio.get_account(account_name)
+    asset_obj = account_obj.get_asset(asset_name)
 
-    asset_obj = edit_and_parse(asset_obj.ToDict(),
-                               asset_obj.FromDict,
+    asset_obj = edit_and_parse(asset_obj.to_dict(),
+                               asset_obj.from_dict,
                                asset_obj.__class__.__name__ + '.yaml')
 
-    if asset_obj.ShortName() != asset_name:
-        account_obj.RemoveAsset(asset_name)
-    account_obj.AddAsset(asset_obj, replace=True)
+    if asset_obj.short_name() != asset_name:
+        account_obj.remove_asset(asset_name)
+    account_obj.add_asset(asset_obj, replace=True)
 
-    lakctx.SavePortfolio()
+    lakctx.save_portfolio()
 
 
 @lak.group()
@@ -456,11 +471,11 @@ def add():
 def account():
     """Add a new account to the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
-    account = edit_and_parse(None, lakshmi.Account.FromDict, 'Account.yaml')
-    portfolio.AddAccount(account)
-    lakctx.SavePortfolio()
+    account = edit_and_parse(None, lakshmi.Account.from_dict, 'Account.yaml')
+    portfolio.add_account(account)
+    lakctx.save_portfolio()
 
 
 @add.command()
@@ -469,22 +484,22 @@ def account():
                                 case_sensitive=False),
               help='Add this type of asset.')
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Add asset to this account (a sub-string that matches the '
+              help='Add asset to this account (a substring that matches the '
               'account name).')
 def asset(asset_type, account):
     """Edit assets in the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
-    account_name = portfolio.GetAccountNameBySubStr(account)
-    account_obj = portfolio.GetAccount(account_name)
+    account_name = portfolio.get_account_name_by_substr(account)
+    account_obj = portfolio.get_account(account_name)
     asset_cls = [
         c for c in lakshmi.assets.CLASSES if c.__name__ == asset_type][0]
 
-    asset_obj = edit_and_parse(None, asset_cls.FromDict, asset_type + '.yaml')
-    account_obj.AddAsset(asset_obj)
+    asset_obj = edit_and_parse(None, asset_cls.from_dict, asset_type + '.yaml')
+    account_obj.add_asset(asset_obj)
 
-    lakctx.SavePortfolio()
+    lakctx.save_portfolio()
 
 
 @lak.group()
@@ -495,37 +510,38 @@ def delete():
 
 @delete.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
-              help='Delete the account that matches this sub-string')
+              help='Delete the account that matches this substring')
 @click.confirmation_option(prompt='This operation is not reversable. '
                            'Are you sure?')
 def account(account):
-    """Delete an account in the portfolio."""
+    """Delete an account from the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
-    account_name = portfolio.GetAccountNameBySubStr(account)
-    portfolio.RemoveAccount(account_name)
-    lakctx.SavePortfolio()
+    portfolio = lakctx.get_portfolio()
+    account_name = portfolio.get_account_name_by_substr(account)
+    portfolio.remove_account(account_name)
+    lakctx.save_portfolio()
 
 
 @delete.command()
 @click.option('--asset', '-a', type=str, metavar='substr', required=True,
-              help='Delete this asset (a sub-string that matches either '
-              'the asset name or the short name).')
+              help='Delete the asset whose name or short name matches this '
+              'substring.')
 @click.option('--account', '-t', type=str, metavar='substr',
-              help='Delete the specified asset from this account (a sub-string '
-              'that matches the account name).')
+              help='If the asset name is not unique across the portfolio, '
+              'optionally a substring to specify the account name '
+              'from which the asset should be deleted.')
 @click.confirmation_option(prompt='This operation is not reversable. '
                            'Are you sure?')
 def asset(asset, account):
     """Delete an asset from the portfolio."""
     global lakctx
-    portfolio = lakctx.Portfolio()
+    portfolio = lakctx.get_portfolio()
 
-    account_name, asset_name = portfolio.GetAssetNameBySubStr(
+    account_name, asset_name = portfolio.get_asset_name_by_substr(
         account if account is not None else '', asset)
-    account_obj = portfolio.GetAccount(account_name)
-    account_obj.RemoveAsset(asset_name)
-    lakctx.SavePortfolio()
+    account_obj = portfolio.get_account(account_name)
+    account_obj.remove_asset(asset_name)
+    lakctx.save_portfolio()
 
 
 @lak.group(chain=True)
@@ -537,20 +553,20 @@ def analyze():
 @analyze.command()
 @click.option('--max-percentage', '-p', type=float, default=10,
               show_default=True,
-              help='The max percenatage loss for each lot before TLHing.')
+              help='The max percentage loss for each lot before TLHing.')
 @click.option('--max-dollars', '-d', type=int,
               help='The max absolute loss for an asset (across all tax lots) '
               'before TLHing.')
 def tlh(max_percentage, max_dollars):
-    """Shows which tax lots can be Tax-loss harvested."""
+    """Shows which tax lots can be Tax-loss harvested (TLH)."""
     global lakctx
-    lakctx.OptionalSeparator()
-    table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).Analyze(
-        lakctx.Portfolio())
-    if not table.List():
+    lakctx.optional_separator()
+    table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).analyze(
+        lakctx.get_portfolio())
+    if not table.list():
         click.echo('No tax lots to harvest.')
     else:
-        click.echo(table.String())
+        click.echo(table.string())
 
 
 @analyze.command()
@@ -558,20 +574,20 @@ def tlh(max_percentage, max_dollars):
               show_default=True,
               help='Max absolute difference before rebalancing.')
 @click.option('--max-relative-percentage', '-r', type=float, default=25,
-              help='The max relatve differnce before rebalancing.')
+              help='The max relative difference before rebalancing.')
 def rebalance(max_abs_percentage, max_relative_percentage):
     """Shows if assets needs to be rebalanced based on a band
     based rebalancing scheme. For more information, please refer to
     https://www.whitecoatinvestor.com/rebalancing-the-525-rule/."""
     global lakctx
-    lakctx.OptionalSeparator()
+    lakctx.optional_separator()
     table = lakshmi.analyze.BandRebalance(
-        max_abs_percentage / 100, max_relative_percentage / 100).Analyze(
-        lakctx.Portfolio())
-    if not table.List():
+        max_abs_percentage / 100, max_relative_percentage / 100).analyze(
+        lakctx.get_portfolio())
+    if not table.list():
         click.echo('Portfolio Asset allocation within bounds.')
     else:
-        click.echo(table.String())
+        click.echo(table.string())
 
 
 if __name__ == '__main__':
