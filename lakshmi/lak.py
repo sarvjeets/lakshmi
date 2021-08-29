@@ -357,7 +357,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         guide for the user.
     """
     # Change filename to absolute path.
-    filepath = Path(__file__).parents[1].absolute() / 'data' / filename
+    filepath = Path(__file__).resolve().parent / 'data' / filename
     if edit_dict:
         help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
             '\n', '\n# ')
