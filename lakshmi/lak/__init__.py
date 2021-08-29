@@ -120,6 +120,9 @@ lakctx = None
               help='Re-fetch all data instead of using previously cached '
               'data. For large portfolios, this would be extremely slow.')
 def lak(refresh):
+    """lak is a simple command line tool inspired by Bogleheads philosophy.
+    Detailed user guide is available at:
+    https://sarvjeets.github.io/lakshmi/docs/lak.html"""
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:
