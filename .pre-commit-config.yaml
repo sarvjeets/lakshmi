@@ -26,7 +26,7 @@ repos:
         - "--max-complexity=18"
         - "--select=B,C,E,F,W,T4,B9"
         - "--ignore=W503"
-        - "--per-file-ignores=lakshmi/lak/__init__.py:F811"
+        - "--per-file-ignores=lakshmi/lak.py:F811"
 
 - repo: local
   hooks:

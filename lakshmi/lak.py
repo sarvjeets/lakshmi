@@ -120,6 +120,9 @@ lakctx = None
               help='Re-fetch all data instead of using previously cached '
               'data. For large portfolios, this would be extremely slow.')
 def lak(refresh):
+    """lak is a simple command line tool inspired by Bogleheads philosophy.
+    Detailed user guide is available at:
+    https://sarvjeets.github.io/lakshmi/docs/lak.html"""
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:
@@ -354,7 +357,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         guide for the user.
     """
     # Change filename to absolute path.
-    filepath = Path(__file__).parents[1].absolute() / 'data' / filename
+    filepath = Path(__file__).resolve().parent / 'data' / filename
     if edit_dict:
         help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
             '\n', '\n# ')

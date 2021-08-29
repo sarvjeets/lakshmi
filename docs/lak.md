@@ -29,7 +29,7 @@
 * [Miscellaneous](#miscellaneous)
    * [How to reorder Accounts or Assets in the lak list assets view?](#how-to-reorder-accounts-or-assets-in-the-lak-list-assets-view)
 
-Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+<sub>Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)</sub>
 
 
 ## Introduction
@@ -525,6 +525,10 @@ $ lak add asset --help
 $ lak --help
 Usage: lak [OPTIONS] COMMAND [ARGS]...
 
+  lak is a simple command line tool inspired by Bogleheads philosophy.
+  Detailed user guide is available at:
+  https://sarvjeets.github.io/lakshmi/docs/lak.html
+
 Options:
   --version      Show the version and exit.
   -r, --refresh  Re-fetch all data instead of using previously cached data.
@@ -787,7 +791,7 @@ Options:
 There are three ways to print asset allocation. Let's look at all three
 in detail.
 
-##### lak list aa --compact
+1. lak list aa \-\-compact
 
 The default option is to print the asset allocation in _compact_ format. This
 view packs the most amount of information in the output:
@@ -802,33 +806,33 @@ Bonds     39%   40%                             39%         40%  $226.80        
 ```
 
 Let's look at each column in detail:
-- *Class*: This column shows the asset classes arranged as a horizontal tree.
-For example, in the output above, there are two asset classes in the
-top-level: _Equity_ and _Bonds_. _Equity_ is further sub-divided into
-_US_ and _Intl_.
-- *A% and D%*: _A%_ and _D%_ stands for Actual percentage and desired
-percentage, respectively. These columns refer to the _Class_ column
-immediately left of them, and shows the ***relative*** percentage of
-those assets in the parent asset class. For example, the columns
-_A%_ right next to _US_ and _Intl_ signifies that the actual
-allocation (based on current balance) of these asset classes is
-_64%_ and _36%_ respectively. The _D%_ column tells us based on the desired
-asset allocation specified for the portfolio, the desired relative
-percentages of these assets should be _60%_ and _40%_.
-- *Actual% and Desired%*: Finally, the last columns show the ***absolute***
-percentages for the leaf asset classes (_US_, _Intl_ and _Bonds_ in the above
-table). These leaf asset classes are the asset classes immediately to the left
-of the values printed in _Actual%_ and _Desired%_ column. Note that the
-_A%_/_D%_ values and the _Actual%_/_Desired%_ values for _US_ and _Intl_ are
-different. This is expected as _A%_ and _D%_ refers to the percentages of these
-assets in _Equity_; however, the _Actual%_ and _Desired%_ refers to the
-percentages of these asset classes in the overall portfolio.
-_ *Value and Difference*: Finally, the _Value_ column shows the amount of money
-allocated to the leaf asset class. The _Difference_ column shows how far the
-money allocated is to the desired amount of money allocated. For example, the
-table above shows that if we sold _$18.08_ of _US_ and bought _$9.42_ and
-_$8.66_ of _Intl_ and _Bonds_, we will match the actual allocation to the
-desired allocation perfectly.
+  - *Class*: This column shows the asset classes arranged as a horizontal tree.
+  For example, in the output above, there are two asset classes in the
+  top-level: _Equity_ and _Bonds_. _Equity_ is further sub-divided into
+  _US_ and _Intl_.
+  - *A% and D%*: _A%_ and _D%_ stands for Actual percentage and desired
+  percentage, respectively. These columns refer to the _Class_ column
+  immediately left of them, and shows the ***relative*** percentage of
+  those assets in the parent asset class. For example, the columns
+  _A%_ right next to _US_ and _Intl_ signifies that the actual
+  allocation (based on current balance) of these asset classes is
+  _64%_ and _36%_ respectively. The _D%_ column tells us based on the desired
+  asset allocation specified for the portfolio, the desired relative
+  percentages of these assets should be _60%_ and _40%_.
+  - *Actual% and Desired%*: Finally, the last columns show the ***absolute***
+  percentages for the leaf asset classes (_US_, _Intl_ and _Bonds_ in the above
+  table). These leaf asset classes are the asset classes immediately to the
+  left of the values printed in _Actual%_ and _Desired%_ column. Note that the
+  _A%_/_D%_ values and the _Actual%_/_Desired%_ values for _US_ and _Intl_ are
+  different. This is expected as _A%_ and _D%_ refers to the percentages of
+  these assets in _Equity_; however, the _Actual%_ and _Desired%_ refers to the
+  percentages of these asset classes in the overall portfolio.
+  - *Value and Difference*: Finally, the _Value_ column shows the amount of
+  money allocated to the leaf asset class. The _Difference_ column shows how
+  far the money allocated is to the desired amount of money allocated. For
+  example, the table above shows that if we sold _$18.08_ of _US_ and bought
+  _$9.42_ and _$8.66_ of _Intl_ and _Bonds_, we will match the actual
+  allocation to the desired allocation perfectly.
 
 The _Difference_ column is an important column to look at, especially when
 making or planning (see the [section](#lak-whatif) on `lak whatif`) changes
@@ -838,7 +842,7 @@ asset classes with the lowest value of _Difference_ should be prioritized.
 Rebalancing can be achieved by just following the current values in this
 column (also see `lak analyze rebalance` [section](#lak-analyze)).
 
-##### lak list aa --no-compact
+2. lak list aa \-\-no-compact
 
 This option still prints asset allocation in a tree format but prints less
 information than the default option:
@@ -860,7 +864,7 @@ The _Actual%_ and _Desired%_ columns correspond to the ***relative***
 allocation of the asset class respective to the parent asset class.
 These columns correspond to _A%_ and _D%_ columns in `lak list aa` output.
 
-##### lak list aa --asset-class
+3. lak list aa \-\-asset-class
 
 This command print's asset allocation, but only across the asset classes
 explicitly mentioned in the `--asset-class` flag. For example:
@@ -889,8 +893,8 @@ _cover_ the allocation in the portfolio, without any overlap. Here are
 some examples that will throw an error (`AssetAllocation called with
 overlapping Asset Classes or Asset Classes which does not cover the
 full tree.`):
-- `lak list aa --asset-class Equity,US`: Overlapping asset classes.
-- `lak list aa --asset-class US, Intl`: The list doesn't cover _Bonds_.
+  - `lak list aa --asset-class Equity,US`: Overlapping asset classes.
+  - `lak list aa --asset-class US, Intl`: The list doesn't cover _Bonds_.
 
 #### lak list al
 This command prints the asset location across the types of accounts.
