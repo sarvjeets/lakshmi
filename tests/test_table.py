@@ -1,6 +1,7 @@
 """Tests for lakshmi.table module."""
-from lakshmi.table import Table
 import unittest
+
+from lakshmi.table import Table
 
 
 class TableTest(unittest.TestCase):
@@ -20,7 +21,8 @@ class TableTest(unittest.TestCase):
         self.assertGreater(len(t.string()), 0)
 
     def test_bad_coltypes(self):
-        with self.assertRaisesRegex(AssertionError, 'Bad column type in coltypes'):
+        with self.assertRaisesRegex(AssertionError,
+                                    'Bad column type in coltypes'):
             Table(2, coltypes=[None, 'str'])
 
     def test_set_rows(self):
@@ -58,13 +60,13 @@ class TableTest(unittest.TestCase):
 
     def test_mismatched_num_cols(self):
         with self.assertRaises(AssertionError):
-            t = Table(2, headers=['1'])
+            Table(2, headers=['1'])
         with self.assertRaises(AssertionError):
-            t = Table(2, headers=['1', '2', '3'])
+            Table(2, headers=['1', '2', '3'])
         with self.assertRaises(AssertionError):
-            t = Table(2, coltypes=['str'])
+            Table(2, coltypes=['str'])
         with self.assertRaises(AssertionError):
-            t = Table(2, headers=['str', 'str', 'str'])
+            Table(2, headers=['str', 'str', 'str'])
 
     def test_too_many_cols(self):
         t = Table(2)

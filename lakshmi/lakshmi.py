@@ -1,9 +1,10 @@
 """Top level interfaces and definitions for Lakshmi."""
 
+import yaml
+
+import lakshmi.utils as utils
 from lakshmi.assets import from_dict, to_dict
 from lakshmi.table import Table
-import lakshmi.utils as utils
-import yaml
 
 
 class Account:
@@ -154,10 +155,12 @@ class AssetClass:
         return self
 
     def _check(self):
-        assert self._leaves, 'Need to validate AssetAllocation before using it.'
+        assert self._leaves, (
+            'Need to validate AssetAllocation before using it.')
 
     def find_asset_class(self, asset_class_name):
-        """Returns a tuple of object representing asset_class_name and its desired ratio.
+        """Returns a tuple of object representing asset_class_name and its
+        desired ratio.
 
         Returns None if asset_class_name is not found."""
         self._check()
@@ -177,7 +180,8 @@ class AssetClass:
         return self._leaves
 
     def value_mapped(self, money_allocation):
-        """Returns how much money is mapped to this Asset Class or it's children.
+        """Returns how much money is mapped to this Asset Class or its
+        children.
 
         Arguments:
           money_allocation: A map of leaf_class_name -> money.
@@ -337,7 +341,8 @@ class Portfolio:
         return matched_assets[0][0], matched_assets[0][2]
 
     def what_if(self, account_name, asset_name, delta):
-        """Runs a whatif scenario if asset_name in account_name is changed by delta."""
+        """Runs a whatif scenario if asset_name in account_name is changed by
+        delta."""
         account = self.get_account(account_name)
         asset = account.get_asset(asset_name)
         asset.what_if(delta)
@@ -388,19 +393,19 @@ class Portfolio:
         """Returns all the assets."""
         table = Table(
             3 + short_name + quantity,
-            headers=['Account'] +
-            (['Name'] if short_name else []) +
-            (['Quantity'] if quantity else []) +
-            ['Asset', 'Value'],
-            coltypes=['str'] +
-            (['str'] if short_name else []) +
-            (['float'] if quantity else []) +
-            ['str', 'dollars'])
+            headers=(['Account']
+                     + (['Name'] if short_name else [])
+                     + (['Quantity'] if quantity else [])
+                     + ['Asset', 'Value']),
+            coltypes=(['str']
+                      + (['str'] if short_name else [])
+                      + (['float'] if quantity else [])
+                      + ['str', 'dollars']))
         for account in self.accounts():
             for asset in account.assets():
-                row = ([account.name()] +
-                       ([f'{asset.short_name()}'] if short_name else []) +
-                       [asset.name(), asset.adjusted_value()])
+                row = ([account.name()]
+                       + ([f'{asset.short_name()}'] if short_name else [])
+                       + [asset.name(), asset.adjusted_value()])
                 if quantity:
                     row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)
@@ -409,15 +414,17 @@ class Portfolio:
         return table
 
     def asset_location(self):
-        """Returns asset location as a list of [asset class, account_type, percentage, value]."""
+        """Returns asset location as a list of [asset class, account_type,
+        percentage, value]."""
         class2type = {}  # Mapping of asset class -> account type -> money
         for account in self.accounts():
             for asset in account.assets():
                 for name, ratio in asset.class2ratio.items():
                     if name not in class2type:
                         class2type[name] = {}
-                    class2type[name][account.account_type] = class2type[name].get(
-                        account.account_type, 0) + ratio * asset.adjusted_value()
+                    class2type[name][account.account_type] = (
+                        class2type[name].get(account.account_type, 0)
+                        + ratio * asset.adjusted_value())
 
         table = Table(
             4,
@@ -520,8 +527,8 @@ class Portfolio:
                 index = find_index(alloc.name, ret_list)
                 # We know that here is atleast one child.
                 for i in range(len(alloc.children) - 1):
-                    # Make room for rest of the children by inserting empty extra rows of the
-                    # same size as the parent's row
+                    # Make room for rest of the children by inserting empty
+                    # extra rows of the same size as the parent's row
                     ret_list.insert(index + 1, [None] * len(ret_list[index]))
                 for i in range(len(alloc.children)):
                     ret_list[index + i].extend(
@@ -544,9 +551,9 @@ class Portfolio:
 
         # All done, now build the table.
         t = Table(cols + 4,
-                  headers=['Class', 'A%', 'D%'] * int(cols / 3) +
-                  leaf_aa.headers()[1:],
-                  coltypes=['str', 'percentage', 'percentage'] * int(cols / 3) +
-                  ['percentage', 'percentage', 'dollars', 'delta_dollars'])
+                  headers=['Class', 'A%', 'D%'] * int(cols / 3)
+                  + leaf_aa.headers()[1:],
+                  coltypes=['str', 'percentage', 'percentage'] * int(cols / 3)
+                  + ['percentage', 'percentage', 'dollars', 'delta_dollars'])
         t.set_rows(ret_list)
         return t

@@ -6,13 +6,15 @@ called multiple times from the same program). If there is ever need to use
 it as a library, this code requires major refactoring to clean it up."""
 
 from pathlib import Path
-from lakshmi import Portfolio
-from lakshmi.table import Table
+
 import click
+import yaml
+
 import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
-import yaml
+from lakshmi import Portfolio
+from lakshmi.table import Table
 
 
 class LakContext:
@@ -56,8 +58,8 @@ class LakContext:
                 lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
 
         if len(config):
-            raise click.ClickException(f'Extra entries found in config file: '
-                                       '{list(config.keys())}')
+            raise click.ClickException('Extra entries found in config file: '
+                                       f'{list(config.keys())}')
 
     def optional_separator(self):
         """Prints a newline between multiple commands. Used to add a newline
@@ -352,8 +354,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         guide for the user.
     """
     # Change filename to absolute path.
-    filepath = (Path(__file__).parents[1].absolute() /
-                'data' / filename)
+    filepath = Path(__file__).parents[1].absolute() / 'data' / filename
     if edit_dict:
         help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
             '\n', '\n# ')
@@ -381,8 +382,8 @@ def init():
     be used to create an empty portfolio file if one doesn't exist."""
     global lakctx
     if Path(lakctx.portfolio_filename).exists():
-        raise click.ClickException('Portfolio file already exists: ' +
-                                   lakctx.portfolio_filename)
+        raise click.ClickException(
+            f'Portfolio file already exists: {lakctx.portfolio_filename}')
 
     asset_class = edit_and_parse(
         None,

@@ -1,6 +1,7 @@
 """Module to help output and print tables."""
 
 from tabulate import tabulate
+
 import lakshmi.utils as utils
 
 

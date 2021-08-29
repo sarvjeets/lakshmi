@@ -1,10 +1,10 @@
 """Tests for lakshmi.cache module."""
-import lakshmi.cache as cache
-from hashlib import md5
-from unittest.mock import patch
-from pathlib import Path
 import pickle
 import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+import lakshmi.cache as cache
 
 
 class Cached(cache.Cacheable):

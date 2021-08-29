@@ -1,6 +1,7 @@
 *~
 *.swp
 __pycache__
+.isort.cfg
 build
 dist
 lakshmi.egg-info

@@ -1,10 +1,11 @@
 """Tests for lakshmi module."""
-from lakshmi import Account, AssetClass, Portfolio
-from lakshmi.assets import ManualAsset, TickerAsset
-import lakshmi.cache
-from lakshmi.table import Table
 import unittest
 from unittest.mock import MagicMock, patch
+
+import lakshmi.cache
+from lakshmi import Account, AssetClass, Portfolio
+from lakshmi.assets import ManualAsset, TickerAsset
+from lakshmi.table import Table
 
 
 class LakshmiTest(unittest.TestCase):
@@ -22,7 +23,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], portfolio.asset_allocation_compact().list())
 
     def test_one_asset_class(self):
-        asset_class = AssetClass('Equity').validate()
+        AssetClass('Equity').validate()
 
     def test_many_asset_class_duplicate(self):
         asset_class = (
@@ -279,9 +280,9 @@ class LakshmiTest(unittest.TestCase):
             [['Equity', '60%', '50%', '$60.00', '-$10.00'],
              ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.asset_allocation(['Equity', 'Fixed Income']).str_list())
-        self.assertListEqual(
-            [['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
-             ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
+        self.assertListEqual([
+            ['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
+            ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
 
     @patch('yfinance.Ticker')
@@ -377,9 +378,12 @@ class LakshmiTest(unittest.TestCase):
             .add_asset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
         self.assertListEqual(
-            [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%', '$60.00', '-$12.00'],
-             ['', '', '', 'Intl', '33%', '40%', '30%', '32%', '$30.00', '+$2.00'],
-             ['Bonds', '10%', '20%', '', '', '', '10%', '20%', '$10.00', '+$10.00']],
+            [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%',
+                '$60.00', '-$12.00'],
+             ['', '', '', 'Intl', '33%', '40%', '30%', '32%',
+                 '$30.00', '+$2.00'],
+             ['Bonds', '10%', '20%', '', '', '', '10%', '20%',
+                 '$10.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
         self.assertListEqual(
             [['All:'],

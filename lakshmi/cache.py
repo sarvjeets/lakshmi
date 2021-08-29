@@ -1,15 +1,15 @@
+import functools
+import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime
-import functools
 from hashlib import md5
 from pathlib import Path
-import pickle
 
 # Inspired by https://pypi.org/project/cache-to-disk/. I tried using other
 # options such as requests-cache, but it was too slow compared to the solution
 # implemented here.
-# TODO(sarvjeets): It would be good to get rid of this one-off solution and switch
-# to something more standard.
+# TODO(sarvjeets): It would be good to get rid of this one-off solution and
+# switch to something more standard.
 
 
 class Cacheable(ABC):
@@ -20,8 +20,8 @@ class Cacheable(ABC):
 
 
 def get_file_age(file):
-    return (datetime.today() -
-            datetime.fromtimestamp(file.stat().st_mtime)).days
+    return (datetime.today()
+            - datetime.fromtimestamp(file.stat().st_mtime)).days
 
 
 # Dict to keep cache context.
@@ -80,7 +80,11 @@ def cache(days):
             filename = f'{days}_{md5(key.encode("utf8")).hexdigest()}.lkc'
             file = cache_dir / filename
 
-            if not force_refresh and file.exists() and get_file_age(file) < days:
+            if (
+                not force_refresh
+                and file.exists()
+                and get_file_age(file) < days
+            ):
                 return pickle.loads(file.read_bytes())
             value = func(class_obj)
             file.write_bytes(pickle.dumps(value))

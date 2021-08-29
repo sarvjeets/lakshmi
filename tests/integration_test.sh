@@ -82,4 +82,3 @@ testcmd "lak edit account -t account"
 testcmd "lak edit asset -a ITOT"
 testcmd "lak delete asset -a ITOT --yes"
 testcmd "lak delete account -t account --yes"
-

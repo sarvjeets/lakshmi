@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 from lakshmi.constants import NAME, VERSION
 
 with open('README.md', 'r', encoding='utf-8') as fh:

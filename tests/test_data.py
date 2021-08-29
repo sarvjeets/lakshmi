@@ -1,9 +1,11 @@
 """Tests for lakshmi/data directory. Simply checks if the files parses."""
+import unittest
+from pathlib import Path
+
+import yaml
+
 import lakshmi
 import lakshmi.assets
-from pathlib import Path
-import unittest
-import yaml
 
 
 class DataTest(unittest.TestCase):
