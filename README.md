@@ -146,6 +146,10 @@ For more detailed information about the tool, please see
 
 (TODO: Add details about the lakshmi module)
 
+## Contributing
+I'm looking for contributors for this project. If you are interested,
+please contact me over email.
+
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
 
