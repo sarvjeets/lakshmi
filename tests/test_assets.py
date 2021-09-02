@@ -25,7 +25,7 @@ class AssetsTest(unittest.TestCase):
 
     def test_asset_bad_what_if(self):
         a = assets.ManualAsset('Cash', 100, {'All': 1.0})
-        self.assertAlmostEqual(-100, a.what_if(-101))
+        a.what_if(-101)
         self.assertAlmostEqual(0, a.adjusted_value())
 
     def test_dict_manual_asset(self):
