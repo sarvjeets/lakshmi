@@ -83,7 +83,9 @@ class LakContext:
         if self.continued:
             return
 
-        self.get_what_ifs()
+        with Spinner():
+            self.get_what_ifs()
+
         if self.whatifs[0].list() or self.whatifs[1].list():
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
 
@@ -112,6 +114,48 @@ class LakContext:
 # and didn't exactly give us the functionality that I wanted
 # -- sarvjeets
 lakctx = None
+
+
+class Spinner:
+    """Prints a progress bar on the screen for cache misses."""
+    SPINNER = ('▰▱▱▱▱▱▱',
+               '▰▰▱▱▱▱▱',
+               '▰▰▰▱▱▱▱',
+               '▰▰▰▰▱▱▱',
+               '▰▰▰▰▰▱▱',
+               '▰▰▰▰▰▰▱',
+               '▰▰▰▰▰▰▰')
+
+    def __init__(self):
+        self._index = 0  # Index within _SPINNER
+        self._spinning = False  # Set to true once we start 'spinning'
+        self._isatty = True  # Are we connected to tty?
+        try:
+            self._isatty = click.get_binary_stream('stdout').isatty()
+        except Exception:
+            self._isatty = False
+
+    def __enter__(self):
+        if not self._isatty:  # Not on terminal, do nothing.
+            return
+
+        def spin():
+            if self._spinning:
+                click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
+            else:
+                self._spinning = True
+
+            click.echo(Spinner.SPINNER[self._index], nl=False)
+            self._index = (self._index + 1) % len(Spinner.SPINNER)
+
+        # Setup so that cache calls spin
+        lakshmi.cache.set_cache_miss_func(spin)
+        return spin
+
+    def __exit__(self, *args):
+        lakshmi.cache.set_cache_miss_func(None)  # Disable spinner
+        if self._spinning:
+            click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
 
 
 @click.group()
@@ -154,9 +198,11 @@ def total():
     lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
     portfolio = lakctx.get_portfolio()
-    click.echo(
-        Table(2, coltypes=['str', 'dollars']).add_row(
-            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt))
+
+    with Spinner():
+        output = Table(2, coltypes=['str', 'dollars']).add_row(
+            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -168,7 +214,9 @@ def al():
     lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
     portfolio = lakctx.get_portfolio()
-    click.echo(portfolio.asset_location().string(lakctx.tablefmt))
+    with Spinner():
+        output = portfolio.asset_location().string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -188,21 +236,23 @@ def aa(compact, asset_class):
     lakctx.optional_separator()
 
     portfolio = lakctx.get_portfolio()
-    if asset_class:
-        if not compact:
-            raise click.UsageError(
-                '--no-compact is only supported when --asset-class '
-                'is not specified.')
-        classes_list = [c.strip() for c in asset_class.split(',')]
-        click.echo(portfolio.asset_allocation(classes_list).string(
-            lakctx.tablefmt))
-    else:
-        if compact:
-            click.echo(portfolio.asset_allocation_compact().string(
-                lakctx.tablefmt))
+    with Spinner():
+        if asset_class:
+            if not compact:
+                raise click.UsageError(
+                    '--no-compact is only supported when --asset-class '
+                    'is not specified.')
+            classes_list = [c.strip() for c in asset_class.split(',')]
+            output = portfolio.asset_allocation(classes_list).string(
+                lakctx.tablefmt)
         else:
-            click.echo(portfolio.asset_allocation_tree().string(
-                lakctx.tablefmt))
+            if compact:
+                output = portfolio.asset_allocation_compact().string(
+                    lakctx.tablefmt)
+            else:
+                output = portfolio.asset_allocation_tree().string(
+                    lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -218,15 +268,18 @@ def assets(short_name, quantity):
     lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
     portfolio = lakctx.get_portfolio()
-    click.echo(portfolio.assets(short_name=short_name,
-                                quantity=quantity).string(lakctx.tablefmt))
+    with Spinner():
+        output = portfolio.assets(
+            short_name=short_name, quantity=quantity).string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
 def whatifs():
     """Print hypothetical what ifs for assets and accounts."""
     global lakctx
-    account_whatifs, asset_whatifs = lakctx.get_what_ifs()
+    with Spinner():
+        account_whatifs, asset_whatifs = lakctx.get_what_ifs()
     if account_whatifs.list():
         lakctx.optional_separator()
         click.echo(account_whatifs.string(lakctx.tablefmt))
@@ -565,8 +618,9 @@ def tlh(max_percentage, max_dollars):
     """Shows which tax lots can be Tax-loss harvested (TLH)."""
     global lakctx
     lakctx.optional_separator()
-    table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).analyze(
-        lakctx.get_portfolio())
+    with Spinner():
+        table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).analyze(
+            lakctx.get_portfolio())
     if not table.list():
         click.echo('No tax lots to harvest.')
     else:
@@ -585,9 +639,10 @@ def rebalance(max_abs_percentage, max_relative_percentage):
     https://www.whitecoatinvestor.com/rebalancing-the-525-rule/."""
     global lakctx
     lakctx.optional_separator()
-    table = lakshmi.analyze.BandRebalance(
-        max_abs_percentage / 100, max_relative_percentage / 100).analyze(
-        lakctx.get_portfolio())
+    with Spinner():
+        table = lakshmi.analyze.BandRebalance(
+            max_abs_percentage / 100, max_relative_percentage / 100).analyze(
+            lakctx.get_portfolio())
     if not table.list():
         click.echo('Portfolio Asset allocation within bounds.')
     else:
