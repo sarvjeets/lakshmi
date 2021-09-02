@@ -95,15 +95,15 @@ class Asset(ABC):
         return self.to_table().string(tablefmt='plain')
 
     def what_if(self, delta):
-        if delta < 0 and delta < -self.adjusted_value():
-            delta = - self.adjusted_value()
         self._delta += delta
         if abs(self._delta) < 1e-6:
             self._delta = 0
-        return delta
+
+    def get_what_if(self):
+        return self._delta
 
     def adjusted_value(self):
-        return self.value() + self._delta
+        return max(0, self.value() + self.get_what_if())
 
     @abstractmethod
     def value(self):

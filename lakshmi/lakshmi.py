@@ -367,7 +367,7 @@ class Portfolio:
                 account_whatifs.add_row(
                     [account.name(), account.available_cash()])
             for asset in account.assets():
-                delta = asset.adjusted_value() - asset.value()
+                delta = asset.get_what_if()
                 if delta != 0.0:
                     asset_whatifs.add_row(
                         [account.name(), asset.name(), delta])
@@ -378,7 +378,7 @@ class Portfolio:
         for account in self.accounts():
             account.add_cash(-account.available_cash())
             for asset in account.assets():
-                asset.what_if(asset.value() - asset.adjusted_value())
+                asset.what_if(-asset.get_what_if())
 
     def total_value(self):
         """Returns total of all assets added."""
