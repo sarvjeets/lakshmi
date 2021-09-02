@@ -99,8 +99,11 @@ class Asset(ABC):
         if abs(self._delta) < 1e-6:
             self._delta = 0
 
+    def get_what_if(self):
+        return self._delta
+
     def adjusted_value(self):
-        return max(0, self.value() + self._delta)
+        return max(0, self.value() + self.get_what_if())
 
     @abstractmethod
     def value(self):

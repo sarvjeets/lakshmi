@@ -82,10 +82,7 @@ class LakContext:
         # chained.
         if self.continued:
             return
-
-        with Spinner():
-            self.get_what_ifs()
-
+        self.get_what_ifs()
         if self.whatifs[0].list() or self.whatifs[1].list():
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
 
@@ -278,8 +275,7 @@ def assets(short_name, quantity):
 def whatifs():
     """Print hypothetical what ifs for assets and accounts."""
     global lakctx
-    with Spinner():
-        account_whatifs, asset_whatifs = lakctx.get_what_ifs()
+    account_whatifs, asset_whatifs = lakctx.get_what_ifs()
     if account_whatifs.list():
         lakctx.optional_separator()
         click.echo(account_whatifs.string(lakctx.tablefmt))
