@@ -273,7 +273,7 @@ def assets(short_name, quantity):
 
 @list.command()
 def whatifs():
-    """Print hypothetical what ifs for assets and accounts."""
+    """Prints hypothetical what ifs for assets and accounts."""
     global lakctx
     account_whatifs, asset_whatifs = lakctx.get_what_ifs()
     if account_whatifs.list():
@@ -282,6 +282,17 @@ def whatifs():
     if asset_whatifs.list():
         lakctx.optional_separator()
         click.echo(asset_whatifs.string(lakctx.tablefmt))
+
+
+@list.command()
+def lots():
+    """Prints tax lot information for all the assets."""
+    global lakctx
+    lakctx.optional_separator()
+    with Spinner():
+        output = lakctx.get_portfolio().list_lots().string(lakctx.tablefmt)
+    if output:
+        click.echo(output)
 
 
 @lak.group(chain=True,
