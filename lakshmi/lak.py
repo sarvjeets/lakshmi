@@ -35,6 +35,8 @@ class LakContext:
         self.lakrc = lakrc
         # Used in self.optional_separator()
         self.continued = False
+        # Used in self.warn_for_what_ifs()
+        self.warned = False
         # List of hypothetical whatifs. Used in self.get_what_ifs() and
         # self.warn_for_what_ifs()
         self.whatifs = None
@@ -80,11 +82,12 @@ class LakContext:
         """Prints a warning if whatifs are set."""
         # Make sure we don't print warning multiple times if commands are
         # chained.
-        if self.continued:
+        if self.warned:
             return
         self.get_what_ifs()
         if self.whatifs[0].list() or self.whatifs[1].list():
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
+        self.warned = True
 
     def get_portfolio(self):
         """Loads and returns the portfolio from self.portfolio_filename."""
@@ -192,8 +195,8 @@ def list(format):
 def total():
     """Prints the total value of the portfolio."""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
 
     with Spinner():
@@ -208,8 +211,8 @@ def al():
     please see
     https://www.bogleheads.org/wiki/Tax-efficient_fund_placement"""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
     with Spinner():
         output = portfolio.asset_location().string(lakctx.tablefmt)
@@ -229,8 +232,8 @@ def aa(compact, asset_class):
     """Prints the Asset Allocation of the portfolio. For more information,
     please see https://www.bogleheads.org/wiki/Asset_allocation"""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
 
     portfolio = lakctx.get_portfolio()
     with Spinner():
@@ -262,8 +265,8 @@ def aa(compact, asset_class):
 def assets(short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
     with Spinner():
         output = portfolio.assets(
@@ -282,6 +285,7 @@ def whatifs():
     if asset_whatifs.list():
         lakctx.optional_separator()
         click.echo(asset_whatifs.string(lakctx.tablefmt))
+    lakctx.warned = True  # Don't warn about whatifs if command is chained.
 
 
 @list.command()

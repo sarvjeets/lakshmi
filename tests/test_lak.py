@@ -17,6 +17,7 @@ class TestLakContext(lak.LakContext):
     def __init__(self):
         self.portfolio_filename = 'test_portfolio.yaml'
         self.continued = False
+        self.warned = False
         self.whatifs = None
         self.tablefmt = None
         self.saved = False
@@ -37,6 +38,7 @@ class TestLakContext(lak.LakContext):
     def reset(self):
         """Reset the state for a new command (except the portfolio)."""
         self.continued = False
+        self.warned = False
         self.whatifs = None
         self.tablefmt = None
         self.saved = False
