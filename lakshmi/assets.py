@@ -262,8 +262,8 @@ class TickerAsset(TradedAsset, Cacheable):
     def __init__(self, ticker, shares, class2ratio):
         self._ticker = ticker
         session = requests.Session()
-        session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
-                                         '{lakshmi.constants.VERSION}')
+        session.headers['user-agent'] = (
+            f'{lakshmi.constants.NAME}/{lakshmi.constants.VERSION}')
         self.yticker = yfinance.Ticker(ticker, session=session)
         super().__init__(shares, class2ratio)
 
