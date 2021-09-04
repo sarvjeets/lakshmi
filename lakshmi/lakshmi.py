@@ -389,6 +389,7 @@ class Portfolio:
                 total += asset.adjusted_value()
         return total
 
+    # TODO: Renmame this to list_assets for consistency.
     def assets(self, short_name=False, quantity=False):
         """Returns all the assets."""
         table = Table(
@@ -410,7 +411,23 @@ class Portfolio:
                     row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)
                 table.add_row(row)
+        return table
 
+    def list_lots(self):
+        """Returns all the lots in the portfolio as table.Table."""
+        table = Table(
+            5,
+            headers=['Short Name', 'Date', 'Cost', 'Gain', 'Gain%'],
+            coltypes=['str', 'str', 'dollars', 'delta_dollars', 'percentage'])
+        for account in self.accounts():
+            for asset in account.assets():
+                if hasattr(asset, 'list_lots'):
+                    lots = asset.list_lots()
+                    assert (
+                        lots.headers()
+                        == ['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'])
+                    for lot in lots.list():
+                        table.add_row([asset.short_name()] + lot[:1] + lot[2:])
         return table
 
     def asset_location(self):

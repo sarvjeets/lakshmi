@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import lakshmi.cache
 from lakshmi import Account, AssetClass, Portfolio
-from lakshmi.assets import ManualAsset, TickerAsset
+from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
 from lakshmi.table import Table
 
 
@@ -21,6 +21,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual([], portfolio.asset_allocation([]).list())
         self.assertListEqual([], portfolio.asset_allocation_compact().list())
+        self.assertListEqual([], portfolio.list_lots().list())
 
     def test_one_asset_class(self):
         AssetClass('Equity').validate()
@@ -646,6 +647,29 @@ class LakshmiTest(unittest.TestCase):
             5, len(
                 asset_class.return_allocation(
                     allocation, levels=5)))
+
+    @patch('yfinance.Ticker')
+    def test_list_lots(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'regularMarketPrice': 200.0, 'longName': 'Unused'}
+        MockTicker.return_value = ticker
+
+        vti = TickerAsset('VTI', 100.0, {'All': 1.0})
+        vti.set_lots([TaxLot('2020/01/01', 50, 100.0),
+                      TaxLot('2021/01/01', 50, 300.0)])
+        vxus = TickerAsset('VXUS', 50.0, {'All': 1.0})
+        vxus.set_lots([TaxLot('2019/01/01', 50, 150.0)])
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(vti)
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0}))
+            .add_asset(vxus))
+        # Order of lots: ShortName, Date, Cost, Gain, Gain%
+        self.assertListEqual(
+            [['VTI', '2020/01/01', '$5,000.00', '+$5,000.00', '100%'],
+             ['VTI', '2021/01/01', '$15,000.00', '-$5,000.00', '-33%'],
+             ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33%']],
+            portfolio.list_lots().str_list())
 
 
 if __name__ == '__main__':
