@@ -17,6 +17,7 @@
    * [lak add](#lak-add)
    * [lak list](#lak-list)
       * [lak list assets](#lak-list-assets)
+      * [lak list lots](#lak-list-lots)
       * [lak list total](#lak-list-total)
       * [lak list aa](#lak-list-aa)
       * [lak list al](#lak-list-al)
@@ -642,7 +643,7 @@ the [Portfolio file syntax](#portfolio-file-syntax) section.
 allocation, etc.:
 
 ```
- lak list --help
+$ lak list --help
 Usage: lak list [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
 
   Command to list various parts of the portfolio.
@@ -660,8 +661,9 @@ Commands:
   aa       Prints the Asset Allocation of the portfolio.
   al       Prints the Asset Location of the portfolio.
   assets   Prints all assets in the portfolio and their current values.
+  lots     Prints tax lot information for all the assets.
   total    Prints the total value of the portfolio.
-  whatifs  Print hypothetical what ifs for assets and accounts.
+  whatifs  Prints hypothetical what ifs for assets and accounts.
 ```
 
 `lak list` command requires a sub-command: `assets`, `total`, `aa`,
@@ -675,7 +677,7 @@ $ lak list assets total
 ```
 
 The `--format` option is useful for changing the format of the output.
-The _lakshmi_ library uses [tabulate](https://pypi.org/project/tabulate/)
+The `lakshmi` library uses [tabulate](https://pypi.org/project/tabulate/)
 internally to display tables. A description of all the available format
 options can be found in the
 [Table format section](https://github.com/astanin/python-tabulate#table-format).
@@ -740,6 +742,25 @@ Schwab Taxable   VXUS             1  Vanguard Total International Stock Index Fu
 Roth IRA         VXUS             1  Vanguard Total International Stock Index Fund ETF Shares   $65.59
 Vanguard 401(k)  VBMFX           20  Vanguard Total Bond Market Index Fund Investor Shares     $226.80
 ```
+
+#### lak list lots
+
+`lak list lots` prints the tax-lots (if specified) for all the assets in the
+portfolio. Tax-lots can be specified when adding a new asset
+(`lak add asset`), or when editing (`lak edit asset`) a given asset.
+To print tax-lots for a single asset, please use `lak info asset` command
+instead.
+
+For the portfolio file created previously:
+
+```
+$ lak list lots
+Short Name    Date           Cost    Gain    Gain%
+------------  ----------  -------  ------  -------
+VTI           2021/07/31  $226.00  +$8.29       4%
+VXUS          2021/07/31   $64.94  +$2.06       3%
+```
+
 
 #### lak list total
 
