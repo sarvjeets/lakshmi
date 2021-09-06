@@ -1,10 +1,13 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 from lakshmi.constants import NAME, VERSION
 
 with open('README.md', 'r', encoding='utf-8') as fh:
     # Replace relative links to absolute links.
-    long_description = fh.read().replace(
-        '](./', '](https://sarvjeets.github.io/lakshmi/')
+    long_description = (
+        fh.read()
+        .replace('](./', '](https://sarvjeets.github.io/lakshmi/')
+        .replace('lak.md', 'lak.html'))
 
 setup(
     name=NAME,

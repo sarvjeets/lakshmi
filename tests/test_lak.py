@@ -1,11 +1,13 @@
 """Tests for lakshmi.lak application."""
-import click
-from lakshmi import Portfolio, AssetClass, Account, lak
-from lakshmi.assets import ManualAsset
 import unittest
-from unittest.mock import patch
-from click.testing import CliRunner
 from pathlib import Path
+from unittest.mock import patch
+
+import click
+from click.testing import CliRunner
+
+from lakshmi import Account, AssetClass, Portfolio, lak
+from lakshmi.assets import ManualAsset
 
 
 class TestLakContext(lak.LakContext):
@@ -15,6 +17,7 @@ class TestLakContext(lak.LakContext):
     def __init__(self):
         self.portfolio_filename = 'test_portfolio.yaml'
         self.continued = False
+        self.warned = False
         self.whatifs = None
         self.tablefmt = None
         self.saved = False
@@ -35,6 +38,7 @@ class TestLakContext(lak.LakContext):
     def reset(self):
         """Reset the state for a new command (except the portfolio)."""
         self.continued = False
+        self.warned = False
         self.whatifs = None
         self.tablefmt = None
         self.saved = False
@@ -131,6 +135,12 @@ class LakTest(unittest.TestCase):
         result = run_lak('list assets')
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, 'Account +Asset +Value\n')
+        self.assertFalse(lak.lakctx.saved)
+
+    def test_list_lots(self):
+        result = run_lak('list lots')
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('', result.output)
         self.assertFalse(lak.lakctx.saved)
 
     def test_list_what_ifs_empty(self):
@@ -247,7 +257,7 @@ class LakTest(unittest.TestCase):
             raise Exception('Better luck next time')
 
         with self.assertRaises(click.Abort):
-            actual = lak.edit_and_parse(None, parse_fn, 'test_file')
+            lak.edit_and_parse(None, parse_fn, 'test_file')
 
         mock_read_text.assert_called_once()
         mock_edit.assert_called_with('a: b')

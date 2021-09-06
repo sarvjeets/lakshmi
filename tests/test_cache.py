@@ -1,10 +1,10 @@
 """Tests for lakshmi.cache module."""
-import lakshmi.cache as cache
-from hashlib import md5
-from unittest.mock import patch
-from pathlib import Path
 import pickle
 import unittest
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import lakshmi.cache as cache
 
 
 class Cached(cache.Cacheable):
@@ -25,6 +25,7 @@ class CacheTest(unittest.TestCase):
         # Reset cache dir setting.
         cache._ctx.pop(cache._CACHE_STR, None)
         cache.set_force_refresh(False)
+        cache.set_cache_miss_func(None)
 
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
@@ -36,6 +37,15 @@ class CacheTest(unittest.TestCase):
         self.assertEqual(2, c.get_value())
         get_file_age.assert_not_called()
         exists.assert_not_called()
+
+    def test_disabled_cache_with_func(self):
+        cache.set_cache_dir(None)  # Disble caching.
+        mocked_obj = Mock()
+        cache.set_cache_miss_func(mocked_obj.func)
+
+        c = Cached('key1', 1)
+        self.assertEqual(1, c.get_value())
+        mocked_obj.func.assert_called_once()
 
     @patch('pathlib.Path.read_bytes')
     @patch('pathlib.Path.write_bytes')
@@ -58,6 +68,26 @@ class CacheTest(unittest.TestCase):
         exists.assert_called_once()
         write_bytes.assert_called_once_with(pickle.dumps(1))
         read_bytes.assert_not_called()
+
+    @patch('pathlib.Path.write_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_default_cache_miss_with_func(
+            self, set_cache_dir, exists, write_bytes):
+        def side_effect(x):
+            cache._ctx[cache._CACHE_STR] = x
+        set_cache_dir.side_effect = side_effect
+        exists.return_value = False
+        mocked_obj = Mock()
+        cache.set_cache_miss_func(mocked_obj.func)
+
+        c = Cached('key1', 1)
+        self.assertEqual(1, c.get_value())
+
+        set_cache_dir.assert_called_once()
+        exists.assert_called_once()
+        write_bytes.assert_called_once_with(pickle.dumps(1))
+        mocked_obj.func.assert_called_once()
 
     @patch('pathlib.Path.read_bytes')
     @patch('pathlib.Path.write_bytes')
@@ -82,6 +112,30 @@ class CacheTest(unittest.TestCase):
         exists.assert_called_once()
         write_bytes.assert_not_called()
         read_bytes.assert_called_once()
+
+    @patch('pathlib.Path.read_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.get_file_age')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_default_cache_hit_with_func(
+            self, set_cache_dir, get_file_age, exists, read_bytes):
+        def side_effect(x):
+            cache._ctx[cache._CACHE_STR] = x
+        set_cache_dir.side_effect = side_effect
+        exists.return_value = True
+        get_file_age.return_value = 1
+        read_bytes.return_value = pickle.dumps(1)  # Cache 1.
+        mocked_obj = Mock()
+        cache.set_cache_miss_func(mocked_obj.func)
+
+        c = Cached('key2', 2)
+        self.assertEqual(1, c.get_value())  # Cached value.
+
+        set_cache_dir.assert_called_once()
+        get_file_age.assert_called_once()
+        exists.assert_called_once()
+        read_bytes.assert_called_once()
+        mocked_obj.func.assert_not_called()
 
     @patch('pathlib.Path.read_bytes')
     @patch('pathlib.Path.write_bytes')

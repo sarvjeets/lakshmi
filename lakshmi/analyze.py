@@ -5,6 +5,7 @@ just analyzing the portfolio and output the results (if any).
 """
 
 from abc import ABC, abstractmethod
+
 from lakshmi.table import Table
 
 
@@ -90,8 +91,10 @@ class BandRebalance(Analyzer):
         for row in aa.list():
             abs_percent = abs(row[1] - row[2])
             rel_percent = abs_percent / row[2] if row[2] != 0 else 0
-            if (abs_percent >= self.max_abs_percent or
-                    rel_percent >= self.max_relative_percent):
+            if (
+                abs_percent >= self.max_abs_percent
+                or rel_percent >= self.max_relative_percent
+            ):
                 ret_val.add_row(row)
 
         return ret_val

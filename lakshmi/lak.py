@@ -6,13 +6,15 @@ called multiple times from the same program). If there is ever need to use
 it as a library, this code requires major refactoring to clean it up."""
 
 from pathlib import Path
-from lakshmi import Portfolio
-from lakshmi.table import Table
+
 import click
+import yaml
+
 import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
-import yaml
+from lakshmi import Portfolio
+from lakshmi.table import Table
 
 
 class LakContext:
@@ -33,6 +35,8 @@ class LakContext:
         self.lakrc = lakrc
         # Used in self.optional_separator()
         self.continued = False
+        # Used in self.warn_for_what_ifs()
+        self.warned = False
         # List of hypothetical whatifs. Used in self.get_what_ifs() and
         # self.warn_for_what_ifs()
         self.whatifs = None
@@ -56,8 +60,8 @@ class LakContext:
                 lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
 
         if len(config):
-            raise click.ClickException(f'Extra entries found in config file: '
-                                       '{list(config.keys())}')
+            raise click.ClickException('Extra entries found in config file: '
+                                       f'{list(config.keys())}')
 
     def optional_separator(self):
         """Prints a newline between multiple commands. Used to add a newline
@@ -78,12 +82,12 @@ class LakContext:
         """Prints a warning if whatifs are set."""
         # Make sure we don't print warning multiple times if commands are
         # chained.
-        if self.continued:
+        if self.warned:
             return
-
         self.get_what_ifs()
         if self.whatifs[0].list() or self.whatifs[1].list():
             click.secho('Warning: Hypothetical what ifs are set.\n', fg='red')
+        self.warned = True
 
     def get_portfolio(self):
         """Loads and returns the portfolio from self.portfolio_filename."""
@@ -112,12 +116,57 @@ class LakContext:
 lakctx = None
 
 
+class Spinner:
+    """Prints a progress bar on the screen for cache misses."""
+    SPINNER = ('▰▱▱▱▱▱▱',
+               '▰▰▱▱▱▱▱',
+               '▰▰▰▱▱▱▱',
+               '▰▰▰▰▱▱▱',
+               '▰▰▰▰▰▱▱',
+               '▰▰▰▰▰▰▱',
+               '▰▰▰▰▰▰▰')
+
+    def __init__(self):
+        self._index = 0  # Index within _SPINNER
+        self._spinning = False  # Set to true once we start 'spinning'
+        self._isatty = True  # Are we connected to tty?
+        try:
+            self._isatty = click.get_binary_stream('stdout').isatty()
+        except Exception:
+            self._isatty = False
+
+    def __enter__(self):
+        if not self._isatty:  # Not on terminal, do nothing.
+            return
+
+        def spin():
+            if self._spinning:
+                click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
+            else:
+                self._spinning = True
+
+            click.echo(Spinner.SPINNER[self._index], nl=False)
+            self._index = (self._index + 1) % len(Spinner.SPINNER)
+
+        # Setup so that cache calls spin
+        lakshmi.cache.set_cache_miss_func(spin)
+        return spin
+
+    def __exit__(self, *args):
+        lakshmi.cache.set_cache_miss_func(None)  # Disable spinner
+        if self._spinning:
+            click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
+
+
 @click.group()
 @click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
               help='Re-fetch all data instead of using previously cached '
               'data. For large portfolios, this would be extremely slow.')
 def lak(refresh):
+    """lak is a simple command line tool inspired by Bogleheads philosophy.
+    Detailed user guide is available at:
+    https://sarvjeets.github.io/lakshmi/docs/lak.html"""
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:
@@ -146,12 +195,14 @@ def list(format):
 def total():
     """Prints the total value of the portfolio."""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
-    click.echo(
-        Table(2, coltypes=['str', 'dollars']).add_row(
-            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt))
+
+    with Spinner():
+        output = Table(2, coltypes=['str', 'dollars']).add_row(
+            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -160,10 +211,12 @@ def al():
     please see
     https://www.bogleheads.org/wiki/Tax-efficient_fund_placement"""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
-    click.echo(portfolio.asset_location().string(lakctx.tablefmt))
+    with Spinner():
+        output = portfolio.asset_location().string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -179,25 +232,27 @@ def aa(compact, asset_class):
     """Prints the Asset Allocation of the portfolio. For more information,
     please see https://www.bogleheads.org/wiki/Asset_allocation"""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
 
     portfolio = lakctx.get_portfolio()
-    if asset_class:
-        if not compact:
-            raise click.UsageError(
-                '--no-compact is only supported when --asset-class '
-                'is not specified.')
-        classes_list = [c.strip() for c in asset_class.split(',')]
-        click.echo(portfolio.asset_allocation(classes_list).string(
-            lakctx.tablefmt))
-    else:
-        if compact:
-            click.echo(portfolio.asset_allocation_compact().string(
-                lakctx.tablefmt))
+    with Spinner():
+        if asset_class:
+            if not compact:
+                raise click.UsageError(
+                    '--no-compact is only supported when --asset-class '
+                    'is not specified.')
+            classes_list = [c.strip() for c in asset_class.split(',')]
+            output = portfolio.asset_allocation(classes_list).string(
+                lakctx.tablefmt)
         else:
-            click.echo(portfolio.asset_allocation_tree().string(
-                lakctx.tablefmt))
+            if compact:
+                output = portfolio.asset_allocation_compact().string(
+                    lakctx.tablefmt)
+            else:
+                output = portfolio.asset_allocation_tree().string(
+                    lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
@@ -210,16 +265,18 @@ def aa(compact, asset_class):
 def assets(short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     global lakctx
-    lakctx.warn_for_what_ifs()
     lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
-    click.echo(portfolio.assets(short_name=short_name,
-                                quantity=quantity).string(lakctx.tablefmt))
+    with Spinner():
+        output = portfolio.assets(
+            short_name=short_name, quantity=quantity).string(lakctx.tablefmt)
+    click.echo(output)
 
 
 @list.command()
 def whatifs():
-    """Print hypothetical what ifs for assets and accounts."""
+    """Prints hypothetical what ifs for assets and accounts."""
     global lakctx
     account_whatifs, asset_whatifs = lakctx.get_what_ifs()
     if account_whatifs.list():
@@ -228,6 +285,18 @@ def whatifs():
     if asset_whatifs.list():
         lakctx.optional_separator()
         click.echo(asset_whatifs.string(lakctx.tablefmt))
+    lakctx.warned = True  # Don't warn about whatifs if command is chained.
+
+
+@list.command()
+def lots():
+    """Prints tax lot information for all the assets."""
+    global lakctx
+    lakctx.optional_separator()
+    with Spinner():
+        output = lakctx.get_portfolio().list_lots().string(lakctx.tablefmt)
+    if output:
+        click.echo(output)
 
 
 @lak.group(chain=True,
@@ -352,8 +421,7 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         guide for the user.
     """
     # Change filename to absolute path.
-    filepath = (Path(__file__).parents[1].absolute() /
-                'data' / filename)
+    filepath = Path(__file__).resolve().parent / 'data' / filename
     if edit_dict:
         help_msg = _HELP_MSG_PREFIX + '# ' + filepath.read_text().replace(
             '\n', '\n# ')
@@ -381,8 +449,8 @@ def init():
     be used to create an empty portfolio file if one doesn't exist."""
     global lakctx
     if Path(lakctx.portfolio_filename).exists():
-        raise click.ClickException('Portfolio file already exists: ' +
-                                   lakctx.portfolio_filename)
+        raise click.ClickException(
+            f'Portfolio file already exists: {lakctx.portfolio_filename}')
 
     asset_class = edit_and_parse(
         None,
@@ -561,8 +629,9 @@ def tlh(max_percentage, max_dollars):
     """Shows which tax lots can be Tax-loss harvested (TLH)."""
     global lakctx
     lakctx.optional_separator()
-    table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).analyze(
-        lakctx.get_portfolio())
+    with Spinner():
+        table = lakshmi.analyze.TLH(max_percentage / 100, max_dollars).analyze(
+            lakctx.get_portfolio())
     if not table.list():
         click.echo('No tax lots to harvest.')
     else:
@@ -581,9 +650,10 @@ def rebalance(max_abs_percentage, max_relative_percentage):
     https://www.whitecoatinvestor.com/rebalancing-the-525-rule/."""
     global lakctx
     lakctx.optional_separator()
-    table = lakshmi.analyze.BandRebalance(
-        max_abs_percentage / 100, max_relative_percentage / 100).analyze(
-        lakctx.get_portfolio())
+    with Spinner():
+        table = lakshmi.analyze.BandRebalance(
+            max_abs_percentage / 100, max_relative_percentage / 100).analyze(
+            lakctx.get_portfolio())
     if not table.list():
         click.echo('Portfolio Asset allocation within bounds.')
     else:

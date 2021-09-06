@@ -1,14 +1,16 @@
 """Implementation of standard asset types."""
 
-from abc import ABC, abstractmethod
-from lakshmi.cache import cache, Cacheable
-import lakshmi.constants
-from lakshmi.table import Table
-import lakshmi.utils as utils
 import datetime
 import re
+from abc import ABC, abstractmethod
+
 import requests
 import yfinance
+
+import lakshmi.constants
+import lakshmi.utils as utils
+from lakshmi.cache import Cacheable, cache
+from lakshmi.table import Table
 
 
 def to_dict(asset):
@@ -45,13 +47,15 @@ class Asset(ABC):
             total += ratio
 
         assert abs(total - 1.0) < 1e-6, (
-            f'Total allocation to classes must be 100% (actual = {total * 100}%)')
+            'Total allocation to classes must be 100% (actual = '
+            f'{total * 100}%)')
 
     def to_dict(self):
         """Encodes this class into a dictionary.
 
         This method for non-abstract Asset classes encodes all data.
-        This method for abstract Asset classes only encodes non-constructor data.
+        This method for abstract Asset classes only encodes non-constructor
+        data.
         """
         if self._delta != 0:
             return {'What if': self._delta}
@@ -61,7 +65,8 @@ class Asset(ABC):
         """Reverse of to_dict.
 
         This method for non-abstract Asset classes is a factory method.
-        This method for abstract Asset classes decodes non-constructor data (if any).
+        This method for abstract Asset classes decodes non-constructor
+        data (if any).
         """
         self.what_if(d.pop('What if', 0))
         return self
@@ -90,15 +95,15 @@ class Asset(ABC):
         return self.to_table().string(tablefmt='plain')
 
     def what_if(self, delta):
-        if delta < 0 and delta < -self.adjusted_value():
-            delta = - self.adjusted_value()
         self._delta += delta
         if abs(self._delta) < 1e-6:
             self._delta = 0
-        return delta
+
+    def get_what_if(self):
+        return self._delta
 
     def adjusted_value(self):
-        return self.value() + self._delta
+        return max(0, self.value() + self.get_what_if())
 
     @abstractmethod
     def value(self):
@@ -172,7 +177,7 @@ class TaxLot:
 
 
 class TradedAsset(Asset):
-    """An abstract class representing an asset with units and per unit price."""
+    """Abstract class representing an asset with units and per unit price."""
 
     def __init__(self, shares, class2ratio):
         self._shares = shares
@@ -234,8 +239,8 @@ class TradedAsset(Asset):
         if not self._tax_lots:
             return super().string()
 
-        return (super().string() + '\n\nTax lots:\n' +
-                f'{self.list_lots().string()}')
+        return (super().string() + '\n\nTax lots:\n'
+                + f'{self.list_lots().string()}')
 
     def value(self):
         return self.shares() * self.price()
@@ -257,8 +262,8 @@ class TickerAsset(TradedAsset, Cacheable):
     def __init__(self, ticker, shares, class2ratio):
         self._ticker = ticker
         session = requests.Session()
-        session.headers['User-agent'] = (f'{lakshmi.constants.NAME}/'
-                                         '{lakshmi.constants.VERSION}')
+        session.headers['user-agent'] = (
+            f'{lakshmi.constants.NAME}/{lakshmi.constants.VERSION}')
         self.yticker = yfinance.Ticker(ticker, session=session)
         super().__init__(shares, class2ratio)
 
@@ -293,7 +298,8 @@ class TickerAsset(TradedAsset, Cacheable):
     def name(self):
         if self.yticker.info.get('longName') is None:
             raise NotFoundError(
-                f'Cannot retrieve ticker ("{self._ticker}") from Yahoo Finance')
+                f'Cannot retrieve ticker ("{self._ticker}") '
+                'from Yahoo Finance')
         return self.yticker.info['longName']
 
     def short_name(self):
@@ -303,12 +309,14 @@ class TickerAsset(TradedAsset, Cacheable):
     def price(self):
         if self.yticker.info.get('regularMarketPrice') is None:
             raise NotFoundError(
-                f'Cannot retrieve ticker ("{self._ticker}") from Yahoo Finance')
+                f'Cannot retrieve ticker ("{self._ticker}") '
+                'from Yahoo Finance')
         return self.yticker.info['regularMarketPrice']
 
 
 class VanguardFund(TradedAsset, Cacheable):
-    """An asset class representing Vanguard trust fund represented by a numeric ID."""
+    """An asset class representing Vanguard trust fund represented by a
+    numeric ID."""
 
     def __init__(self, fund_id, shares, class2ratio):
         self._fund_id = fund_id
@@ -344,7 +352,8 @@ class VanguardFund(TradedAsset, Cacheable):
     @cache(365)  # Name changes are very rare.
     def name(self):
         req = requests.get(
-            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}/profile.json',
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
+            '/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return req.json()['fundProfile']['longName']
@@ -355,7 +364,8 @@ class VanguardFund(TradedAsset, Cacheable):
     @cache(1)
     def price(self):
         req = requests.get(
-            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}/price.json',
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
+            '/price.json',
             headers={'Referer': 'https://vanguard.com/'})
         req.raise_for_status()  # Raise if error
         return float(req.json()['currentPrice']
@@ -430,8 +440,8 @@ class _TreasuryBonds(Asset):
     def from_dict(self, d):
         for bond in d.pop('Bonds'):
             self.add_bond(bond.pop('Issue Date'), bond.pop('Denomination'))
-            assert len(bond) == 0, (f'Extra attributes found: '
-                                    '{list(bond.keys())}')
+            assert len(bond) == 0, ('Extra attributes found: '
+                                    f'{list(bond.keys())}')
         Asset.from_dict(self, d)
         return self
 
@@ -458,8 +468,8 @@ class _TreasuryBonds(Asset):
         return table
 
     def string(self):
-        return (super().string() + '\n\nBonds:\n' +
-                f'{self.list_bonds().string()}')
+        return (super().string() + '\n\nBonds:\n'
+                + f'{self.list_bonds().string()}')
 
     def name(self):
         return f'{self._series} Bonds'

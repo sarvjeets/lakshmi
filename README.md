@@ -62,8 +62,11 @@ up to date help, run:
 
 ```
 $ lak --help
-
 Usage: lak [OPTIONS] COMMAND [ARGS]...
+
+  lak is a simple command line tool inspired by Bogleheads philosophy.
+  Detailed user guide is available at:
+  https://sarvjeets.github.io/lakshmi/docs/lak.html
 
 Options:
   --version      Show the version and exit.
@@ -76,7 +79,7 @@ Commands:
   analyze  Analyze the portfolio.
   delete   Delete an account or asset.
   edit     Edit parts of the portfolio.
-  info     Prints detailed information about an asset or account.
+  info     Print detailed information about an asset or account.
   init     Initializes a new portfolio by adding asset classes.
   list     Command to list various parts of the portfolio.
   whatif   Run hypothetical what if scenarios by modifying the total...
@@ -142,6 +145,10 @@ For more detailed information about the tool, please see
 ## Library
 
 (TODO: Add details about the lakshmi module)
+
+## Contributing
+I'm looking for contributors for this project. If you are interested,
+please contact me over email.
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.

@@ -1,6 +1,7 @@
 """Module to help output and print tables."""
 
 from tabulate import tabulate
+
 import lakshmi.utils as utils
 
 
@@ -32,7 +33,7 @@ class Table():
         if coltypes:
             assert len(coltypes) == numcols
             assert set(coltypes).issubset(
-                self.coltype2func.keys()), 'Bad column type in coltypes'
+                Table.coltype2func.keys()), 'Bad column type in coltypes'
             self._coltypes = coltypes
         else:
             self._coltypes = ['str'] * self._numcols
@@ -52,7 +53,7 @@ class Table():
         return self._headers
 
     def col_align(self):
-        return list(map(lambda x: self.coltype2align[x], self._coltypes))
+        return list(map(lambda x: Table.coltype2align[x], self._coltypes))
 
     def list(self):
         return self._rows
@@ -65,7 +66,7 @@ class Table():
                 if row[col_num] is None:
                     ret_row.append('')
                 else:
-                    ret_row.append(self.coltype2func[self._coltypes[col_num]](
+                    ret_row.append(Table.coltype2func[self._coltypes[col_num]](
                         row[col_num]))
             ret_list.append(ret_row)
         return ret_list

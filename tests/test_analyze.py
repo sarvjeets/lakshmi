@@ -1,9 +1,10 @@
 """Tests for lakshmi.assets module."""
-import lakshmi.analyze as analyze
-from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
-from lakshmi import Account, AssetClass, Portfolio
 import unittest
 from unittest.mock import patch
+
+import lakshmi.analyze as analyze
+from lakshmi import Account, AssetClass, Portfolio
+from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
 
 
 class AnalyzeTest(unittest.TestCase):

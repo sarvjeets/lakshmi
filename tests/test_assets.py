@@ -1,10 +1,11 @@
 """Tests for lakshmi.assets module."""
 import json
-import lakshmi.assets as assets
-import lakshmi.cache
 import pathlib
 import unittest
 from unittest.mock import MagicMock, patch
+
+import lakshmi.assets as assets
+import lakshmi.cache
 
 
 class AssetsTest(unittest.TestCase):
@@ -24,7 +25,7 @@ class AssetsTest(unittest.TestCase):
 
     def test_asset_bad_what_if(self):
         a = assets.ManualAsset('Cash', 100, {'All': 1.0})
-        self.assertAlmostEqual(-100, a.what_if(-101))
+        a.what_if(-101)
         self.assertAlmostEqual(0, a.adjusted_value())
 
     def test_dict_manual_asset(self):
@@ -56,9 +57,11 @@ class AssetsTest(unittest.TestCase):
 
         ticker_asset = assets.TickerAsset('bad', 10, {'All': 1.0})
 
-        with self.assertRaisesRegex(assets.NotFoundError, 'Cannot retrieve ticker'):
+        with self.assertRaisesRegex(assets.NotFoundError,
+                                    'Cannot retrieve ticker'):
             ticker_asset.name()
-        with self.assertRaisesRegex(assets.NotFoundError, 'Cannot retrieve ticker'):
+        with self.assertRaisesRegex(assets.NotFoundError,
+                                    'Cannot retrieve ticker'):
             ticker_asset.value()
 
         MockTicker.assert_called_once()

@@ -1,10 +1,11 @@
 """Tests for lakshmi module."""
-from lakshmi import Account, AssetClass, Portfolio
-from lakshmi.assets import ManualAsset, TickerAsset
-import lakshmi.cache
-from lakshmi.table import Table
 import unittest
 from unittest.mock import MagicMock, patch
+
+import lakshmi.cache
+from lakshmi import Account, AssetClass, Portfolio
+from lakshmi.assets import ManualAsset, TaxLot, TickerAsset
+from lakshmi.table import Table
 
 
 class LakshmiTest(unittest.TestCase):
@@ -20,9 +21,10 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual([], portfolio.asset_allocation([]).list())
         self.assertListEqual([], portfolio.asset_allocation_compact().list())
+        self.assertListEqual([], portfolio.list_lots().list())
 
     def test_one_asset_class(self):
-        asset_class = AssetClass('Equity').validate()
+        AssetClass('Equity').validate()
 
     def test_many_asset_class_duplicate(self):
         asset_class = (
@@ -279,9 +281,9 @@ class LakshmiTest(unittest.TestCase):
             [['Equity', '60%', '50%', '$60.00', '-$10.00'],
              ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.asset_allocation(['Equity', 'Fixed Income']).str_list())
-        self.assertListEqual(
-            [['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
-             ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
+        self.assertListEqual([
+            ['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
+            ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
 
     @patch('yfinance.Ticker')
@@ -377,9 +379,12 @@ class LakshmiTest(unittest.TestCase):
             .add_asset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
         self.assertListEqual(
-            [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%', '$60.00', '-$12.00'],
-             ['', '', '', 'Intl', '33%', '40%', '30%', '32%', '$30.00', '+$2.00'],
-             ['Bonds', '10%', '20%', '', '', '', '10%', '20%', '$10.00', '+$10.00']],
+            [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%',
+                '$60.00', '-$12.00'],
+             ['', '', '', 'Intl', '33%', '40%', '30%', '32%',
+                 '$30.00', '+$2.00'],
+             ['Bonds', '10%', '20%', '', '', '', '10%', '20%',
+                 '$10.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
         self.assertListEqual(
             [['All:'],
@@ -642,6 +647,29 @@ class LakshmiTest(unittest.TestCase):
             5, len(
                 asset_class.return_allocation(
                     allocation, levels=5)))
+
+    @patch('yfinance.Ticker')
+    def test_list_lots(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'regularMarketPrice': 200.0, 'longName': 'Unused'}
+        MockTicker.return_value = ticker
+
+        vti = TickerAsset('VTI', 100.0, {'All': 1.0})
+        vti.set_lots([TaxLot('2020/01/01', 50, 100.0),
+                      TaxLot('2021/01/01', 50, 300.0)])
+        vxus = TickerAsset('VXUS', 50.0, {'All': 1.0})
+        vxus.set_lots([TaxLot('2019/01/01', 50, 150.0)])
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(vti)
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0}))
+            .add_asset(vxus))
+        # Order of lots: ShortName, Date, Cost, Gain, Gain%
+        self.assertListEqual(
+            [['VTI', '2020/01/01', '$5,000.00', '+$5,000.00', '100%'],
+             ['VTI', '2021/01/01', '$15,000.00', '-$5,000.00', '-33%'],
+             ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33%']],
+            portfolio.list_lots().str_list())
 
 
 if __name__ == '__main__':
