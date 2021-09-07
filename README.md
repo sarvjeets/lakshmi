@@ -9,7 +9,7 @@ This project is inspired by
 [Bogleheads forum](http://bogleheads.org). Bogleheads focus on a simple but
 [powerful philosophy](https://www.bogleheads.org/wiki/Bogleheads%C2%AE_investment_philosophy)
 that allows investors to achieve above-average
-returns after costs. This tool is build around the same principles to help
+returns after costs. This tool is built around the same principles to help
 an _average_ investor manage their investing portfolio.
 
 Lakshmi (meaning "She who leads to one's goal") is one of the principal
@@ -126,7 +126,7 @@ Options:
 ```
 
 TickerAsset represents an asset with a ticker symbol. The value of these assets
-is pulled and updated automatically. To add a TickerAsset:
+is updated automatically. To add a TickerAsset:
 
 ```
 lak add asset -p TickerAsset -t account_str
