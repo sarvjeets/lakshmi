@@ -144,7 +144,51 @@ For more detailed information about the tool, please see
 
 ## Library
 
-(TODO: Add details about the lakshmi module)
+The `lakshmi` library can also be used directly. The modules and classes
+are well documented and there are numerous examples for using each method
+or class in the [tests](./tests) accompanying this package. For example,
+the [example portfolio](./docs/portfolio.yaml) can be constructed and the
+asset allocation, etc. can be printed by the following piece of code:
+
+```python
+from lakshmi import Account, AssetClass, Portfolio
+from lakshmi.assets import TaxLot, TickerAsset
+from lakshmi.table import Table
+
+
+def main():
+    asset_class = (
+        AssetClass('All')
+        .add_subclass(0.6, AssetClass('Equity')
+                      .add_subclass(0.6, AssetClass('US'))
+                      .add_subclass(0.4, AssetClass('Intl')))
+        .add_subclass(0.4, AssetClass('Bonds')))
+    portfolio = Portfolio(asset_class)
+
+    (portfolio
+     .add_account(Account('Schwab Taxable', 'Taxable')
+                  .add_asset(TickerAsset('VTI', 1, {'US': 1.0})
+                             .set_lots([TaxLot('2021/07/31', 1, 226)]))
+                  .add_asset(TickerAsset('VXUS', 1, {'Intl': 1.0})
+                             .set_lots([TaxLot('2021/07/31', 1, 64.94)])))
+     .add_account(Account('Roth IRA', 'Tax-Exempt')
+                  .add_asset(TickerAsset('VXUS', 1, {'Intl': 1.0})))
+     .add_account(Account('Vanguard 401(k)', 'Tax-Deferred')
+                  .add_asset(TickerAsset('VBMFX', 20, {'Bonds': 1.0}))))
+
+    # Save the portfolio
+    # portfolio.Save('portfolio.yaml')
+    print('\n' + portfolio.asset_allocation_compact().string() + '\n')
+    print(Table(2, coltypes=['str', 'dollars'])
+          .add_row(['Total Assets', portfolio.total_value()]).string())
+    print('\n' + portfolio.asset_allocation(['US', 'Intl', 'Bonds']).string())
+    print('\n' + portfolio.assets().string() + '\n')
+    print(portfolio.asset_location().string())
+
+
+if __name__ == "__main__":
+    main()
+```
 
 ## Contributing
 I'm looking for contributors for this project. If you are interested,
