@@ -10,7 +10,7 @@ colorama==0.4.4
 cryptography==3.4.8
 distlib==0.3.2
 docutils==0.17.1
-filelock==3.0.12
+filelock==3.3.1
 identify==2.3.0
 idna==3.2
 importlib-metadata==4.8.1
