@@ -11,7 +11,7 @@ cryptography==3.4.8
 distlib==0.3.2
 docutils==0.17.1
 filelock==3.0.12
-identify==2.2.14
+identify==2.3.0
 idna==3.2
 importlib-metadata==4.8.1
 jeepney==0.7.1
