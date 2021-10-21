@@ -41,7 +41,7 @@ tabulate==0.8.9
 toml==0.10.2
 tqdm==4.62.3
 twine==3.4.2
-urllib3==1.26.6
+urllib3==1.26.7
 virtualenv==20.8.1
 webencodings==0.5.1
 yfinance==0.1.64
