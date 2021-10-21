@@ -31,7 +31,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'click~=8.0',
-        'PyYAML~=5.4',
+        'PyYAML>=5.4,<7.0',
         'requests~=2.25',
         'tabulate~=0.8',
         'yfinance~=0.1',
