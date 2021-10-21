@@ -45,4 +45,4 @@ urllib3==1.26.6
 virtualenv==20.8.1
 webencodings==0.5.1
 yfinance==0.1.64
-zipp==3.5.0
+zipp==3.6.0
