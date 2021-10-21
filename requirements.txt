@@ -1,7 +1,7 @@
 backports.entry-points-selectable==1.1.0
 bleach==4.1.0
 certifi==2021.10.8
-cffi==1.14.6
+cffi==1.15.0
 cfgv==3.3.1
 chardet==4.0.0
 charset-normalizer==2.0.7
