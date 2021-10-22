@@ -1,8 +1,7 @@
 # Lakshmi
 
 ![Screenshot of lak in action](./docs/lak.png)
-(Screenshot of the `lak` command. See the
-[section below](#command-line-interface) for more details)
+(Screenshot of the `lak` command in action)
 
 ## Background
 This project is inspired by
@@ -144,11 +143,12 @@ For more detailed information about the tool, please see
 
 ## Library
 
-The `lakshmi` library can also be used directly. The modules and classes
-are well documented and there are numerous examples for using each method
-or class in the [tests](./tests) accompanying this package. For example,
-the [example portfolio](./docs/portfolio.yaml) can be constructed and the
-asset allocation, etc. can be printed by the following piece of code:
+The `lakshmi` library can also be used directly. The modules and classes are
+well documented and there are numerous examples for using each method or class
+in the [tests](https://github.com/sarvjeets/lakshmi/tree/develop/tests)
+accompanying this package. For example, the
+[example portfolio](./docs/portfolio.yaml) can be constructed and the asset
+allocation, etc. can be printed by the following piece of code:
 
 ```python
 from lakshmi import Account, AssetClass, Portfolio
