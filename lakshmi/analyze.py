@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from lakshmi.table import Table
 
 
+# TODO(sarvjeets): This is not needed/used anywhere. Consider removing it.
 class Analyzer(ABC):
     @abstractmethod
     def analyze(self, portfolio):
@@ -25,6 +26,14 @@ class TLH(Analyzer):
     def __init__(self, max_percentage, max_dollars=None):
         """Triggers if a lot has lost more than max_percentage or the total loss
         for a given asset exceeds max_dollars.
+
+        Args:
+            max_percentage: A float representing the max percentage loss after
+            which a lot can be harvested.
+            max_dollars: A float representing the max amount of loss (in
+            dollars) for one or more lots (of the same security), beyond which
+            we should recommend selling all the lots that are below their
+            cost basis.
         """
         assert max_percentage > 0.0 and max_percentage < 1.0, (
             'max_percetage should be between 0% and 100% (exclusive).')
@@ -34,6 +43,16 @@ class TLH(Analyzer):
         self.max_dollars = max_dollars
 
     def _return_lots_to_sell(self, price, tax_lots):
+        """Helper function that returns which lots to harvest.
+
+        Args:
+            price: The current price of the security.
+            tax_lots: A list of lakshmi.assets.TaxLot (all belonging
+            to the same security).
+
+        Returns: A list of [lot date, loss in dollar, loss in percent]
+        that could be loss harvested.
+        """
         percent_lots = []
         negative_lots = []
         total_loss = 0.0
@@ -53,6 +72,14 @@ class TLH(Analyzer):
             return percent_lots
 
     def analyze(self, portfolio):
+        """Returns which lots can be tax loss harvested from a portfolio.
+
+        Args:
+            portfolio: A lakshmi.Portfolio object representing a portfolio.
+
+        Returns: A lakshmi.table.Table object with tax lots to harvest with
+        columns corespnding to 'Account', 'Asset', 'Date', 'Loss' and 'Loss%'.
+        """
         ret_val = Table(
             5,
             headers=['Account', 'Asset', 'Date', 'Loss', 'Loss%'],
@@ -69,18 +96,47 @@ class TLH(Analyzer):
 
 class BandRebalance(Analyzer):
     """Triggers if portfolio asset class targets are outside the bands
-    specified. This considers an asset class outside bound if the
-    absolute difference in percentage allocation is more than max_abs_percent
-    different from target allocation or more than max_relative_percent
-    different from the target allocation."""
+    specified. This considers an asset class outside bound if the absolute
+    difference in percentage allocation is more than max_abs_percent different
+    from target allocation or more than max_relative_percent different from the
+    target allocation.
+
+    A popular version is the 5/25 band based rebalancing rule. For more
+    information, please see 5/25 on:
+    https://www.bogleheads.org/wiki/Rebalancing
+    """
 
     def __init__(self, max_abs_percent=0.05, max_relative_percent=0.25):
+        """Constructor to set the bands. An asset class is considered outside
+        the rebalance bands if the differnt between the desired and actual
+        ratio of that asset class exceeds the lessor of max absolute or max
+        relative percentage.
+
+        Args:
+            max_abs_percent: A float (ratio) representing the maximum absolute
+            percent that an asset can deviate before it's considered outside
+            the rebalancing band.
+            max_relative_percent: A float (ratio) representing the maximum
+            relative percent that an asset can deviate before it's considered
+            outside the rebalancing band.
+        """
         assert max_abs_percent > 0 and max_abs_percent < 1.0
         assert max_relative_percent > 0 and max_relative_percent < 1.0
         self.max_abs_percent = max_abs_percent
         self.max_relative_percent = max_relative_percent
 
     def analyze(self, portfolio):
+        """Returns asset classes that are outside the rebalancing bands.
+
+        Args:
+            portfolio: A lakshmi.Portfolio object representing the portfolio
+            that is being analyzed.
+
+        Returns: A lakshmi.table.Table object with columns representing
+        Asset Class, Actual % of asset class in portfolio, Desired % of asset
+        class in the portfolio, Value in dollars of the asset class and the
+        difference between Desired and actual dollar values.
+        """
         aa = portfolio.asset_allocation(portfolio.asset_classes.leaves())
         headers = ['Class', 'Actual%', 'Desired%', 'Value', 'Difference']
         assert headers == aa.headers()
