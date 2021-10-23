@@ -33,6 +33,7 @@ repos:
   - id: unittest
     name: unittest
     entry: python -m unittest discover
-    language: system
+    language: python
+    additional_dependencies: [click, PyYAML, requests, tabulate, yfinance]
     types: [python]
     pass_filenames: false
