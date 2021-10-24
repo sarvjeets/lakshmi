@@ -84,7 +84,7 @@ class AssetsTest(unittest.TestCase):
     def test_missing_longname(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'shortName': 'Bitcoin USD',
-                       'name' : 'Bitcoin',
+                       'name': 'Bitcoin',
                        'regularMarketPrice': 1.0}
         MockTicker.return_value = ticker
 
@@ -96,7 +96,7 @@ class AssetsTest(unittest.TestCase):
     @patch('yfinance.Ticker')
     def test_missing_longname_shortname(self, MockTicker):
         ticker = MagicMock()
-        ticker.info = {'name' : 'Bitcoin',
+        ticker.info = {'name': 'Bitcoin',
                        'regularMarketPrice': 1.0}
         MockTicker.return_value = ticker
 
