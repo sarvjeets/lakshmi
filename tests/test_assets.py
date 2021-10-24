@@ -80,6 +80,31 @@ class AssetsTest(unittest.TestCase):
 
         MockTicker.assert_called_once()
 
+    @patch('yfinance.Ticker')
+    def test_missing_longname(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'shortName': 'Bitcoin USD',
+                       'name' : 'Bitcoin',
+                       'regularMarketPrice': 1.0}
+        MockTicker.return_value = ticker
+
+        btc = assets.TickerAsset('BTC-USD', 1.0, {'All': 1.0})
+        self.assertEqual('Bitcoin USD', btc.name())
+
+        MockTicker.assert_called_once()
+
+    @patch('yfinance.Ticker')
+    def test_missing_longname_shortname(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'name' : 'Bitcoin',
+                       'regularMarketPrice': 1.0}
+        MockTicker.return_value = ticker
+
+        btc = assets.TickerAsset('BTC-USD', 1.0, {'All': 1.0})
+        self.assertEqual('Bitcoin', btc.name())
+
+        MockTicker.assert_called_once()
+
     def test_tax_lots_ticker(self):
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
         lots = [assets.TaxLot('2012/12/12', 50, 1.0),
