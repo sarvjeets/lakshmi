@@ -1,5 +1,7 @@
 # Lakshmi
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sarvjeets/lakshmi/develop.svg)](https://results.pre-commit.ci/latest/github/sarvjeets/lakshmi/develop)
+
 ![Screenshot of lak in action](./docs/lak.png)
 (Screenshot of the `lak` command in action)
 
