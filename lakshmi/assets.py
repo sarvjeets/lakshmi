@@ -485,11 +485,15 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: NonFoundError if the ticker is not found.
         """
-        if self.yticker.info.get('longName') is None:
+        asset_name = self.yticker.info.get('longName') or \
+            self.yticker.info.get('shortName') or \
+            self.yticker.info.get('name')
+
+        if asset_name is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self._ticker}") '
                 'from Yahoo Finance')
-        return self.yticker.info['longName']
+        return asset_name
 
     def short_name(self):
         """Returns the short name (ticker) of this object."""
