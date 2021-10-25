@@ -117,6 +117,26 @@ Setting the cache to an empty value disables caching (not recommended):
 cache:
 ```
 
+By default `lak` assumes that the config file is located at `~/.lakrc`, but
+this location can be overriden by a flag or an environment variable. For
+example:
+
+```
+# Use lakrc from a different location
+$ lak -c ~/.config/lak/.lakrc ...
+# The same using environment variable.
+$ LAK_CONFIG=~/.config/lak/.lakrc lak ...
+```
+
+The config file can also be specified via the `LAK_CONFIG` environment
+variable, which can be used instead of repeatedly specifying the config file
+via the option. For example, add this to your shell's initialization config
+(`.bashrc` or `.zshrc`) to always use an alternate location for your `lakrc`:
+
+```
+export LAK_CONFIG=~/.config/lak/.lakrc
+```
+
 ## Portfolio file syntax
 `lak` provides [add](#lak-add) and [edit](#lak-edit) commands to modify
 different parts of the portfolio, and these commands present the
