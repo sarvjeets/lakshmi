@@ -60,7 +60,7 @@ class LakTest(unittest.TestCase):
         mock_return_config.return_value = {}
         mock_exists.return_value = True
 
-        lakctx = lak.LakContext()
+        lakctx = lak.LakContext('unused')
         self.assertFalse(lakctx.continued)
         self.assertIsNone(lakctx.whatifs)
         self.assertIsNone(lakctx.portfolio)
@@ -80,7 +80,7 @@ class LakTest(unittest.TestCase):
 
         # This shouldn't raise an exception until the portfolio
         # is actually loaded.
-        lakctx = lak.LakContext()
+        lakctx = lak.LakContext('unused')
 
         with self.assertRaisesRegex(
                 click.ClickException,
