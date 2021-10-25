@@ -1,18 +1,20 @@
+default_language_version:
+  python: python3.9
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
-    hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
 
 # isort
 - repo: https://github.com/asottile/seed-isort-config
-  rev: v1.9.3
+  rev: v2.2.0
   hooks:
   - id: seed-isort-config
 - repo: https://github.com/pre-commit/mirrors-isort
-  rev: v4.3.21
+  rev: v5.9.3
   hooks:
   - id: isort
 
@@ -33,6 +35,7 @@ repos:
   - id: unittest
     name: unittest
     entry: python -m unittest discover
-    language: system
+    language: python
+    additional_dependencies: [click, PyYAML, requests, tabulate, yfinance]
     types: [python]
     pass_filenames: false
