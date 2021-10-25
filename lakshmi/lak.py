@@ -64,8 +64,7 @@ class LakContext:
                 lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
 
         if len(config):
-            raise click.ClickException('Extra entries found in config file: '
-                                       f'{list(config.keys())}')
+            raise click.ClickException('Extra entries found in config file')
 
     def optional_separator(self):
         """Prints a newline between multiple commands. Used to add a newline
