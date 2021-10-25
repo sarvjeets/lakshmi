@@ -531,10 +531,12 @@ Usage: lak [OPTIONS] COMMAND [ARGS]...
   https://sarvjeets.github.io/lakshmi/docs/lak.html
 
 Options:
-  --version      Show the version and exit.
-  -r, --refresh  Re-fetch all data instead of using previously cached data.
-                 For large portfolios, this would be extremely slow.
-  --help         Show this message and exit.
+  --version          Show the version and exit.
+  -r, --refresh      Re-fetch all data instead of using previously cached
+                     data. For large portfolios, this would be extremely slow.
+  -c, --config PATH  The configuration file.  [env var: LAK_CONFIG; default:
+                     ~/.lakrc]
+  --help             Show this message and exit.
 
 Commands:
   add      Add new accounts or assets to the portfolio.
