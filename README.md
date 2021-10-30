@@ -36,11 +36,10 @@ have associated ticker symbols),
 and
 [I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
 - Automatic fetching of market value of various types of assets.
-- Listing current values of assets, printing detailed information,
-printing asset allocation, asset location, etc.
+- Listing current values of assets, asset allocation and asset location.
 - Tracking of tax-lot information for assets.
-- Support for running what-if scenarios to see how it impacts the asset
-allocation, etc.
+- Support for running what-if scenarios to see how it impacts the overall asset
+allocation.
 - Analysis of portfolio to identify if there is need to rebalance or
 if there are losses that can be
 [harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
