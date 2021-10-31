@@ -19,6 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/sarvjeets/lakshmi',
+    license="MIT",
     platforms='any',
     classifiers=[
         'Development Status :: 4 - Beta',
