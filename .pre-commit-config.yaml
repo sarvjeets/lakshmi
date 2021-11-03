@@ -19,8 +19,8 @@ repos:
   - id: isort
 
 # flake8
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.3.0
+- repo: https://github.com/pycqa/flake8
+  rev: 4.0.1
   hooks:
     - id: flake8
       args: # arguments to configure flake8
