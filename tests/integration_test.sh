@@ -30,7 +30,7 @@ if [ "$#" -eq 1 ]; then
 elif [ "$#" -eq 0 ]; then
     CACHE='~/.lakshmicache'
 else
-    echo Usage: $0 '<path_to_lak>'; exit 2
+    echo Usage: $0 '<path_for_cache_dir>'; exit 2
 fi
 
 cleanup () {
@@ -53,7 +53,7 @@ export LAK_CONFIG=$TMP_DIR/lakrc
 # believing that the user editted the file.
 export EDITOR=touch
 
-echo "Testing binary: `which lak`"
+echo "Testing binary: `command -v lak`"
 testcmd "lak init"
 testcmd "lak add account"
 testcmd "lak add asset -t account -p ManualAsset"
