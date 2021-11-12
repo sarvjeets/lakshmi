@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New option in `lak` + env var to specify `.lakrc` file.
 - Changelog
+- Contributing guidelines and development instructions for Lakshmi.
 ### Changed
 - Dependabot is disbled for this project.
 - Optimized away unnecessary calls when force refreshing the cached values (`lak -r` flag).

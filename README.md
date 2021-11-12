@@ -193,9 +193,40 @@ if __name__ == "__main__":
     main()
 ```
 
-## Contributing
-I'm looking for contributors for this project. If you are interested,
-please contact me over email.
+## Development
+Here are the steps to download the source code and start developing on
+Lakshmi:
+
+```shell
+$ git clone https://github.com/sarvjeets/lakshmi.git
+$ cd lakshmi
+
+# All development is done on the 'develop' branch
+$ git checkout develop
+
+# Setting up a virtual environment is strongly recommended. Install virtualenv
+# by one of the following:
+# pip install virtualenv --user  # If you have pip installed
+# sudo apt-get install python-virtualenv # Ubuntu
+# sudo pacman -S python-virtualenv  # Arch linux
+$ virtualenv venv
+# Activate the virtual environment
+$ source venv/bin/activate
+
+# Install all the dependencies
+$ pip install -r requirements.txt
+
+# Run unittests
+$ python -m unittests
+
+# Install pre-commit hooks to run it automatically on commits
+$ pre-commit install
+# Run pre-commit manually
+$ pre-commit run --all-files
+
+# Create your own bug or feature branch and start developing. Remember to
+# run tests (and add them when necessary) and pre-commit hooks on changes.
+```
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
