@@ -198,7 +198,8 @@ Here are the steps to download the source code and start developing on
 Lakshmi:
 
 ```shell
-$ git clone https://github.com/sarvjeets/lakshmi.git
+# Fork and clone this rep.
+$ git clone https://github.com/yourusername/lakshmi.git
 $ cd lakshmi
 
 # All development is done on the 'develop' branch
