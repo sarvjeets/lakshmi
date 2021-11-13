@@ -27,8 +27,9 @@ resource for introduction to basic investing concepts like asset-allocation,
 asset-location, etc.
 
 The following features are currently available:
+
 - Specify and track asset allocation across accounts.
-- Ability to add/edit/delete accounts and assets (funds, stocks, etc.)
+- Ability to add/edit/delete accounts and assets (funds, stocks, ETFs, etc.)
 inside those accounts.
 - Supports manual assets, assets with ticker, Vanguard funds (that don't
 have associated ticker symbols),
@@ -55,7 +56,7 @@ pip install lakshmi
 
 ## Command-line interface
 
-(For detailed help, please see [lak user guide](./docs/lak.md))
+For detailed help on the CLI, please see [lak user guide](./docs/lak.md).
 
 The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:
@@ -88,13 +89,13 @@ Commands:
 ```
 
 A new portfolio can be created by either:
+
 1. Copying an [existing](./docs/portfolio.yaml)
-portfolio file to ~/portfolio.yaml and editing it.
+portfolio file to ~/portfolio.yaml and editing it, OR
+2. Using the `lak` commands to create a new portfolio.
 
--- OR --
-
-2. Using the `lak` commands to create a new portfolio. The following command will
-open up an editor to input the desired asset allocation:
+The following command will open up an editor to input the desired asset
+allocation:
 
 ```
 $ lak init
@@ -141,17 +142,14 @@ That's it. To view all the assets, asset allocation and asset location, run:
 lak list assets total aa al
 ```
 
-For more detailed information about the tool, please see
-[lak user guide](./docs/lak.md).
-
 ## Library
 
 The `lakshmi` library can also be used directly. The modules and classes are
 well documented and there are numerous examples for using each method or class
 in the [tests](https://github.com/sarvjeets/lakshmi/tree/develop/tests)
-accompanying this package. For example, the
+accompanying this package. The
 [example portfolio](./docs/portfolio.yaml) can be constructed and the asset
-allocation, etc. can be printed by the following piece of code:
+allocation, etc. can be printed by the following piece of python code:
 
 ```python
 from lakshmi import Account, AssetClass, Portfolio
@@ -198,7 +196,7 @@ Here are the steps to download the source code and start developing on
 Lakshmi:
 
 ```shell
-# Fork and clone this rep.
+# Fork and clone this repo.
 $ git clone https://github.com/yourusername/lakshmi.git
 $ cd lakshmi
 

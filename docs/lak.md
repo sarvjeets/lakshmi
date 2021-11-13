@@ -46,8 +46,9 @@ investing concepts.
 This tool is built for US investors and prints portfolio values in dollars.
 
 The following features are currently available:
+
 - Specify and track asset allocation across accounts.
-- Ability to add/edit/delete accounts and assets (e.g. funds, stocks)
+- Ability to add/edit/delete accounts and assets (e.g. funds, stocks, ETFs)
 inside those accounts.
 - Supports manual assets, assets with ticker, Vanguard funds (that don't
 have associated ticker symbols),
@@ -92,7 +93,7 @@ or you can force `lak` to temporarily refresh cached values by specifying `-r`
 or `--refresh` flag to `lak` command:
 
 ```
-# Reload all cached information.
+# Reload cached information such as prices etc.
 $ lak -r ...
 $ lak --refresh ...
 ```
@@ -518,8 +519,8 @@ Roth IRA         Vanguard Total International Stock Index Fund ETF Shares   $65.
 Vanguard 401(k)  Vanguard Total Bond Market Index Fund Investor Shares     $227.60
 ```
 
-The steps above should create an output like this (except the Value column
-which depends on the market value of the ETFs added).
+The steps above should create an output similar to this (except the Value
+column which depends on the market value of the ETFs added).
 
 ## Help and usage
 
@@ -575,7 +576,7 @@ If your portfolio is large, this will be really slow.
 
 A potential use case would be for fetching the current value of a
 TickerAsset (the prices are cached for a day).
-In the typical boglehead-style, it is **strongly recommended** to not
+In line with boglehead philosophy, it is **strongly recommended** to not
 check your portfolio multiple times a day. The decision to cache price
 information for a day was partly motivated to reduce the urge to check
 your portfolio multiple times a day to see "_how it is doing_".
