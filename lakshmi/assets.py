@@ -261,12 +261,7 @@ class TaxLot:
 
         Raises: AssertionError if date is not in the right format.
         """
-        # Do some sanity check.
-        date_pattern = re.compile('\\d{4}/\\d{2}/\\d{2}')
-        assert date_pattern.match(
-            date), 'Tax lot dates should be in format YYYY/MM/DD'
-
-        self.date = date
+        self.date = utils.validate_date(date)
         self.quantity = quantity
         self.unit_cost = unit_cost
 
