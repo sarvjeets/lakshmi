@@ -4,7 +4,10 @@ and computing portfolio's performance."""
 from bisect import bisect
 from datetime import datetime
 
+import yaml
+
 from lakshmi import utils
+from lakshmi.table import Table
 
 
 class Checkpoint:
@@ -31,6 +34,32 @@ class Checkpoint:
         self._portfolio_value = portfolio_value
         self._inflow = inflow
         self._outflow = outflow
+
+    def to_dict(self, show_empty_cashflow=False):
+        """Converts this object to a dictionary.
+
+        Args:
+            show_empty_cashflow: If set to True, inflows and outflows are
+            shown even if they are empty.
+        """
+        d = {}
+        d['Date'] = self._date
+        d['Portfolio Value'] = self._portfolio_value
+        if show_empty_cashflow or self._inflow > 0:
+            d['Inflow'] = self._inflow
+        if show_empty_cashflow or self._outflow > 0:
+            d['Outflow'] = self._outflow
+        return d
+
+    @classmethod
+    def from_dict(cls, d):
+        """Returns a new object given dictionary representation d."""
+        keys = set(d.keys())
+        keys.difference_update(
+            {'Date', 'Portfolio Value', 'Inflow', 'Outflow'})
+        assert len(keys) == 0, f'Extra attributes found while parsing: {keys}'
+        return Checkpoint(d.get('Date'), d.get('Portfolio Value'),
+                          d.get('Inflow', 0), d.get('Outflow', 0))
 
     def get_date(self):
         """Returns date of this checkpoint in 'YYYY/MM/DD' format."""
@@ -65,6 +94,45 @@ class Timeline:
             self._dates.append(cp_date)
             self._checkpoints[cp_date] = cp
         self._dates.sort()
+
+    def to_list(self):
+        """Returns this object as a list of checkpoints."""
+        return [self._checkpoints[date].to_dict() for date in self._dates]
+
+    @classmethod
+    def from_list(cls, timeline_list):
+        """Returns a new object given a list (reverse of method above)."""
+        return Timeline([Checkpoint.from_dict(cp) for cp in timeline_list])
+
+    def save(self, filename):
+        """Save this Timeline to a file."""
+        with open(filename, 'w') as f:
+            yaml.dump(self.to_list(), f)
+
+    @classmethod
+    def load(cls, filename):
+        """Load Timeline from a file."""
+        with open(filename) as f:
+            return Timeline.from_list(
+                yaml.load(f.read(), Loader=yaml.SafeLoader))
+
+    def to_table(self):
+        """Convert this timeline to a Table.
+
+        This function is useful for pretty-printing this object.
+
+        Returns: A lakshmi.table.Table object.
+        """
+        table = Table(4,
+                      headers=['Date', 'Portfolio Value', 'Inflow', 'Outflow'],
+                      coltypes=['str', 'dollars', 'dollars', 'dollars'])
+        for date in self._dates:
+            cp = self._checkpoints[date]
+            table.add_row([cp.get_date(),
+                           cp.get_portfolio_value(),
+                           cp.get_inflow(),
+                           cp.get_outflow()])
+        return table
 
     def has_checkpoint(self, date):
         """Retuns true iff there is a checkpoint for date."""
