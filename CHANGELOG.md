@@ -5,15 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [v2.2.0] - 2021-11-26
 ### Added
-- New option in `lak` + env var to specify `.lakrc` file.
-- Changelog
+- [New flag](https://github.com/sarvjeets/lakshmi/blob/develop/docs/lak.md#lakrc)
+in `lak` + environment variable support for specifying the `.lakrc` file.
+- Changelog (this file).
 - Contributing guidelines and development instructions for Lakshmi.
 ### Changed
 - Dependabot is disbled for this project.
-- Optimized away unnecessary calls when force refreshing the cached values (`lak -r` flag).
+- Optimized away unnecessary calls when force refreshing the cached values
+(`lak -r` flag).
 ### Fixed
-- Incorrect error handling when `lakrc` file couldn't be parsed.
+- Incorrect error handling when `.lakrc` file couldn't be parsed.
 
 ## [v2.1.2] - 2021-10-24
 ### Added
