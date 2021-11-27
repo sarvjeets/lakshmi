@@ -22,17 +22,21 @@ class LakContext:
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
 
-    def _return_config(self):
-        """Internal function to read and return .lakrc file."""
-        lakrcfile = Path(self.lakrc).expanduser()
+    def _return_config(self, lakrc):
+        """Internal function to read and return config file."""
+        lakrcfile = Path(lakrc).expanduser()
 
-        if not lakrcfile.exists():
+        # If default file doesn't exist, assume no config.
+        if not lakrcfile.exists() and lakrc == '~/.lakrc':
             return {}
+
+        # Explicitly specified file should exist.
+        assert lakrcfile.exists(), f'Config file not found: {lakrc}'
+
         config = yaml.load(lakrcfile.read_text(), Loader=yaml.SafeLoader)
         return config
 
-    def __init__(self, lakrc='~/.lakrc'):
-        self.lakrc = lakrc
+    def __init__(self, lakrc):
         # Used in self.optional_separator()
         self.continued = False
         # Used in self.warn_for_what_ifs()
@@ -44,7 +48,7 @@ class LakContext:
         self.portfolio = None
         self.tablefmt = None
 
-        config = self._return_config()
+        config = self._return_config(lakrc)
 
         portfolio_filename = config.pop(
             'portfolio', LakContext.DEFAULT_PORTFOLIO)
@@ -60,8 +64,7 @@ class LakContext:
                 lakshmi.cache.set_cache_dir(Path(cache_dir).expanduser())
 
         if len(config):
-            raise click.ClickException('Extra entries found in config file: '
-                                       f'{list(config.keys())}')
+            raise click.ClickException('Extra entries found in config file')
 
     def optional_separator(self):
         """Prints a newline between multiple commands. Used to add a newline
@@ -163,7 +166,11 @@ class Spinner:
 @click.option('--refresh', '-r', is_flag=True,
               help='Re-fetch all data instead of using previously cached '
               'data. For large portfolios, this would be extremely slow.')
-def lak(refresh):
+@click.option('--config', '-c', type=click.Path(file_okay=True),
+              default='~/.lakrc', show_default=True,
+              envvar='LAK_CONFIG', show_envvar=True,
+              help='The configuration file.')
+def lak(refresh, config):
     """lak is a simple command line tool inspired by Bogleheads philosophy.
     Detailed user guide is available at:
     https://sarvjeets.github.io/lakshmi/docs/lak.html"""
@@ -171,7 +178,7 @@ def lak(refresh):
     global lakctx
     if not lakctx:
         # Setup a new context object for child commands.
-        lakctx = LakContext()
+        lakctx = LakContext(config)
 
 
 @lak.group(chain=True)

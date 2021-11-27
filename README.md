@@ -27,8 +27,9 @@ resource for introduction to basic investing concepts like asset-allocation,
 asset-location, etc.
 
 The following features are currently available:
+
 - Specify and track asset allocation across accounts.
-- Ability to add/edit/delete accounts and assets (funds, stocks, etc.)
+- Ability to add/edit/delete accounts and assets (funds, stocks, ETFs, etc.)
 inside those accounts.
 - Supports manual assets, assets with ticker, Vanguard funds (that don't
 have associated ticker symbols),
@@ -36,11 +37,10 @@ have associated ticker symbols),
 and
 [I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
 - Automatic fetching of market value of various types of assets.
-- Listing current values of assets, printing detailed information,
-printing asset allocation, asset location, etc.
+- Listing current values of assets, asset allocation and asset location.
 - Tracking of tax-lot information for assets.
-- Support for running what-if scenarios to see how it impacts the asset
-allocation, etc.
+- Support for running what-if scenarios to see how it impacts the overall asset
+allocation.
 - Analysis of portfolio to identify if there is need to rebalance or
 if there are losses that can be
 [harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
@@ -56,7 +56,7 @@ pip install lakshmi
 
 ## Command-line interface
 
-(For detailed help, please see [lak user guide](./docs/lak.md))
+For detailed help on the CLI, please see [lak user guide](./docs/lak.md).
 
 The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:
@@ -70,10 +70,12 @@ Usage: lak [OPTIONS] COMMAND [ARGS]...
   https://sarvjeets.github.io/lakshmi/docs/lak.html
 
 Options:
-  --version      Show the version and exit.
-  -r, --refresh  Re-fetch all data instead of using previously cached data.
-                 For large portfolios, this would be extremely slow.
-  --help         Show this message and exit.
+  --version          Show the version and exit.
+  -r, --refresh      Re-fetch all data instead of using previously cached
+                     data. For large portfolios, this would be extremely slow.
+  -c, --config PATH  The configuration file.  [env var: LAK_CONFIG; default:
+                     ~/.lakrc]
+  --help             Show this message and exit.
 
 Commands:
   add      Add new accounts or assets to the portfolio.
@@ -87,13 +89,13 @@ Commands:
 ```
 
 A new portfolio can be created by either:
+
 1. Copying an [existing](./docs/portfolio.yaml)
-portfolio file to ~/portfolio.yaml and editing it.
+portfolio file to ~/portfolio.yaml and editing it, OR
+2. Using the `lak` commands to create a new portfolio.
 
--- OR --
-
-2. Using the `lak` commands to create a new portfolio. The following command will
-open up an editor to input the desired asset allocation:
+The following command will open up an editor to input the desired asset
+allocation:
 
 ```
 $ lak init
@@ -140,17 +142,14 @@ That's it. To view all the assets, asset allocation and asset location, run:
 lak list assets total aa al
 ```
 
-For more detailed information about the tool, please see
-[lak user guide](./docs/lak.md).
-
 ## Library
 
 The `lakshmi` library can also be used directly. The modules and classes are
 well documented and there are numerous examples for using each method or class
 in the [tests](https://github.com/sarvjeets/lakshmi/tree/develop/tests)
-accompanying this package. For example, the
+accompanying this package. The
 [example portfolio](./docs/portfolio.yaml) can be constructed and the asset
-allocation, etc. can be printed by the following piece of code:
+allocation, etc. can be printed by the following piece of python code:
 
 ```python
 from lakshmi import Account, AssetClass, Portfolio
@@ -192,9 +191,41 @@ if __name__ == "__main__":
     main()
 ```
 
-## Contributing
-I'm looking for contributors for this project. If you are interested,
-please contact me over email.
+## Development
+Here are the steps to download the source code and start developing on
+Lakshmi:
+
+```shell
+# Fork and clone this repo.
+$ git clone https://github.com/yourusername/lakshmi.git
+$ cd lakshmi
+
+# All development is done on the 'develop' branch
+$ git checkout develop
+
+# Setting up a virtual environment is strongly recommended. Install virtualenv
+# by one of the following:
+# pip install virtualenv --user  # If you have pip installed
+# sudo apt-get install python-virtualenv # Ubuntu
+# sudo pacman -S python-virtualenv  # Arch linux
+$ virtualenv venv
+# Activate the virtual environment
+$ source venv/bin/activate
+
+# Install all the dependencies
+$ pip install -r requirements.txt
+
+# Run unittests
+$ python -m unittests
+
+# Install pre-commit hooks to run it automatically on commits
+$ pre-commit install
+# Run pre-commit manually
+$ pre-commit run --all-files
+
+# Create your own bug or feature branch and start developing. Remember to
+# run tests (and add them when necessary) and pre-commit hooks on changes.
+```
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.

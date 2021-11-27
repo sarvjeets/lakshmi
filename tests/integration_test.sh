@@ -6,8 +6,6 @@
 # What it does check is if commands are executing without errors. For example,
 # it can catch issues with packaging files incorrectly.
 
-export EDITOR=touch
-
 # Tests if command works
 testcmd () {
     GREEN='\033[0;32m'
@@ -24,14 +22,7 @@ testcmd () {
 }
 
 # Constants
-BIN='lak'
 TMP_DIR='/tmp/lakshmi_integration_test'
-
-cleanup () {
-    test -f $TMP_DIR/lakrc && mv $TMP_DIR/lakrc ~/.lakrc
-    test -d $TMP_DIR && rm -r $TMP_DIR
-}
-trap cleanup EXIT
 
 # Setup from arguments
 if [ "$#" -eq 1 ]; then
@@ -39,22 +30,30 @@ if [ "$#" -eq 1 ]; then
 elif [ "$#" -eq 0 ]; then
     CACHE='~/.lakshmicache'
 else
-    echo Usage: $0 '<path_to_lak>'; exit 2
+    echo Usage: $0 '<path_for_cache_dir>'; exit 2
 fi
 
-# Make temp directory and backup lakrc
+cleanup () {
+    test -d $TMP_DIR && rm -r $TMP_DIR
+}
+trap cleanup EXIT
+
+# Make temp directory
 mkdir -p $TMP_DIR
-if [ -s ~/.lakrc ]; then
-    cp ~/.lakrc $TMP_DIR/lakrc
-fi
 
 # Create new lakrc for testing
-cat << HERE > ~/.lakrc
+cat << HERE > $TMP_DIR/lakrc
 portfolio: $TMP_DIR/portfolio.yaml
 cache: $CACHE
 HERE
 
-echo "Testing binary: `which lak`"
+export LAK_CONFIG=$TMP_DIR/lakrc
+
+# Default values for files is OK, just touch the file to fool lak into
+# believing that the user editted the file.
+export EDITOR=touch
+
+echo "Testing binary: `command -v lak`"
 testcmd "lak init"
 testcmd "lak add account"
 testcmd "lak add asset -t account -p ManualAsset"

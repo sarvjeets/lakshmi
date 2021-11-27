@@ -19,6 +19,10 @@ class Cached(cache.Cacheable):
     def get_value(self):
         return self.value
 
+    @cache.cache(365)
+    def get_long_cached_value(self):
+        return self.value
+
 
 class CacheTest(unittest.TestCase):
     def setUp(self):
@@ -176,6 +180,55 @@ class CacheTest(unittest.TestCase):
         exists.assert_not_called()
         write_bytes.assert_called_once_with(pickle.dumps(2))
         read_bytes.assert_not_called()
+
+    @patch('pathlib.Path.read_bytes')
+    @patch('pathlib.Path.write_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.get_file_age')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_force_refresh_with_long_cached_value(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
+        cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
+        cache.set_force_refresh(True)
+        exists.return_value = True
+        get_file_age.return_value = 5
+        read_bytes.return_value = pickle.dumps(1)  # Cache 1.
+
+        c = Cached('key2', 2)
+        self.assertEqual(1, c.get_long_cached_value())  # Cached value.
+
+        set_cache_dir.assert_not_called()
+        get_file_age.assert_called_once()
+        exists.assert_called_once()
+        write_bytes.assert_not_called()
+        read_bytes.assert_called_once()
+
+    @patch('pathlib.Path.read_bytes')
+    @patch('pathlib.Path.write_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.get_file_age')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_force_refresh_called_twice(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
+        # While this test is not logically "correct", it makes the
+        # testing easier and more robust. In reality the cached
+        # value would be 2 and not 3.
+        cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
+        cache.set_force_refresh(True)
+        get_file_age.return_value = 1
+        read_bytes.return_value = pickle.dumps(3)  # Cache 3.
+
+        c = Cached('key2', 2)
+        self.assertEqual(2, c.get_value())  # Cached value not used.
+        self.assertEqual(3, c.get_value())  # Cached value used.
+
+        set_cache_dir.assert_not_called()
+        get_file_age.assert_called_once()
+        exists.assert_called_once()
+        write_bytes.assert_called_once_with(pickle.dumps(2))
+        read_bytes.assert_called_once()
 
     @patch('pathlib.Path.read_bytes')
     @patch('pathlib.Path.write_bytes')

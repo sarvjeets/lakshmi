@@ -24,8 +24,6 @@ from pathlib import Path
 # Inspired by https://pypi.org/project/cache-to-disk/. I tried using other
 # options such as requests-cache, but it was too slow compared to the solution
 # implemented here.
-# TODO(sarvjeets): It would be good to get rid of this one-off solution and
-# switch to something more standard.
 
 
 class Cacheable(ABC):
@@ -56,6 +54,7 @@ def get_file_age(file):
 _DEFAULT_DIR = Path.home() / '.lakshmicache'
 _CACHE_STR = 'cache_dir'
 _FORCE_STR = 'force_refresh'
+_FORCED_FILES_STR = 'forced_files'
 _MISS_FUNC_STR = 'miss_func'
 
 # Dict (string -> object) to keep cache context.
@@ -64,8 +63,14 @@ _MISS_FUNC_STR = 'miss_func'
 # The pathlib.Path object specifying cache directory. If set to None,
 # caching is disabled. Default: _DEFAULT_DIR
 # _FORCE_STR:
-# If set to True, new values are generated even if a cached one is
-# available. Default: False
+# If set to True, new values are re-generated once even if a cached one is
+# available. This is meant for data that is cached for < month (stock prices
+# and Treasury Bond value). Values that are cached for > 40 days ignore this
+# flag. Default: False
+# _FORCED_FILES_STR:
+# A set of files which are already refreshed once due to _ctx[_FORCE_STR]
+# being set to True. this is used to ensure we don't re-fetch same values
+# multiple times in a session.
 # _MISS_FUNC_STR:
 # If set, this function is called for every cache miss.
 _ctx = {_FORCE_STR: False}
@@ -79,6 +84,7 @@ def set_force_refresh(v):
     """
     global _ctx
     _ctx[_FORCE_STR] = v
+    _ctx[_FORCED_FILES_STR] = set()
 
 
 def set_cache_miss_func(f):
@@ -118,7 +124,29 @@ def set_cache_dir(cache_dir):
             file.unlink()
 
 
-def call_func(class_obj, func):
+def _valid_cached_value(file, days):
+    """Helper function to check if the cached value from file is valid.
+
+    Args:
+        file: The Path object representing a file potentially containing
+        previously cached value.
+        days: Number of days after which the cached value becomes invalid.
+
+    Returns: True iff the cached value in file is valid.
+    """
+    MAX_DAYS_TO_FORCE_REFRESH = 40
+    if (
+        _ctx[_FORCE_STR]
+        and days < MAX_DAYS_TO_FORCE_REFRESH
+        and file.name not in _ctx[_FORCED_FILES_STR]
+    ):
+        # Ignore cached value.
+        _ctx[_FORCED_FILES_STR].add(file.name)
+        return False
+    return (file.exists() and get_file_age(file) < days)
+
+
+def _call_func(class_obj, func):
     """Helper function to return value of class_obj.func().
 
     In addition to calling function, this helper also calls the
@@ -157,21 +185,14 @@ def cache(days):
                 set_cache_dir(_DEFAULT_DIR)
             cache_dir = _ctx[_CACHE_STR]
             if not cache_dir:
-                return call_func(class_obj, func)
-            force_refresh = _ctx[_FORCE_STR]
+                return _call_func(class_obj, func)
 
             key = f'{func.__qualname__}_{class_obj.cache_key()}'
             filename = f'{days}_{md5(key.encode("utf8")).hexdigest()}.lkc'
             file = cache_dir / filename
-
-            if (
-                not force_refresh
-                and file.exists()
-                and get_file_age(file) < days
-            ):
+            if _valid_cached_value(file, days):
                 return pickle.loads(file.read_bytes())
-
-            value = call_func(class_obj, func)
+            value = _call_func(class_obj, func)
             file.write_bytes(pickle.dumps(value))
             return value
         return new_func
