@@ -1,6 +1,7 @@
 """Test for lakshmi.performance module."""
 
 import unittest
+from datetime import datetime
 
 from lakshmi.performance import Checkpoint, Timeline
 
@@ -70,7 +71,8 @@ class PerformanceTest(unittest.TestCase):
 
     def test_timeline(self):
         checkpoints = [
-            Checkpoint('2021/1/1', 100), Checkpoint('2021/3/1', 500),
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/3/1', 500),
             Checkpoint('2021/1/31', 300, inflow=150, outflow=50)]
         timeline = Timeline(checkpoints)
 
@@ -98,7 +100,8 @@ class PerformanceTest(unittest.TestCase):
 
     def test_timeline_to_list(self):
         checkpoints = [
-            Checkpoint('2021/1/1', 100), Checkpoint('2021/3/1', 500),
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/3/1', 500),
             Checkpoint('2021/1/31', 300, inflow=150, outflow=50)]
         timeline = Timeline(checkpoints)
         timeline_list = timeline.to_list()
@@ -115,7 +118,8 @@ class PerformanceTest(unittest.TestCase):
 
     def test_timeline_to_table(self):
         checkpoints = [
-            Checkpoint('2021/1/1', 100), Checkpoint('2021/3/1', 500),
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/3/1', 500),
             Checkpoint('2021/1/31', 300, inflow=150, outflow=50)]
         timeline = Timeline(checkpoints)
         self.assertEqual(
@@ -123,3 +127,31 @@ class PerformanceTest(unittest.TestCase):
              ['2021/01/31', '$300.00', '$150.00', '$50.00'],
              ['2021/03/01', '$500.00', '$0.00', '$0.00']],
             timeline.to_table().str_list())
+        self.assertEqual(
+            [['2021/01/01', '$100.00', '$0.00', '$0.00']],
+            timeline.to_table('2021/01/01', '2021/01/02').str_list())
+        self.assertEqual(
+            [['2021/03/01', '$500.00', '$0.00', '$0.00']],
+            timeline.to_table('2021/02/01', '2021/04/01').str_list())
+        self.assertEqual(
+            [['2021/01/31', '$300.00', '$150.00', '$50.00']],
+            timeline.to_table('2021/01/31', '2021/01/31').str_list())
+        self.assertEqual(
+            [], timeline.to_table('2021/01/15', '2021/01/17').str_list())
+
+    def test_get_xirr_data(self):
+        checkpoints = [
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/1/31', 300, inflow=150, outflow=50),
+            Checkpoint('2021/3/1', 500, inflow=10, outflow=20)]
+        timeline = Timeline(checkpoints)
+        dates, amounts = timeline.get_xirr_data('2021/01/01', '2021/03/01')
+        self.assertEqual(
+            [datetime(2021, 1, 1), datetime(2021, 1, 31),
+             datetime(2021, 3, 1)],
+            dates)
+        self.assertEqual([-100, -100, 510], amounts)
+
+        dates, amounts = timeline.get_xirr_data('2021/01/16', '2021/01/31')
+        self.assertEqual([datetime(2021, 1, 16), datetime(2021, 1, 31)], dates)
+        self.assertEqual([-150, 200], amounts)

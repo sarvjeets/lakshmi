@@ -1,7 +1,7 @@
 """This module contains all classes and functions related to checkpointing
 and computing portfolio's performance."""
 
-from bisect import bisect
+import bisect
 from datetime import datetime
 
 import yaml
@@ -81,6 +81,8 @@ class Checkpoint:
 class Timeline:
     """Class representing a collection of checkpoints."""
 
+    _DATE_FMT = '%Y/%m/%d'
+
     def __init__(self, checkpoints):
         """Returns a new object given a list of checkpoints."""
         assert len(checkpoints) > 0
@@ -116,17 +118,25 @@ class Timeline:
             return Timeline.from_list(
                 yaml.load(f.read(), Loader=yaml.SafeLoader))
 
-    def to_table(self):
+    def to_table(self, begin=None, end=None):
         """Convert this timeline to a Table.
 
         This function is useful for pretty-printing this object.
+
+        Args:
+            begin: If specified, start printing checkpoints from this date
+            (inclusive). Format: 'YYYY/MM/DD'.
+            end: If specified, stop printing checkpoints after this date
+            (inclusive). Format: 'YYYY/MM/DD'.
 
         Returns: A lakshmi.table.Table object.
         """
         table = Table(4,
                       headers=['Date', 'Portfolio Value', 'Inflow', 'Outflow'],
                       coltypes=['str', 'dollars', 'dollars', 'dollars'])
-        for date in self._dates:
+        begin_pos = bisect.bisect_left(self._dates, begin) if begin else None
+        end_pos = bisect.bisect_right(self._dates, end) if end else None
+        for date in self._dates[begin_pos:end_pos]:
             cp = self._checkpoints[date]
             table.add_row([cp.get_date(),
                            cp.get_portfolio_value(),
@@ -154,9 +164,9 @@ class Timeline:
     @classmethod
     def _interpolate_checkpoint(cls, date, checkpoint1, checkpoint2):
         """Given checkpoints 1 and 2, returns new checkpoint for date."""
-        date1 = datetime.strptime(checkpoint1.get_date(), '%Y/%m/%d')
-        date2 = datetime.strptime(checkpoint2.get_date(), '%Y/%m/%d')
-        given_date = datetime.strptime(date, '%Y/%m/%d')
+        date1 = datetime.strptime(checkpoint1.get_date(), Timeline._DATE_FMT)
+        date2 = datetime.strptime(checkpoint2.get_date(), Timeline._DATE_FMT)
+        given_date = datetime.strptime(date, Timeline._DATE_FMT)
         val1 = checkpoint1.get_portfolio_value()
         val2 = (checkpoint2.get_portfolio_value()
                 - checkpoint2.get_inflow()
@@ -204,7 +214,7 @@ class Timeline:
             f'{date} is not in the range of the saved checkpoints. '
             f'Begin={self.begin()}, End={self.end()}')
 
-        pos = bisect(self._dates, date)
+        pos = bisect.bisect(self._dates, date)
         return Timeline._interpolate_checkpoint(
             date,
             self._checkpoints[self._dates[pos - 1]],
@@ -215,7 +225,7 @@ class Timeline:
         date = checkpoint.get_date()
         assert not self.has_checkpoint(date), (
             'Cannot insert two checkpoints with the same date.')
-        pos = bisect(self._dates, date)
+        pos = bisect.bisect(self._dates, date)
         self._dates.insert(pos, date)
         self._checkpoints[date] = checkpoint
 
@@ -225,6 +235,41 @@ class Timeline:
         assert date in self._checkpoints
         self._checkpoints.pop(date)
         self._dates.remove(date)
+
+    def get_xirr_data(self, begin, end):
+        """Returns data in a format to help calculate XIRR.
+
+        Args:
+            begin: Begin date in YYYY/MM/DD format.
+            end: End date in YYYY/MM/DD format.
+
+        Returns: (dates, amounts) where both lists has the same size. dates
+        contain the dates of the cashflows and amounts contains the
+        consolidated cashflows on those dates (money flowing out of the
+        portfolio is positive).
+        """
+        dates = []
+        amounts = []
+
+        begin_checkpoint = self.get_checkpoint(begin, True)
+        dates.append(datetime.strptime(begin_checkpoint.get_date(),
+                                       Timeline._DATE_FMT))
+        amounts.append(-begin_checkpoint.get_portfolio_value())
+
+        begin_pos = bisect.bisect_right(self._dates, begin)
+        end_pos = bisect.bisect_left(self._dates, end)
+        for date in self._dates[begin_pos:end_pos]:
+            dates.append(datetime.strptime(date, Timeline._DATE_FMT))
+            checkpoint = self._checkpoints[date]
+            amounts.append(checkpoint.get_outflow() - checkpoint.get_inflow())
+
+        end_checkpoint = self.get_checkpoint(end, True)
+        dates.append(
+            datetime.strptime(end_checkpoint.get_date(), Timeline._DATE_FMT))
+        amounts.append(end_checkpoint.get_portfolio_value()
+                       + end_checkpoint.get_outflow()
+                       - end_checkpoint.get_inflow())
+        return dates, amounts
 
 
 class Performance:
