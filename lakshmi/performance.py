@@ -127,9 +127,11 @@ class Timeline:
 
         Args:
             begin: If specified, start printing checkpoints from this date
-            (inclusive). Format: 'YYYY/MM/DD'.
+            (inclusive). Format: 'YYYY/MM/DD'. If None, start from the earliest
+            checkpoint date.
             end: If specified, stop printing checkpoints after this date
-            (inclusive). Format: 'YYYY/MM/DD'.
+            (inclusive). Format: 'YYYY/MM/DD'. If None, end at the last
+            checkpoint date.
 
         Returns: A lakshmi.table.Table object.
         """
@@ -258,11 +260,18 @@ class Timeline:
         """Returns data in a format to help calculate XIRR.
 
         Args:
-            begin: Begin date in YYYY/MM/DD format.
-            end: End date in YYYY/MM/DD format.
+            begin: Begin date in YYYY/MM/DD format. If None, start from the
+            earliest checkpoint date.
+            end: End date in YYYY/MM/DD format. If None, ends at the last
+            checkpoint date.
 
         Returns: PerformanceData object.
         """
+        if not begin:
+            begin = self.begin()
+        if not end:
+            end = self.end()
+
         assert utils.validate_date(begin) != utils.validate_date(end)
 
         dates = []
@@ -363,3 +372,37 @@ class Performance:
             'Overall', self._timeline.get_performance_data(
                 self._timeline.begin(), self._timeline.end())))
         return table
+
+    def get_info(self, begin, end):
+        """Get information about the performance in [begin, end].
+
+        This method prints detailed information about performance of portfolio
+        (as given by checkpoints).
+
+        Args:
+            begin: Begin date in YYYY/MM/DD format. If None, starts at the
+            earliest checkpoint date.
+            end: End date in YYYY/MM/DD format. If None, ends at the last
+            checkpoint date.
+
+        Returns: A formatted string suitable for pretty-printing.
+        """
+        table = Table(2, coltypes=['str', 'str'])
+
+        data = self._timeline.get_performance_data(begin, end)
+        change = data.end_balance - data.begin_balance
+
+        table.set_rows([
+            ['Start date', self._timeline.begin()],
+            ['End date', self._timeline.end()],
+            ['Beginning balance', utils.format_money(data.begin_balance)],
+            ['Ending balance', utils.format_money(data.end_balance)],
+            ['Inflows', utils.format_money(data.inflows)],
+            ['Outflows', utils.format_money(data.outflows)],
+            ['Portfolio growth', utils.format_money_delta(change)],
+            ['Market growth', utils.format_money_delta(
+                change - data.inflows + data.outflows)],
+            ['Portfolio growth %', f'{round(100*change/data.begin_balance)}%'],
+            ['Money-weighted Rate of Return',
+             f'{round(100*xirr(data.dates, data.amounts))}%']])
+        return table.string(tablefmt='plain')

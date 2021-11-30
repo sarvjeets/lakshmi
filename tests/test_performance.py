@@ -165,6 +165,16 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(150, data.inflows)
         self.assertEqual(50, data.outflows)
 
+    def test_get_performance_data_none_dates(self):
+        checkpoints = [
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/1/31', 300, inflow=150, outflow=50),
+            Checkpoint('2021/3/1', 500, inflow=10, outflow=20)]
+        timeline = Timeline(checkpoints)
+        data = timeline.get_performance_data(None, None)
+        self.assertEqual(100, data.begin_balance)
+        self.assertEqual(500, data.end_balance)
+
     def test_summary_table_single_date(self):
         perf_table = Performance(Timeline([
             Checkpoint('2021/1/1', 100)])).summary_table()
@@ -197,3 +207,21 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(
             ['3 Months', '6 Months', '1 Year'], perf._get_periods()[1])
         self.assertEqual(4, len(perf.summary_table().list()))
+
+    def test_performance_get_info(self):
+        checkpoints = [
+            Checkpoint('2020/1/1', 1000),
+            Checkpoint('2021/1/1', 500, outflow=1000),
+            Checkpoint('2022/1/1', 1000)]
+        info = Performance(Timeline(checkpoints)).get_info(None, None)
+
+        self.assertRegex(info, r'Start date +2020/01/01')
+        self.assertRegex(info, r'End date +2022/01/01')
+        self.assertRegex(info, r'Begin.+ \$1,000.00')
+        self.assertRegex(info, r'Ending.+ \$1,000\.00')
+        self.assertRegex(info, r'Inflows + \$0')
+        self.assertRegex(info, r'Outflows + \$1,000\.00')
+        self.assertRegex(info, r'Portfolio growth +\+\$0\.00')
+        self.assertRegex(info, r'Market growth +\+\$1,000\.00')
+        self.assertRegex(info, r'Portfolio growth \% +0%')
+        self.assertRegex(info, r'Money-weighted.+62%')
