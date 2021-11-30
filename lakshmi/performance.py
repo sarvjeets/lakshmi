@@ -2,9 +2,11 @@
 and computing portfolio's performance."""
 
 import bisect
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 import yaml
+from pyxirr import xirr
 
 from lakshmi import utils
 from lakshmi.table import Table
@@ -27,7 +29,7 @@ class Checkpoint:
         """
         self._date = utils.validate_date(checkpoint_date)
 
-        assert portfolio_value >= 0, 'Portfolio value must be non-negative'
+        assert portfolio_value > 0, 'Portfolio value must be positive'
         assert inflow >= 0, 'Inflow must be non-negative'
         assert outflow >= 0, 'Outflow must be non-negative'
 
@@ -236,20 +238,37 @@ class Timeline:
         self._checkpoints.pop(date)
         self._dates.remove(date)
 
-    def get_xirr_data(self, begin, end):
+    @dataclass
+    class PerformanceData:
+        # List of dates (datetime objects). Used to compute XIRR.
+        dates: list
+        # List of cashflows on the above dates. Money flowing out of portfolio
+        # is considered positive. Used to compute XIRR.
+        amounts: list
+        # Beginning balance.
+        begin_balance: float
+        # Ending balance.
+        end_balance: float
+        # Sum of all inflows to the portfolio.
+        inflows: float = 0.0
+        # Sum of all outflows from the portfolio.
+        outflows: float = 0.0
+
+    def get_performance_data(self, begin, end):
         """Returns data in a format to help calculate XIRR.
 
         Args:
             begin: Begin date in YYYY/MM/DD format.
             end: End date in YYYY/MM/DD format.
 
-        Returns: (dates, amounts) where both lists has the same size. dates
-        contain the dates of the cashflows and amounts contains the
-        consolidated cashflows on those dates (money flowing out of the
-        portfolio is positive).
+        Returns: PerformanceData object.
         """
+        assert utils.validate_date(begin) != utils.validate_date(end)
+
         dates = []
         amounts = []
+        inflows = 0.0
+        outflows = 0.0
 
         begin_checkpoint = self.get_checkpoint(begin, True)
         dates.append(datetime.strptime(begin_checkpoint.get_date(),
@@ -262,6 +281,8 @@ class Timeline:
             dates.append(datetime.strptime(date, Timeline._DATE_FMT))
             checkpoint = self._checkpoints[date]
             amounts.append(checkpoint.get_outflow() - checkpoint.get_inflow())
+            inflows += checkpoint.get_inflow()
+            outflows += checkpoint.get_outflow()
 
         end_checkpoint = self.get_checkpoint(end, True)
         dates.append(
@@ -269,9 +290,76 @@ class Timeline:
         amounts.append(end_checkpoint.get_portfolio_value()
                        + end_checkpoint.get_outflow()
                        - end_checkpoint.get_inflow())
-        return dates, amounts
+        inflows += end_checkpoint.get_inflow()
+        outflows += end_checkpoint.get_outflow()
+        return Timeline.PerformanceData(
+            dates=dates, amounts=amounts, inflows=inflows, outflows=outflows,
+            begin_balance=begin_checkpoint.get_portfolio_value(),
+            end_balance=end_checkpoint.get_portfolio_value())
 
 
 class Performance:
-    """Class to compute portfolio's performance."""
-    pass
+    """Class to compute performance stats given a Timeline object."""
+
+    _TIME_PERIODS = [timedelta(days=30),
+                     timedelta(days=30) * 3,
+                     timedelta(days=30) * 6,
+                     timedelta(days=365),
+                     timedelta(days=365) * 3,
+                     timedelta(days=365) * 10]
+    _TIME_PERIODS_NAMES = ['1 Month',
+                           '3 Months',
+                           '6 Months',
+                           '1 Year',
+                           '3 Years',
+                           '10 Years']
+
+    def __init__(self, timeline):
+        self._timeline = timeline
+
+    def _get_periods(self):
+        """Returns periods for which summary stats should be printed."""
+        # We only show 3 _TIME_PERIODS based on timeline_period
+        timeline_period = (
+            datetime.strptime(self._timeline.end(), Timeline._DATE_FMT)
+            - datetime.strptime(self._timeline.begin(), Timeline._DATE_FMT))
+        end_index = bisect.bisect_left(Performance._TIME_PERIODS,
+                                       timeline_period)
+        begin_index = max(0, end_index - 3)
+        return (Performance._TIME_PERIODS[begin_index:end_index],
+                Performance._TIME_PERIODS_NAMES[begin_index:end_index])
+
+    @classmethod
+    def _create_summary_row(cls, period_name, perf_data):
+        """Helper method to create a row in summary table."""
+        change = perf_data.end_balance - perf_data.begin_balance
+        return [period_name, perf_data.inflows, perf_data.outflows,
+                change, change / perf_data.begin_balance,
+                xirr(perf_data.dates, perf_data.amounts)]
+
+    def summary_table(self):
+        """Returns summary of performance during different periods."""
+        table = Table(6,
+                      headers=['Period', 'Inflows', 'Outflows',
+                               'Portfolio Change', 'Change %', 'IRR'],
+                      coltypes=['str', 'dollars', 'dollars',
+                                'delta_dollars', 'percentage', 'percentage'])
+        # Not enough data for any points.
+        if self._timeline.begin() == self._timeline.end():
+            return table
+
+        # Add rows for atmost 3 periods.
+        periods, period_names = self._get_periods()
+        for period, period_name in zip(periods, period_names):
+            begin_date_str = (
+                datetime.strptime(self._timeline.end(), Timeline._DATE_FMT)
+                - period).strftime(Timeline._DATE_FMT)
+            table.add_row(Performance._create_summary_row(
+                period_name, self._timeline.get_performance_data(
+                    begin_date_str, self._timeline.end())))
+
+        # Add row for 'Overall' time period
+        table.add_row(Performance._create_summary_row(
+            'Overall', self._timeline.get_performance_data(
+                self._timeline.begin(), self._timeline.end())))
+        return table

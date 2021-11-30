@@ -3,7 +3,7 @@
 import unittest
 from datetime import datetime
 
-from lakshmi.performance import Checkpoint, Timeline
+from lakshmi.performance import Checkpoint, Performance, Timeline
 
 
 class PerformanceTest(unittest.TestCase):
@@ -139,19 +139,61 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(
             [], timeline.to_table('2021/01/15', '2021/01/17').str_list())
 
-    def test_get_xirr_data(self):
+    def test_get_performance_data(self):
         checkpoints = [
             Checkpoint('2021/1/1', 100),
             Checkpoint('2021/1/31', 300, inflow=150, outflow=50),
             Checkpoint('2021/3/1', 500, inflow=10, outflow=20)]
         timeline = Timeline(checkpoints)
-        dates, amounts = timeline.get_xirr_data('2021/01/01', '2021/03/01')
+        data = timeline.get_performance_data('2021/01/01', '2021/03/01')
         self.assertEqual(
             [datetime(2021, 1, 1), datetime(2021, 1, 31),
              datetime(2021, 3, 1)],
-            dates)
-        self.assertEqual([-100, -100, 510], amounts)
+            data.dates)
+        self.assertEqual([-100, -100, 510], data.amounts)
+        self.assertEqual(100, data.begin_balance)
+        self.assertEqual(500, data.end_balance)
+        self.assertEqual(160, data.inflows)
+        self.assertEqual(70, data.outflows)
 
-        dates, amounts = timeline.get_xirr_data('2021/01/16', '2021/01/31')
-        self.assertEqual([datetime(2021, 1, 16), datetime(2021, 1, 31)], dates)
-        self.assertEqual([-150, 200], amounts)
+        data = timeline.get_performance_data('2021/01/16', '2021/01/31')
+        self.assertEqual([datetime(2021, 1, 16), datetime(2021, 1, 31)],
+                         data.dates)
+        self.assertEqual([-150, 200], data.amounts)
+        self.assertEqual(150, data.begin_balance)
+        self.assertEqual(300, data.end_balance)
+        self.assertEqual(150, data.inflows)
+        self.assertEqual(50, data.outflows)
+
+    def test_summary_table_single_date(self):
+        perf_table = Performance(Timeline([
+            Checkpoint('2021/1/1', 100)])).summary_table()
+        self.assertEqual([], perf_table.str_list())
+
+    def test_summary_table_1month(self):
+        checkpoints = [
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2021/1/31', 200, inflow=100, outflow=50),
+            Checkpoint('2021/2/1', 210)]
+        perf = Performance(Timeline(checkpoints))
+        # We should only return 1 period.
+        self.assertEqual(
+            ['1 Month'], perf._get_periods()[1])
+
+        perf_table = perf.summary_table()
+        self.assertEqual(2, len(perf_table.list()))
+        # Only check basic values (these functions are unittested elsewhere)
+        self.assertEqual(['1 Month', '$100.00', '$50.00'],
+                         perf_table.str_list()[0][:3])
+        self.assertEqual(
+            ['Overall', '$100.00', '$50.00', '+$110.00', '110%'],
+            perf_table.str_list()[1][:5])
+
+    def test_summary_table_1year(self):
+        checkpoints = [
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2022/2/1', 210)]
+        perf = Performance(Timeline(checkpoints))
+        self.assertEqual(
+            ['3 Months', '6 Months', '1 Year'], perf._get_periods()[1])
+        self.assertEqual(4, len(perf.summary_table().list()))
