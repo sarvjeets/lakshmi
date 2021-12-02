@@ -13,6 +13,7 @@ import yaml
 import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
+import lakshmi.performance
 from lakshmi import Portfolio
 from lakshmi.table import Table
 
@@ -21,6 +22,7 @@ class LakContext:
     """Context class with utilities to help the script keep state and
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
+    DEFAULT_CHECKPOINTS = '~/lakshmi_checkpoints.yaml'
 
     def _return_config(self, lakrc):
         """Internal function to read and return config file."""
@@ -46,15 +48,24 @@ class LakContext:
         self.whatifs = None
         # The loaded portfolio.
         self.portfolio = None
+        # The loaded timeline.
+        self.timeline = None
         self.tablefmt = None
 
         config = self._return_config(lakrc)
 
+        # Setup portfolio filename.
         portfolio_filename = config.pop(
             'portfolio', LakContext.DEFAULT_PORTFOLIO)
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
-        # Setup cache directory.
+        # Setup checkpoints filename.
+        checkpoints_filename = config.pop(
+            'checkpoints', LakContext.DEFAULT_CHECKPOINTS)
+        self.checkpoints_filename = str(
+            Path(checkpoints_filename).expanduser())
+
+        # Setup cache directory. If nothing is set, ~/.lakshmicache is used.
         if 'cache' in config:
             cache_dir = config.pop('cache')
             if cache_dir is None:
@@ -110,11 +121,26 @@ class LakContext:
         """Save self.portfolio back to file."""
         self.portfolio.save(self.portfolio_filename)
 
+    def get_timeline(self):
+        """Loads and returns the timeline (checkpoints) of the portfolio."""
+        if not self.timeline:
+            try:
+                self.timeline = lakshmi.performance.Timeline.load(
+                    self.checkpoints_filename)
+            except FileNotFoundError:
+                raise click.ClickException(
+                    f'Checkpoints file {self.checkpoints_filename} not found. '
+                    'Please use `lak add checkpoint` to create checkpoints.')
+        return self.timeline
+
+    def save_timeline(self):
+        """Saves self.timeline back to a file."""
+        self.timeline.save(self.checkpoints_filename)
+
 
 # Global variable to save and pass context between click commands.
-#
 # I tried using click's builtin context, but it was too troublesome
-# and didn't exactly give us the functionality that I wanted
+# and didn't exactly give us the functionality that I wanted.
 # -- sarvjeets
 lakctx = None
 
@@ -304,6 +330,21 @@ def lots():
         output = lakctx.get_portfolio().list_lots().string(lakctx.tablefmt)
     if output:
         click.echo(output)
+
+
+@list.command()
+@click.option('--begin', '-b', metavar='DATE',
+              help='Start printing the checkpoints from this date '
+              '(Format: YYYY/MM/DD).')
+@click.option('--end', '-e', metavar='DATE',
+              help='Stop printing the checkpoints at this date '
+              '(Format: YYYY/MM/DD).')
+def checkpoints(begin, end):
+    """Prints the portfolio's saved checkpoints."""
+    global lakctx
+    lakctx.optional_separator()
+    click.echo(lakctx.get_timeline().to_table(begin, end).string(
+        lakctx.tablefmt))
 
 
 @lak.group(chain=True,
