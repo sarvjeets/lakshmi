@@ -224,4 +224,4 @@ class PerformanceTest(unittest.TestCase):
         self.assertRegex(info, r'Portfolio growth +\+\$0\.00')
         self.assertRegex(info, r'Market growth +\+\$1,000\.00')
         self.assertRegex(info, r'Portfolio growth \% +0%')
-        self.assertRegex(info, r'Money-weighted.+62%')
+        self.assertRegex(info, r'Internal.+62%')

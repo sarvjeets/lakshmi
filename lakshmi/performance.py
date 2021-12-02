@@ -403,6 +403,6 @@ class Performance:
             ['Market growth', utils.format_money_delta(
                 change - data.inflows + data.outflows)],
             ['Portfolio growth %', f'{round(100*change/data.begin_balance)}%'],
-            ['Money-weighted Rate of Return',
+            ['Internal Rate of Return',
              f'{round(100*xirr(data.dates, data.amounts))}%']])
         return table.string(tablefmt='plain')
