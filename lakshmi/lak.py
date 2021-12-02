@@ -347,6 +347,15 @@ def checkpoints(begin, end):
         lakctx.tablefmt))
 
 
+@list.command()
+def performance():
+    """Prints summary stats about portfolio's performance."""
+    global lakctx
+    lakctx.optional_separator()
+    perf = lakshmi.performance.Performance(lakctx.get_timeline())
+    click.echo(perf.summary_table().string(lakctx.tablefmt))
+
+
 @lak.group(chain=True,
            invoke_without_command=True)
 @click.option('--reset', '-r', is_flag=True,

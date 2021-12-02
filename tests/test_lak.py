@@ -34,7 +34,7 @@ class TestLakContext(lak.LakContext):
 
         self.timeline = Timeline([
             Checkpoint('2021/1/1', 100),
-            Checkpoint('2021/1/2', 120, inflow=10, outflow=5)])
+            Checkpoint('2021/1/2', 105.01, inflow=10, outflow=5)])
 
     def get_portfolio(self):
         return self.portfolio
@@ -182,7 +182,13 @@ class LakTest(unittest.TestCase):
         result = run_lak('list checkpoints -b 2021/01/02')
         self.assertEqual(0, result.exit_code)
         self.assertNotRegex(result.output, r'2021/01/01 +\$100.00',)
-        self.assertRegex(result.output, r'2021/01/02 +\$120.00',)
+        self.assertRegex(result.output, r'2021/01/02 +\$105.01',)
+        self.assertFalse(lak.lakctx.saved_timeline)
+
+    def test_list_performance(self):
+        result = run_lak('list performance')
+        self.assertEqual(0, result.exit_code)
+        self.assertRegex(result.output, r'Overall +\$10.00',)
         self.assertFalse(lak.lakctx.saved_timeline)
 
     def test_list_what_ifs_empty(self):
