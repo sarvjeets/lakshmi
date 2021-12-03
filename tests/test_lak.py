@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from lakshmi import Account, AssetClass, Portfolio, lak
 from lakshmi.assets import ManualAsset
-from lakshmi.performance import Checkpoint, Timeline
+from lakshmi.performance import Checkpoint, Performance, Timeline
 
 
 class TestLakContext(lak.LakContext):
@@ -17,13 +17,13 @@ class TestLakContext(lak.LakContext):
 
     def __init__(self):
         self.portfolio_filename = 'test_portfolio.yaml'
-        self.checkpoints_filename = 'test_checkpoints.yaml'
+        self.performance_filename = 'test_performance.yaml'
         self.continued = False
         self.warned = False
         self.whatifs = None
         self.tablefmt = None
         self.saved_portfolio = False
-        self.saved_timeline = False
+        self.saved_performance = False
 
         self.portfolio = Portfolio(
             AssetClass('All')
@@ -32,9 +32,9 @@ class TestLakContext(lak.LakContext):
             Account('Schwab', 'Taxable').add_asset(
                 ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
 
-        self.timeline = Timeline([
+        self.performance = Performance(Timeline([
             Checkpoint('2021/1/1', 100),
-            Checkpoint('2021/1/2', 105.01, inflow=10, outflow=5)])
+            Checkpoint('2021/1/2', 105.01, inflow=10, outflow=5)]))
 
     def get_portfolio(self):
         return self.portfolio
@@ -42,11 +42,11 @@ class TestLakContext(lak.LakContext):
     def save_portfolio(self):
         self.saved_portfolio = True
 
-    def get_timeline(self):
-        return self.timeline
+    def get_performance(self):
+        return self.performance
 
-    def save_timeline(self):
-        self.saved_timeline = True
+    def save_performance(self):
+        self.saved_performance = True
 
     def reset(self):
         """Reset the state for a new command (except the portfolio)."""
@@ -105,17 +105,17 @@ class LakTest(unittest.TestCase):
 
     @patch('lakshmi.lak.LakContext._return_config')
     @patch('builtins.open')
-    def test_lak_context_checkpoints_file_not_found(
+    def test_lak_context_performance_file_not_found(
             self, mock_open, mock_return_config):
         mock_return_config.return_value = {
-            'checkpoints': 'checkpoints.yaml'}
+            'performance': 'performance.yaml'}
         mock_open.side_effect = FileNotFoundError('Not found (unused)')
 
         lakctx = lak.LakContext('unused')
         with self.assertRaisesRegex(
                 click.ClickException,
-                'Checkpoints file checkpoints.yaml not found.'):
-            lakctx.get_timeline()
+                'Performance file performance.yaml not found.'):
+            lakctx.get_performance()
 
         mock_open.assert_called_once()
 
@@ -176,20 +176,20 @@ class LakTest(unittest.TestCase):
         result = run_lak('list checkpoints')
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, r'2021/01/01 +\$100.00',)
-        self.assertFalse(lak.lakctx.saved_timeline)
+        self.assertFalse(lak.lakctx.saved_performance)
 
     def test_list_checkpoints_with_date(self):
         result = run_lak('list checkpoints -b 2021/01/02')
         self.assertEqual(0, result.exit_code)
         self.assertNotRegex(result.output, r'2021/01/01 +\$100.00',)
         self.assertRegex(result.output, r'2021/01/02 +\$105.01',)
-        self.assertFalse(lak.lakctx.saved_timeline)
+        self.assertFalse(lak.lakctx.saved_performance)
 
     def test_list_performance(self):
         result = run_lak('list performance')
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, r'Overall +\$10.00',)
-        self.assertFalse(lak.lakctx.saved_timeline)
+        self.assertFalse(lak.lakctx.saved_performance)
 
     def test_list_what_ifs_empty(self):
         result = run_lak('list whatifs')

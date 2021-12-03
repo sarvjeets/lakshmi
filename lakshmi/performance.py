@@ -108,18 +108,6 @@ class Timeline:
         """Returns a new object given a list (reverse of method above)."""
         return Timeline([Checkpoint.from_dict(cp) for cp in timeline_list])
 
-    def save(self, filename):
-        """Save this Timeline to a file."""
-        with open(filename, 'w') as f:
-            yaml.dump(self.to_list(), f)
-
-    @classmethod
-    def load(cls, filename):
-        """Load Timeline from a file."""
-        with open(filename) as f:
-            return Timeline.from_list(
-                yaml.load(f.read(), Loader=yaml.SafeLoader))
-
     def to_table(self, begin=None, end=None):
         """Convert this timeline to a Table.
 
@@ -325,6 +313,33 @@ class Performance:
 
     def __init__(self, timeline):
         self._timeline = timeline
+
+    def get_timeline(self):
+        """Returns the timeline."""
+        return self._timeline
+
+    def to_dict(self):
+        """Converts this object to a dictionary."""
+        return {'Timeline': self._timeline.to_list()}
+
+    @classmethod
+    def from_dict(cls, d):
+        """Creates a new Performance object from a dict (reverse of above)."""
+        ret_obj = Performance(Timeline.from_list(d.pop('Timeline')))
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
+        return ret_obj
+
+    def save(self, filename):
+        """Save this Object to a file."""
+        with open(filename, 'w') as f:
+            yaml.dump(self.to_dict(), f)
+
+    @classmethod
+    def load(cls, filename):
+        """Load Performance object from a file."""
+        with open(filename) as f:
+            return Performance.from_dict(
+                yaml.load(f.read(), Loader=yaml.SafeLoader))
 
     def _get_periods(self):
         """Returns periods for which summary stats should be printed."""

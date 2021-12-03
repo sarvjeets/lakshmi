@@ -175,6 +175,12 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(100, data.begin_balance)
         self.assertEqual(500, data.end_balance)
 
+    def test_performance_to_dict(self):
+        perf = Performance(Timeline([Checkpoint('2021/1/1', 100)]))
+        perf = Performance.from_dict(perf.to_dict())
+        self.assertEqual('2021/01/01', perf.get_timeline().begin())
+        self.assertEqual('2021/01/01', perf.get_timeline().end())
+
     def test_summary_table_single_date(self):
         perf_table = Performance(Timeline([
             Checkpoint('2021/1/1', 100)])).summary_table()

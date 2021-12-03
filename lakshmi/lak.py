@@ -22,7 +22,7 @@ class LakContext:
     """Context class with utilities to help the script keep state and
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
-    DEFAULT_CHECKPOINTS = '~/lakshmi_checkpoints.yaml'
+    DEFAULT_PERFORMANCE = '~/.lakshmi_performance.yaml'
 
     def _return_config(self, lakrc):
         """Internal function to read and return config file."""
@@ -48,8 +48,8 @@ class LakContext:
         self.whatifs = None
         # The loaded portfolio.
         self.portfolio = None
-        # The loaded timeline.
-        self.timeline = None
+        # The loaded performance object.
+        self.performance = None
         self.tablefmt = None
 
         config = self._return_config(lakrc)
@@ -59,11 +59,11 @@ class LakContext:
             'portfolio', LakContext.DEFAULT_PORTFOLIO)
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
-        # Setup checkpoints filename.
-        checkpoints_filename = config.pop(
-            'checkpoints', LakContext.DEFAULT_CHECKPOINTS)
-        self.checkpoints_filename = str(
-            Path(checkpoints_filename).expanduser())
+        # Setup performance filename.
+        performance_filename = config.pop(
+            'performance', LakContext.DEFAULT_PERFORMANCE)
+        self.performance_filename = str(
+            Path(performance_filename).expanduser())
 
         # Setup cache directory. If nothing is set, ~/.lakshmicache is used.
         if 'cache' in config:
@@ -121,21 +121,21 @@ class LakContext:
         """Save self.portfolio back to file."""
         self.portfolio.save(self.portfolio_filename)
 
-    def get_timeline(self):
-        """Loads and returns the timeline (checkpoints) of the portfolio."""
-        if not self.timeline:
+    def get_performance(self):
+        """Loads and returns the performance stats of the portfolio."""
+        if not self.performance:
             try:
-                self.timeline = lakshmi.performance.Timeline.load(
-                    self.checkpoints_filename)
+                self.performance = lakshmi.performance.Performance.load(
+                    self.performance_filename)
             except FileNotFoundError:
                 raise click.ClickException(
-                    f'Checkpoints file {self.checkpoints_filename} not found. '
+                    f'Performance file {self.performance_filename} not found. '
                     'Please use `lak add checkpoint` to create checkpoints.')
-        return self.timeline
+        return self.performance
 
-    def save_timeline(self):
-        """Saves self.timeline back to a file."""
-        self.timeline.save(self.checkpoints_filename)
+    def save_performance(self):
+        """Saves self.performance back to a file."""
+        self.performance.save(self.performance_filename)
 
 
 # Global variable to save and pass context between click commands.
@@ -343,8 +343,8 @@ def checkpoints(begin, end):
     """Prints the portfolio's saved checkpoints."""
     global lakctx
     lakctx.optional_separator()
-    click.echo(lakctx.get_timeline().to_table(begin, end).string(
-        lakctx.tablefmt))
+    click.echo(lakctx.get_performance().get_timeline().to_table(
+        begin, end).string(lakctx.tablefmt))
 
 
 @list.command()
@@ -352,7 +352,7 @@ def performance():
     """Prints summary stats about portfolio's performance."""
     global lakctx
     lakctx.optional_separator()
-    perf = lakshmi.performance.Performance(lakctx.get_timeline())
+    perf = lakctx.get_performance()
     click.echo(perf.summary_table().string(lakctx.tablefmt))
 
 
