@@ -254,6 +254,12 @@ class LakTest(unittest.TestCase):
         self.assertRegex(result.output, r'Name: +Test Asset\n')
         self.assertFalse(lak.lakctx.saved_portfolio)
 
+    def test_info_performance(self):
+        result = run_lak('info performance --begin 2021/1/1')
+        self.assertEqual(0, result.exit_code)
+        self.assertRegex(result.output, r'Start date +2021/01/01\n')
+        self.assertFalse(lak.lakctx.saved_portfolio)
+
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
     def test_edit_and_parse_with_no_dict(self, mock_read_text, mock_edit):
@@ -472,6 +478,13 @@ class LakTest(unittest.TestCase):
         self.assertTrue(lak.lakctx.saved_portfolio)
         self.assertEqual(
             0, len(lak.lakctx.portfolio.get_account('Schwab').assets()))
+
+    def test_delete_checkpoint(self):
+        result = run_lak('delete checkpoint --date 2021/1/1 --yes')
+        self.assertEqual(0, result.exit_code)
+        self.assertTrue(lak.lakctx.saved_performance)
+        self.assertEqual('2021/01/02',
+                         lak.lakctx.get_performance().get_timeline().begin())
 
     def test_analyze_tlh(self):
         result = run_lak('analyze tlh')

@@ -335,10 +335,12 @@ def lots():
 @list.command()
 @click.option('--begin', '-b', metavar='DATE',
               help='Start printing the checkpoints from this date '
-              '(Format: YYYY/MM/DD).')
+              '(Format: YYYY/MM/DD). If not provided, defaults to earliest '
+              'date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
               help='Stop printing the checkpoints at this date '
-              '(Format: YYYY/MM/DD).')
+              '(Format: YYYY/MM/DD). If not provided, defaults to the latest '
+              'date for which a checkpoint exists.')
 def checkpoints(begin, end):
     """Prints the portfolio's saved checkpoints."""
     global lakctx
@@ -411,7 +413,7 @@ def asset(asset, account, delta):
 
 @lak.group(chain=True)
 def info():
-    """Print detailed information about an asset or account."""
+    """Print detailed information about parts of the portfolio."""
     pass
 
 
@@ -445,6 +447,22 @@ def asset(asset, account):
         account if account is not None else '', asset)
     click.echo(portfolio.get_account(
         account_name).get_asset(asset_name).string())
+
+
+@info.command()
+@click.option('--begin', '-b', metavar='DATE',
+              help='Begining date from which to start computing performance '
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
+              'earliest possible date.')
+@click.option('--end', '-e', metavar='DATE',
+              help='Ending date at which to stop computing performance '
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
+              'latest possible date.')
+def performance(begin, end):
+    """Print detailed stats about portfolio's performance."""
+    global lakctx
+    lakctx.optional_separator()
+    click.echo(lakctx.get_performance().get_info(begin, end))
 
 
 @lak.group()
@@ -629,15 +647,18 @@ def asset(asset_type, account):
 
 @lak.group()
 def delete():
-    """Delete an account or asset."""
+    """Delete different entities from the portfolio."""
     pass
+
+
+# A generic prompt to use for all delete commands.
+_PROMPT_STR = 'This operation is not reversable. Are you sure?'
 
 
 @delete.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
               help='Delete the account that matches this substring')
-@click.confirmation_option(prompt='This operation is not reversable. '
-                           'Are you sure?')
+@click.confirmation_option(prompt=_PROMPT_STR)
 def account(account):
     """Delete an account from the portfolio."""
     global lakctx
@@ -655,8 +676,7 @@ def account(account):
               help='If the asset name is not unique across the portfolio, '
               'optionally a substring to specify the account name '
               'from which the asset should be deleted.')
-@click.confirmation_option(prompt='This operation is not reversable. '
-                           'Are you sure?')
+@click.confirmation_option(prompt=_PROMPT_STR)
 def asset(asset, account):
     """Delete an asset from the portfolio."""
     global lakctx
@@ -667,6 +687,18 @@ def asset(asset, account):
     account_obj = portfolio.get_account(account_name)
     account_obj.remove_asset(asset_name)
     lakctx.save_portfolio()
+
+
+@delete.command()
+@click.option('--date', '-d', metavar='DATE', required=True,
+              help='Date of the checkpoint to delete.')
+@click.confirmation_option(prompt=_PROMPT_STR)
+def checkpoint(date):
+    """Delete checkpoint for a given date."""
+    global lakctx
+    perf = lakctx.get_performance()
+    perf.get_timeline().delete_checkpoint(date)
+    lakctx.save_performance()
 
 
 @lak.group(chain=True)
