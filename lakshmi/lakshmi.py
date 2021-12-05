@@ -600,13 +600,23 @@ class Portfolio:
             for asset in account.assets():
                 asset.what_if(-asset.get_what_if())
 
-    def total_value(self):
-        """Returns total value of the portfolio."""
+    def total_value(self, include_whatifs=True):
+        """Returns total value of the portfolio.
+
+        Args:
+            include_whatifs: If False, any 'what if' adjustments to accounts or
+            assets are ignored while calculating the total.
+
+        Returns:
+            The total value of all assets in all accounts.
+        """
         total = 0.0
         for account in self.accounts():
-            total += account.available_cash()
+            if include_whatifs:
+                total += account.available_cash()
             for asset in account.assets():
-                total += asset.adjusted_value()
+                total += (asset.adjusted_value() if include_whatifs
+                          else asset.value())
         return total
 
     # TODO: Renmame this to list_assets for consistency.
