@@ -404,12 +404,15 @@ class Performance:
         """
         table = Table(2, coltypes=['str', 'str'])
 
+        # Make dates strings cannonical.
+        begin = utils.validate_date(begin) if begin else self._timeline.begin()
+        end = utils.validate_date(end) if end else self._timeline.end()
         data = self._timeline.get_performance_data(begin, end)
         change = data.end_balance - data.begin_balance
 
         table.set_rows([
-            ['Start date', self._timeline.begin()],
-            ['End date', self._timeline.end()],
+            ['Start date', begin],
+            ['End date', end],
             ['Beginning balance', utils.format_money(data.begin_balance)],
             ['Ending balance', utils.format_money(data.end_balance)],
             ['Inflows', utils.format_money(data.inflows)],
