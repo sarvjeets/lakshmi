@@ -146,8 +146,11 @@ class AssetClass:
         """Returns a dict representing this object."""
         d = {'Name': self.name}
         if self._children:
-            d['Children'] = [{'Ratio': ratio} | child.to_dict()
-                             for child, ratio in self._children]
+            d['Children'] = []
+            for child, ratio in self._children:
+                val = {'Ratio': ratio}
+                val.update(child.to_dict())
+                d['Children'].append(val)
         return d
 
     @classmethod
