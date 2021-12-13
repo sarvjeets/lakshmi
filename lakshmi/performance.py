@@ -33,19 +33,26 @@ class Checkpoint:
         assert inflow >= 0, 'Inflow must be non-negative'
         assert outflow >= 0, 'Outflow must be non-negative'
 
-        self._portfolio_value = portfolio_value
+        # Round portfolio value to 2 degits.
+        self._portfolio_value = round(portfolio_value, 2)
         self._inflow = inflow
         self._outflow = outflow
 
-    def to_dict(self, show_empty_cashflow=False):
+    def to_dict(self, show_empty_cashflow=False, show_date=True):
         """Converts this object to a dictionary.
 
         Args:
             show_empty_cashflow: If set to True, inflows and outflows are
             shown even if they are empty.
+            show_date: If set to False, date is not included in the dictionary
+            output.
+
+        Returns:
+            A dictionary object representing this object.
         """
         d = {}
-        d['Date'] = self._date
+        if show_date:
+            d['Date'] = self._date
         d['Portfolio Value'] = self._portfolio_value
         if show_empty_cashflow or self._inflow > 0:
             d['Inflow'] = self._inflow
@@ -54,14 +61,30 @@ class Checkpoint:
         return d
 
     @classmethod
-    def from_dict(cls, d):
-        """Returns a new object given dictionary representation d."""
-        keys = set(d.keys())
-        keys.difference_update(
-            {'Date', 'Portfolio Value', 'Inflow', 'Outflow'})
-        assert len(keys) == 0, f'Extra attributes found while parsing: {keys}'
-        return Checkpoint(d.get('Date'), d.get('Portfolio Value'),
-                          d.get('Inflow', 0), d.get('Outflow', 0))
+    def from_dict(cls, d, date=None):
+        """Returns a new object given dictionary representation.
+
+        This function is reverse of the above function. Optionally, it takes
+        in a date which is used to set the date if it is specified. If it is
+        not specified than this function expects that a data is specified via
+        d. This is a reverse function of to_dict().
+
+        Args:
+            d: A dictionary representing this object (usually a output of
+            to_dict method).
+            date: Date for this checkpoint (Format: YYYY/MM/DD).
+
+        Returns: A newly initialized object of type Checkpoint.
+
+        Raises:
+            AssertionError if the dictionary format is not as expected.
+        """
+        if not date:
+            date = d.pop('Date')
+        ret_obj = Checkpoint(date, d.pop('Portfolio Value'),
+                             d.pop('Inflow', 0), d.pop('Outflow', 0))
+        assert len(d) == 0, f'Extra attributes found while parsing: {list(d)}'
+        return ret_obj
 
     def get_date(self):
         """Returns date of this checkpoint in 'YYYY/MM/DD' format."""
@@ -94,7 +117,7 @@ class Timeline:
         for cp in checkpoints:
             cp_date = cp.get_date()
             assert cp_date not in self._dates, (
-                'Cannot have two checkpoints with the same date')
+                f'Cannot have two checkpoints with the same date ({cp_date})')
             self._dates.append(cp_date)
             self._checkpoints[cp_date] = cp
         self._dates.sort()
@@ -212,11 +235,26 @@ class Timeline:
             self._checkpoints[self._dates[pos - 1]],
             self._checkpoints[self._dates[pos]])
 
-    def insert_checkpoint(self, checkpoint):
-        """Inserts checkpoint to the timeline."""
+    def insert_checkpoint(self, checkpoint, replace=False):
+        """Inserts given checkpoint to the timeline.
+
+        Args:
+            checkpoint: Checkpoint to insert.
+            replace: If True, the new checkpoint overwrites a checkpoint with
+            the same date present in the timeline.
+
+        Raises:
+            AssertionError if replace is False and another checkpoint with the
+            same date is present in the timeline.
+        """
         date = checkpoint.get_date()
+
+        if replace and self.has_checkpoint(date):
+            self._checkpoints[date] = checkpoint
+            return
+
         assert not self.has_checkpoint(date), (
-            'Cannot insert two checkpoints with the same date.')
+            f'Cannot insert two checkpoints with the same date ({date}).')
         pos = bisect.bisect(self._dates, date)
         self._dates.insert(pos, date)
         self._checkpoints[date] = checkpoint

@@ -5,7 +5,6 @@ from pathlib import Path
 import yaml
 
 import lakshmi
-import lakshmi.assets
 
 
 class DataTest(unittest.TestCase):
@@ -47,6 +46,13 @@ class DataTest(unittest.TestCase):
             self.parse_dict(
                 'lakshmi/data/VanguardFund.yaml',
                 lakshmi.assets.VanguardFund.from_dict))
+
+    def test_checkpoint(self):
+        self.assertIsNotNone(
+            self.parse_dict(
+                'lakshmi/data/Checkpoint.yaml',
+                lambda x: lakshmi.performance.Checkpoint.from_dict(
+                    x, date='2021/01/01')))
 
     def test_portfolio(self):
         self.assertIsNotNone(self.parse_dict('docs/portfolio.yaml',

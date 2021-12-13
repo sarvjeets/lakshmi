@@ -5,6 +5,7 @@ as library (by design it keeps a lot of global state and is not safe to be
 called multiple times from the same program). If there is ever need to use
 it as a library, this code requires major refactoring to clean it up."""
 
+from datetime import date
 from pathlib import Path
 
 import click
@@ -120,6 +121,12 @@ class LakContext:
     def save_portfolio(self):
         """Save self.portfolio back to file."""
         self.portfolio.save(self.portfolio_filename)
+
+    def init_performance(self, checkpoint):
+        """Intitializes performance object with single checkpoint."""
+        assert not self.performance
+        self.performance = lakshmi.performance.Performance(
+            lakshmi.performance.Timeline([checkpoint]))
 
     def get_performance(self):
         """Loads and returns the performance stats of the portfolio."""
@@ -606,7 +613,7 @@ def asset(asset, account):
 
 @lak.group()
 def add():
-    """Add new accounts or assets to the portfolio."""
+    """Add new entities to the portfolio."""
     pass
 
 
@@ -643,6 +650,41 @@ def asset(asset_type, account):
     account_obj.add_asset(asset_obj)
 
     lakctx.save_portfolio()
+
+
+# Used so we can mock today() for testing.
+def _today():
+    return date.today().strftime('%Y/%m/%d')
+
+
+@add.command()
+@click.option('--edit', '-e', is_flag=True,
+              help='If set, edit the checkpoint before saving it.')
+def checkpoint(edit):
+    """Checkpoint the current portfolio value. This creates a new checkpoint
+    for today with the current portofolio value (and no cash-flows). To add
+    cashflows to this checkpoint, please use the --edit flag."""
+    global lakctx
+
+    with Spinner():
+        value = lakctx.get_portfolio().total_value(include_whatifs=False)
+
+    date_str = _today()
+    checkpoint = lakshmi.performance.Checkpoint(date_str, value)
+    if edit:
+        checkpoint = edit_and_parse(
+            checkpoint.to_dict(show_empty_cashflow=True, show_date=False),
+            lambda x: lakshmi.performance.Checkpoint.from_dict(
+                x, date=date_str),
+            'Checkpoint.yaml')
+    try:
+        perf = lakctx.get_performance()
+        perf.get_timeline().insert_checkpoint(checkpoint)
+    except click.ClickException:
+        # File not found. Create one.
+        lakctx.init_performance(checkpoint)
+
+    lakctx.save_performance()
 
 
 @lak.group()

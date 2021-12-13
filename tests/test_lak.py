@@ -43,7 +43,9 @@ class TestLakContext(lak.LakContext):
         self.saved_portfolio = True
 
     def get_performance(self):
-        return self.performance
+        if self.performance:
+            return self.performance
+        raise click.ClickException('Performance file not found.')
 
     def save_performance(self):
         self.saved_performance = True
@@ -465,6 +467,43 @@ class LakTest(unittest.TestCase):
             None,
             ManualAsset.from_dict,
             'ManualAsset.yaml')
+
+    @patch('lakshmi.lak._today')
+    def test_add_checkpoint(self, mock_today):
+        mock_today.return_value = '2021/01/31'
+
+        result = run_lak('add checkpoint')
+        self.assertEqual(0, result.exit_code)
+        self.assertTrue(lak.lakctx.saved_performance)
+        self.assertEqual(
+            100.0,
+            lak.lakctx.get_performance().get_timeline().get_checkpoint(
+                '2021/01/31').get_portfolio_value())
+
+    @patch('lakshmi.lak._today')
+    def test_add_checkpoint_to_empty(self, mock_today):
+        mock_today.return_value = '2100/01/31'
+        lak.lakctx.performance = None
+
+        result = run_lak('add checkpoint')
+        self.assertEqual(0, result.exit_code)
+        self.assertTrue(lak.lakctx.saved_performance)
+        self.assertEqual('2100/01/31',
+                         lak.lakctx.get_performance().get_timeline().begin())
+
+    @patch('lakshmi.lak.edit_and_parse')
+    @patch('lakshmi.lak._today')
+    def test_add_checkpoint_and_edit(self, mock_today, mock_parse):
+        mock_today.return_value = '2021/01/31'
+        mock_parse.return_value = Checkpoint('2021/01/31', 500.0)
+
+        result = run_lak('add checkpoint --edit')
+        self.assertEqual(0, result.exit_code)
+        self.assertTrue(lak.lakctx.saved_performance)
+        self.assertEqual(
+            500.0,
+            lak.lakctx.get_performance().get_timeline().get_checkpoint(
+                '2021/01/31').get_portfolio_value())
 
     def test_delete_account(self):
         result = run_lak('delete account -t Schwab --yes')

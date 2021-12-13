@@ -29,6 +29,14 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(100, c.get_inflow())
         self.assertEqual(50, c.get_outflow())
 
+        self.assertNotIn('Date', c.to_dict(show_date=False))
+
+        c = Checkpoint.from_dict(c.to_dict(show_date=False), '2020/12/12')
+        self.assertEqual(200, c.get_portfolio_value())
+        self.assertEqual('2020/12/12', c.get_date())
+        self.assertEqual(100, c.get_inflow())
+        self.assertEqual(50, c.get_outflow())
+
     def test_show_empty(self):
         c = Checkpoint('2020/11/11', 100, inflow=10)
         d = c.to_dict()
@@ -64,6 +72,11 @@ class PerformanceTest(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             timeline.insert_checkpoint(cp)
+
+        cp_replace = Checkpoint('2021/1/1', 150.0)
+        timeline.insert_checkpoint(cp_replace, replace=True)
+        self.assertEqual(150, timeline.get_checkpoint('2021/1/1')
+                         .get_portfolio_value())
 
         cp1 = Checkpoint('2020/1/1', 200)
         timeline.insert_checkpoint(cp1)
