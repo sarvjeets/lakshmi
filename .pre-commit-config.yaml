@@ -34,6 +34,6 @@ repos:
     name: unittest
     entry: python -m unittest discover
     language: python
-    additional_dependencies: [click, PyYAML, requests, tabulate, yfinance]
+    additional_dependencies: [click, pyxirr, PyYAML, requests, tabulate, yfinance]
     types: [python]
     pass_filenames: false

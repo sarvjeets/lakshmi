@@ -1,0 +1,6 @@
+# The total value of the portfolio (after all the inflows and outflows).
+Portfolio Value: 10_000.00
+# The amount of money added to the portfolio (optional).
+Inflow: 100.00
+# The amount of money withdrawn from the portfolio (optional).
+Outflow: 0
