@@ -18,6 +18,8 @@ portfolio balances and display stats about portfolio's performance over time.
     - `lak info performance`
 - Support in `.lakrc` to specify where the portfolio performance related data
 (checkpoints) are stored.
+### Fixed
+- Help message now shows default values for `lak analyze rebalance`.
 
 ## [v2.2.0] - 2021-11-26
 ### Added

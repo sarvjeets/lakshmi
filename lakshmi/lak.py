@@ -791,6 +791,7 @@ def tlh(max_percentage, max_dollars):
               show_default=True,
               help='Max absolute difference before rebalancing.')
 @click.option('--max-relative-percentage', '-r', type=float, default=25,
+              show_default=True,
               help='The max relative difference before rebalancing.')
 def rebalance(max_abs_percentage, max_relative_percentage):
     """Shows if assets needs to be rebalanced based on a band
