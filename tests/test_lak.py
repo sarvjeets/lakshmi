@@ -439,6 +439,17 @@ class LakTest(unittest.TestCase):
             'ManualAsset.yaml')
 
     @patch('lakshmi.lak.edit_and_parse')
+    def test_edit_checkpoint(self, mock_parse):
+        mock_parse.return_value = Checkpoint('2021/1/2', 105.01,
+                                             inflow=10, outflow=1)
+        result = run_lak('edit checkpoint --date 2021/01/02')
+        self.assertEqual(0, result.exit_code)
+        self.assertTrue(lak.lakctx.saved_performance)
+        self.assertEqual(
+            1, lak.lakctx.get_performance().get_timeline().get_checkpoint(
+                '2021/01/02').get_outflow())
+
+    @patch('lakshmi.lak.edit_and_parse')
     def test_add_account(self, mock_parse):
         mock_parse.return_value = Account('Vanguard', 'Taxable')
 

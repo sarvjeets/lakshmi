@@ -611,6 +611,23 @@ def asset(asset, account):
     lakctx.save_portfolio()
 
 
+@edit.command()
+@click.option('--date', '-d', metavar='DATE', required=True,
+              help='Date of the checkpoint to edit.')
+def checkpoint(date):
+    """Edit a protfolio's checkpoint."""
+    global lakctx
+    timeline = lakctx.get_performance().get_timeline()
+    orig_cp = timeline.get_checkpoint(date, interpolate=True)
+    edited_cp = edit_and_parse(
+        orig_cp.to_dict(show_empty_cashflow=True, show_date=False),
+        lambda x: lakshmi.performance.Checkpoint.from_dict(
+            x, date=orig_cp.get_date()),
+        'Checkpoint.yaml')
+    timeline.insert_checkpoint(edited_cp, replace=True)
+    lakctx.save_performance()
+
+
 @lak.group()
 def add():
     """Add new entities to the portfolio."""
