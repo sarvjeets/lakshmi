@@ -434,7 +434,9 @@ def account(account):
 
     portfolio = lakctx.get_portfolio()
     account_name = portfolio.get_account_name_by_substr(account)
-    click.echo(portfolio.get_account(account_name).string())
+    with Spinner():
+        output = portfolio.get_account(account_name).string()
+    click.echo(output)
 
 
 @info.command()
