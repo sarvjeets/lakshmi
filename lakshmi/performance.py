@@ -440,14 +440,17 @@ class Performance:
 
         Returns: A formatted string suitable for pretty-printing.
         """
-        table = Table(2, coltypes=['str', 'str'])
-
         # Make dates strings cannonical.
         begin = utils.validate_date(begin) if begin else self._timeline.begin()
         end = utils.validate_date(end) if end else self._timeline.end()
+        if begin == end:
+            # Not enought checkpoints to compute performance.
+            return ''
+
         data = self._timeline.get_performance_data(begin, end)
         change = data.end_balance - data.begin_balance
 
+        table = Table(2, coltypes=['str', 'str'])
         table.set_rows([
             ['Start date', begin],
             ['End date', end],
