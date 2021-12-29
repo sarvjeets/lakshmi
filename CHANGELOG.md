@@ -20,6 +20,7 @@ portfolio balances and display stats about portfolio's performance over time.
 (checkpoints) are stored.
 ### Fixed
 - Help message now shows default values for `lak analyze rebalance`.
+- Added validation for I/EE bonds.
 
 ## [v2.2.0] - 2021-11-26
 ### Added

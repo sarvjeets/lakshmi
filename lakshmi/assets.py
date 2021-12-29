@@ -620,7 +620,9 @@ class _TreasuryBonds(Asset):
                 denom: The denomination of this bond.
             """
             self.series = series
-            self.issue_date = issue_date
+            # Validate issue date and convert it into standard format.
+            self.issue_date = datetime.datetime.strptime(
+                issue_date, '%m/%Y').strftime('%m/%Y')
             self.denom = denom
             self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 
