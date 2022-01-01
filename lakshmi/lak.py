@@ -23,7 +23,7 @@ class LakContext:
     """Context class with utilities to help the script keep state and
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
-    DEFAULT_PERFORMANCE = '~/.lakshmi_performance.yaml'
+    DEFAULT_PERFORMANCE = '~/.performance.yaml'
 
     def _return_config(self, lakrc):
         """Internal function to read and return config file."""
