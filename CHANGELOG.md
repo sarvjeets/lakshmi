@@ -13,7 +13,7 @@ portfolio balances and display stats about portfolio's performance over time.
     - `lak add checkpoint`
     - `lak edit checkpoint`
     - `lak delete checkpoint`
-    - `lak list checkpoint`
+    - `lak list checkpoints`
     - `lak list performance`
     - `lak info performance`
 - Support in `.lakrc` to specify where the portfolio performance related data
