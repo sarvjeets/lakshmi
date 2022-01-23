@@ -5,6 +5,7 @@
 * [Introduction](#introduction)
 * [Configuration files and directories](#configuration-files-and-directories)
    * [Portfolio](#portfolio)
+   * [Performance](#performance)
    * [Cache](#cache)
    * [lakrc](#lakrc)
 * [Portfolio file syntax](#portfolio-file-syntax)
@@ -22,6 +23,8 @@
       * [lak list aa](#lak-list-aa)
       * [lak list al](#lak-list-al)
       * [lak list whatifs](#lak-list-whatifs)
+      * [lak list checkpoints](#lak-list-checkpoints)
+      * [lak list performance](#lak-list-performance)
    * [lak info](#lak-info)
    * [lak whatif](#lak-whatif)
    * [lak analyze](#lak-analyze)
@@ -29,8 +32,6 @@
    * [lak delete](#lak-delete)
 * [Miscellaneous](#miscellaneous)
    * [How to reorder Accounts or Assets in the lak list assets view?](#how-to-reorder-accounts-or-assets-in-the-lak-list-assets-view)
-
-<sub>Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)</sub>
 
 
 ## Introduction
@@ -45,26 +46,6 @@ investing concepts.
 
 This tool is built for US investors and prints portfolio values in dollars.
 
-The following features are currently available:
-
-- Specify and track asset allocation across accounts.
-- Ability to add/edit/delete accounts and assets (e.g. funds, stocks, ETFs)
-inside those accounts.
-- Supports manual assets, assets with ticker, Vanguard funds (that don't
-have associated ticker symbols),
-[EE Bonds](https://www.treasurydirect.gov/indiv/products/prod_eebonds_glance.htm)
-and
-[I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
-- Automatic fetching of market value of various types of assets.
-- Listing current values of assets, printing detailed information,
-printing asset allocation, asset location, etc.
-- Tracking of tax-lot information for assets.
-- Support for running what-if scenarios to see how it impacts the asset
-allocation, etc.
-- Analysis of portfolio to identify if there is need to rebalance or
-if there are losses that can be
-[harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
-
 ## Configuration files and directories
 
 ### Portfolio
@@ -72,6 +53,21 @@ if there are losses that can be
 file. By default, this portfolio is saved in **`~/porfolio.yaml`**. The
 [portfolio file syntax](#portfolio-file-syntax) section explains the syntax
 of this file. Backing up this file periodically is strongly recommended.
+
+### Performance
+The performance related data (checkpoints of the portfolio values, etc.) is
+stored in a performance file. By default, this data is stored in
+**`~/.perfomance.yaml`**. `lak list performance` and `lak info performance`
+commands use this file to compute historical performance stats.
+
+This file is created the first time `lak add checkpoint` is called. Entries
+in this file can be added/modified or deleted via the `lak edit checkpoint` and
+`lak delete checkpoint` commands.
+
+It is recommended to save portfolio checkpoints periodically (every month or
+quarter, or everytime money is added or removed from the portfolio) so that
+the performance of the portfolio can be tracked. The tool interpolates the
+value of the portfolio between saved checkpoints whenever needed.
 
 ### Cache
 In addition, `lak` caches the information about the assets in a cache
@@ -105,9 +101,10 @@ a text file in [YAML](http://yaml.org/) format. An example `.lakrc`
 file looks like:
 
 ```yaml
-# ~/.lakrc file
+# Example ~/.lakrc file
 # Comments begin with '#' and are ignored.
-portfolio: '~/aa/portfolio.yaml'
+portfolio: '~/.config/lak/portfolio.yaml'
+performance: ~/.config/lak/.performance.yaml
 cache: '~/.cache/lakshmicache'
 ```
 
@@ -560,11 +557,11 @@ Options:
   --help             Show this message and exit.
 
 Commands:
-  add      Add new accounts or assets to the portfolio.
+  add      Add new entities to the portfolio.
   analyze  Analyze the portfolio.
-  delete   Delete an account or asset.
+  delete   Delete different entities from the portfolio.
   edit     Edit parts of the portfolio.
-  info     Print detailed information about an asset or account.
+  info     Print detailed information about parts of the portfolio.
   init     Initializes a new portfolio by adding asset classes.
   list     Command to list various parts of the portfolio.
   whatif   Run hypothetical what if scenarios by modifying the total...
@@ -610,20 +607,21 @@ To resolve this error, please delete the existing portfolio file.
 
 
 ### lak add
-This command is used to add accounts and assets:
+This command is used to add accounts, assets or checkpoints:
 
 ```
 $ lak add --help
 Usage: lak add [OPTIONS] COMMAND [ARGS]...
 
-  Add new accounts or assets to the portfolio.
+  Add new entities to the portfolio.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  account  Add a new account to the portfolio.
-  asset    Edit assets in the portfolio.
+  account     Add a new account to the portfolio.
+  asset       Add a new asset to the portfolio.
+  checkpoint  Checkpoint the current portfolio value.
 ```
 
 [Using lak command to create portfolio](#using-lak-command-to-create-portfolio)
@@ -660,6 +658,58 @@ same asset name across accounts.
 For information on different asset types, please refer to the list provided in
 the [Portfolio file syntax](#portfolio-file-syntax) section.
 
+
+```
+$ lak add checkpoint --help
+Usage: lak add checkpoint [OPTIONS]
+
+  Checkpoint the current portfolio value. This creates a new checkpoint for
+  today with the current portofolio value (and no cash-flows). To add
+  cashflows to this checkpoint, please use the --edit flag.
+
+Options:
+  -e, --edit  If set, edit the checkpoint before saving it.
+  --help      Show this message and exit.
+```
+
+This command checkpoint the current value of the portfolio. This checkpoint
+data is saved in the [performance](#performance) file, which is used to
+compute historical portfolio performance. If a performance file does not
+exist, this command will create a new file. The `--edit` flag can be used to
+edit the checkpoint before saving it. This is helpful if you want to add any
+cashflows. For example,
+
+```
+$ lak add checkpoint --edit
+```
+
+This will open your default text-editor with:
+
+```yaml
+Portfolio Value: 500.89
+Inflow: 0
+Outflow: 0
+
+# # Lines starting with "#" are ignored and an empty message aborts this command.
+
+# # The total value of the portfolio (after all the inflows and outflows).
+# Portfolio Value: 10_000.00
+# # The amount of money added to the portfolio (optional).
+# Inflow: 100.00
+# # The amount of money withdrawn from the portfolio (optional).
+# Outflow: 0
+#
+```
+If any money was added (inflow) or removed (outflow) from the portfolio, those
+amounts can be added before the checkpoint is saved. The inflows/outflows are
+used to compute the Internal rate of return
+([IRR](https://www.investopedia.com/terms/i/irr.asp#:~:text=The%20internal%20rate%20of%20return,a%20discounted%20cash%20flow%20analysis.))
+of the portfolio.
+
+The saved checkpoints can listed via `lak list checkpoints` command.
+`lak delete chekpoint` and `lak edit checkpoint` can be used to delete or
+edit an already saved checkpoint.
+
 ### lak list
 
 `lak list` command is used to check on your portfolio's assets, asset
@@ -672,8 +722,7 @@ Usage: lak list [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
   Command to list various parts of the portfolio.
 
 Options:
-  -f, --format [plain|simple|github|grid|fancy_grid|pipe|orgtbl|rst|mediawiki|
-html|latex|latex_raw|latex_booktabs|latex_longtable|tsv]
+  -f, --format [plain|simple|github|grid|fancy_grid|pipe|orgtbl|rst|mediawiki|html|latex|latex_raw|latex_booktabs|latex_longtable|tsv]
                                   Set output table format. For more
                                   information on table formats, please see
                                   "Table format" section on:
@@ -681,12 +730,14 @@ html|latex|latex_raw|latex_booktabs|latex_longtable|tsv]
   --help                          Show this message and exit.
 
 Commands:
-  aa       Prints the Asset Allocation of the portfolio.
-  al       Prints the Asset Location of the portfolio.
-  assets   Prints all assets in the portfolio and their current values.
-  lots     Prints tax lot information for all the assets.
-  total    Prints the total value of the portfolio.
-  whatifs  Prints hypothetical what ifs for assets and accounts.
+  aa           Prints the Asset Allocation of the portfolio.
+  al           Prints the Asset Location of the portfolio.
+  assets       Prints all assets in the portfolio and their current values.
+  checkpoints  Prints the portfolio's saved checkpoints.
+  lots         Prints tax lot information for all the assets.
+  performance  Prints summary stats about portfolio's performance.
+  total        Prints the total value of the portfolio.
+  whatifs      Prints hypothetical what ifs for assets and accounts.
 ```
 
 `lak list` command requires a sub-command: `assets`, `total`, `aa`,
@@ -962,9 +1013,9 @@ in the first column across account types. Please see `lak whatif`
 
 #### lak list whatifs
 
-If `lak whatif` [command](#lak-whatif) is used to test out hypothetical
+When `lak whatif` [command](#lak-whatif) is used to test out hypothetical
 changes to the portfolio, `lak list whatifs` lists all the hypothetical
-changes make to the portfolio. If there are no changes, the output is empty.
+changes made to the portfolio. If there are no changes, the output is empty.
 For example:
 
 ```
@@ -981,23 +1032,82 @@ Schwab Taxable  Vanguard Total Stock Market Index Fund ETF Shares         -$10.0
 Schwab Taxable  Vanguard Total International Stock Index Fund ETF Shares  +$10.00
 ```
 
+#### lak list checkpoints
+
+This command lists all the checkpoints that were saved for a portfolio (e.g.
+by using the `lak add checkpoint` command).
+
+```
+$ lak list checkpoints --help
+Usage: lak list checkpoints [OPTIONS]
+
+  Prints the portfolio's saved checkpoints.
+
+Options:
+  -b, --begin DATE  Start printing the checkpoints from this date (Format:
+                    YYYY/MM/DD). If not provided, defaults to earliest date
+                    for which a checkpoint exists.
+  -e, --end DATE    Stop printing the checkpoints at this date (Format:
+                    YYYY/MM/DD). If not provided, defaults to the latest date
+                    for which a checkpoint exists.
+  --help            Show this message and exit.
+```
+
+A sample output for this command looks like:
+
+```
+$ lak list checkpoints
+Date          Portfolio Value    Inflow    Outflow
+----------  -----------------  --------  ---------
+2021/01/03            $550.00     $0.00      $0.00
+2021/12/08            $587.39    $10.00    $100.00
+2022/01/22            $564.89     $0.00      $0.00
+```
+
+In addition to the portfolio value, this command lists the inflows (money
+added to the portfolio) or outflows (money removed from the portfolio) on
+different dates.
+
+#### lak list performance
+
+This command is used to print information about portfolio performance based
+on the checkpoints that were previously saved. A sample output for this
+command looks like:
+
+```
+$ lak list performance
+Period      Inflows    Outflows    Portfolio Change    Change %    IRR
+--------  ---------  ----------  ------------------  ----------  -----
+3 Months     $10.00     $100.00             -$95.59        -14%    -4%
+6 Months     $10.00     $100.00             -$61.77        -10%    10%
+1 Year       $10.00     $100.00              +$7.75          1%    18%
+Overall      $10.00     $100.00             +$14.89          3%    18%
+```
+
+This command lists the portfolio inflows and outflows, change in the portfolio
+value and performance stats for different time periods. The
+last column
+([IRR](https://www.investopedia.com/terms/i/irr.asp#:~:text=The%20internal%20rate%20of%20return,a%20discounted%20cash%20flow%20analysis.))
+refers to the Internal Rate of Return of the portfolio.
+
 ### lak info
 
-This command is useful to print detailed information about an asset or account.
-Here are few examples:
+This command is useful to print detailed information about parts of the
+portfolio (e.g. account or asset). Here are few examples:
 
 ```
 $ lak info --help
 Usage: lak info [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
 
-  Print detailed information about an asset or account.
+  Print detailed information about parts of the portfolio.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  account  Print details of an account.
-  asset    Print details of an asset.
+  account      Print details of an account.
+  asset        Print details of an asset.
+  performance  Print detailed stats about portfolio's performance.
 
 $ lak info account --help
 Usage: lak info account [OPTIONS]
@@ -1069,6 +1179,42 @@ Date          Quantity    Cost    Gain    Gain%
 2021/07/31          1  $64.94  +$0.99       2%
 ```
 
+If the portfolio has saved checkpoints (created via the `lak add checkpoint`
+command), `lak info performance` can be used to print
+detailed stats about the perfolio's performance for different time periods:
+
+```
+$ lak info performance --help
+Usage: lak info performance [OPTIONS]
+
+  Print detailed stats about portfolio's performance.
+
+Options:
+  -b, --begin DATE  Begining date from which to start computing performance
+                    stats (Format: YYYY/MM/DD). If not provided, defaults to
+                    the earliest possible date.
+  -e, --end DATE    Ending date at which to stop computing performance stats
+                    (Format: YYYY/MM/DD). If not provided, defaults to the
+                    latest possible date.
+  --help            Show this message and exit.
+
+# If there is no checkpoint for the date specified, the value of the portfolio
+# on that date is simply interpolated based on the two checkpoints surrounding
+# it.
+
+$ lak info performance -b 2021/06/06
+Start date               2021/06/06
+End date                 2022/01/22
+Beginning balance        $607.87
+Ending balance           $564.89
+Inflows                  $10.00
+Outflows                 $100.00
+Portfolio growth         -$42.98
+Market growth            +$47.02
+Portfolio growth %       -7%
+Internal Rate of Return  13%
+```
+
 Just like the `lak list` command, `lak info` command can be chained:
 
 ```
@@ -1100,6 +1246,9 @@ the changes via the `lak whatif` command, all the `lak` commands
 behave as if those changes were _actually_ made to the portfolio.
 To warn the user, some commands print a warning at the top indicating
 that hypothetical whatifs are set.
+
+These whatifs are ignored for the purposes of creating and saving checkpoints
+(e.g. with `lak add checkpoint`).
 
 Just the like the `lak info` command, `lak whatif` command take either
 `account` or `asset` as a sub-command:
@@ -1142,7 +1291,6 @@ Class      Actual%    Desired%    Value    Difference
 US             33%         36%  $180.00       +$13.92
 Intl           24%         24%  $131.86        -$2.58
 Bonds          42%         40%  $226.80       -$11.34
-$
 ```
 
 We see that the actual allocation of _US_ asset class decreased from
@@ -1207,7 +1355,7 @@ Options:
 
 Commands:
   rebalance  Shows if assets needs to be rebalanced based on a band based...
-  tlh        Shows which tax lots can be Tax-loss harvested.
+  tlh        Shows which tax lots can be Tax-loss harvested (TLH).
 
 $ lak analyze tlh --help
 Usage: lak analyze tlh [OPTIONS]
@@ -1216,7 +1364,7 @@ Usage: lak analyze tlh [OPTIONS]
 
 Options:
   -p, --max-percentage FLOAT  The max percentage loss for each lot before
-                              TLHing.  [default: 10.0]
+                              TLHing.  [default: 10]
   -d, --max-dollars INTEGER   The max absolute loss for an asset (across all
                               tax lots) before TLHing.
   --help                      Show this message and exit.
@@ -1230,12 +1378,11 @@ Usage: lak analyze rebalance [OPTIONS]
 
 Options:
   -a, --max-abs-percentage FLOAT  Max absolute difference before rebalancing.
-                                  [default: 5.0]
+                                  [default: 5]
   -r, --max-relative-percentage FLOAT
                                   The max relative difference before
-                                  rebalancing.
+                                  rebalancing.  [default: 25]
   --help                          Show this message and exit.
-
 ```
 
 **A word of caution about the `tlh` command**: This command assumes that
@@ -1248,7 +1395,8 @@ advised to do their own research before using this tool.
 ### lak edit
 
 This command is used to edit various parts of the portfolio. The
-[portfolio file](#portfolio) can be directly edited if so desired,
+[portfolio](#portfolio) or the [performance](#performance) file can be
+directly edited if so desired,
 but `lak edit` makes it easier to directly modify the relevant
 parts of the portfolio file.
 
@@ -1264,7 +1412,8 @@ Options:
 Commands:
   account     Edit an account in the portfolio.
   asset       Edit an asset in the portfolio.
-  assetclass  Edit the Asset classes and desired asset allocation.
+  assetclass  Edit the Asset classes and the desired asset allocation.
+  checkpoint  Edit a protfolio's checkpoint.
 ```
 
 For example, to edit the Schwab taxable account:
@@ -1302,26 +1451,46 @@ all the lines), the command is aborted. If there are any errors in the
 file, `lak edit` prints the error, and prompts the user to re-edit the
 file.
 
+`lak edit checkpoint` command is used to edit previously saved checkpoints or
+to add new checkpoint in-between two saved checkpoints. This is useful for
+adding new information (e.g. missing cashflows) retroactively to the portfolio.
+For example,
+```
+$ lak list checkpoints
+Date          Portfolio Value    Inflow    Outflow
+----------  -----------------  --------  ---------
+2021/01/03            $550.00     $0.00      $0.00
+2021/12/08            $587.39    $10.00    $100.00
+2022/01/22            $564.89     $0.00      $0.00
+
+$ lak edit checkpoint -d 2021/11/11
+# This will open up editor with checkpoint for date 2021/11/11 with the
+# portfolio value pre-filled for that checkpoint by interpolating the portfolio
+# values from 2021/01/03 and 2021/12/08.
+```
+
 ### lak delete
 
-This command allows the user to delete accounts or assets from the portfolio:
+This command allows the user to delete accounts, assets or checkpoints from
+the portfolio:
 
 ```
 $ lak delete --help
 Usage: lak delete [OPTIONS] COMMAND [ARGS]...
 
-  Delete an account or asset.
+  Delete different entities from the portfolio.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  account  Delete an account from the portfolio.
-  asset    Delete an asset from the portfolio.
+  account     Delete an account from the portfolio.
+  asset       Delete an asset from the portfolio.
+  checkpoint  Delete checkpoint for a given date.
 ```
 
 `lak delete` sub-commands prompt the user to confirm if they want to delete
-the account or asset before actually deleting them. This can be skipped via
+the specified entity before actually deleting it. This can be skipped via
 the `--yes` flag.
 
 ## Miscellaneous
