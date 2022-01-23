@@ -607,7 +607,7 @@ To resolve this error, please delete the existing portfolio file.
 
 
 ### lak add
-This command is used to add accounts and assets:
+This command is used to add accounts, assets or checkpoints:
 
 ```
 $ lak add --help
@@ -1085,9 +1085,10 @@ Overall      $10.00     $100.00             +$14.89          3%    18%
 ```
 
 This command lists the portfolio inflows and outflows, change in the portfolio
-value, performance change in portfolio value for differnt time periods. The
-last column (IRR) refers to internal rate of return, that is computed using
-the portfolio value and inflows/outflows provided in the checkpoints.
+value and performance stats for different time periods. The
+last column
+([IRR](https://www.investopedia.com/terms/i/irr.asp#:~:text=The%20internal%20rate%20of%20return,a%20discounted%20cash%20flow%20analysis.))
+refers to the Internal Rate of Return of the portfolio.
 
 ### lak info
 
