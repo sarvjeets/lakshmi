@@ -656,7 +656,7 @@ def account():
               help='Add asset to this account (a substring that matches the '
               'account name).')
 def asset(asset_type, account):
-    """Edit assets in the portfolio."""
+    """Add a new asset to the portfolio."""
     global lakctx
     portfolio = lakctx.get_portfolio()
 
