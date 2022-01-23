@@ -46,26 +46,6 @@ investing concepts.
 
 This tool is built for US investors and prints portfolio values in dollars.
 
-The following features are currently available:
-
-- Specify and track asset allocation across accounts.
-- Ability to add/edit/delete accounts and assets (e.g. funds, stocks, ETFs)
-inside those accounts.
-- Supports manual assets, assets with ticker, Vanguard funds (that don't
-have associated ticker symbols),
-[EE Bonds](https://www.treasurydirect.gov/indiv/products/prod_eebonds_glance.htm)
-and
-[I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
-- Automatic fetching of market value of various types of assets.
-- Listing current values of assets, printing detailed information,
-printing asset allocation, asset location, etc.
-- Tracking of tax-lot information for assets.
-- Support for running what-if scenarios to see how it impacts the asset
-allocation, etc.
-- Analysis of portfolio to identify if there is need to rebalance or
-if there are losses that can be
-[harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
-
 ## Configuration files and directories
 
 ### Portfolio
