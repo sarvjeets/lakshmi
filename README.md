@@ -30,17 +30,18 @@ The following features are currently available:
 
 - Specify and track asset allocation across accounts.
 - Ability to add/edit/delete accounts and assets (funds, stocks, ETFs, etc.)
-inside those accounts.
+inside those accounts. The market value of these assets is automatically
+updated.
+- Support for running what-if scenarios to see how it impacts the overall asset
+allocation.
+- Ability to track portfolio performance (IRR) and cash flows.
 - Supports manual assets, assets with ticker, Vanguard funds (that don't
 have associated ticker symbols),
 [EE Bonds](https://www.treasurydirect.gov/indiv/products/prod_eebonds_glance.htm)
 and
 [I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
-- Automatic fetching of market value of various types of assets.
 - Listing current values of assets, asset allocation and asset location.
 - Tracking of tax-lot information for assets.
-- Support for running what-if scenarios to see how it impacts the overall asset
-allocation.
 - Analysis of portfolio to identify if there is need to rebalance or
 if there are losses that can be
 [harvested](https://www.bogleheads.org/wiki/Tax_loss_harvesting).
@@ -78,11 +79,11 @@ Options:
   --help             Show this message and exit.
 
 Commands:
-  add      Add new accounts or assets to the portfolio.
+  add      Add new entities to the portfolio.
   analyze  Analyze the portfolio.
-  delete   Delete an account or asset.
+  delete   Delete different entities from the portfolio.
   edit     Edit parts of the portfolio.
-  info     Print detailed information about an asset or account.
+  info     Print detailed information about parts of the portfolio.
   init     Initializes a new portfolio by adding asset classes.
   list     Command to list various parts of the portfolio.
   whatif   Run hypothetical what if scenarios by modifying the total...
@@ -115,15 +116,14 @@ help for the command:
 
 ```
 $ lak add asset --help
-
 Usage: lak add asset [OPTIONS]
 
-  Edit assets in the portfolio.
+  Add a new asset to the portfolio.
 
 Options:
   -p, --asset-type [ManualAsset|TickerAsset|VanguardFund|IBonds|EEBonds]
                                   Add this type of asset.  [required]
-  -t, --account substr            Add asset to this account (a sub-string that
+  -t, --account substr            Add asset to this account (a substring that
                                   matches the account name).  [required]
   --help                          Show this message and exit.
 ```
