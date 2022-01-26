@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v2.3.0] - 2022-01-25
+### Added
+- A new module `lakshmi.performance` that adds ability to checkpoint
+portfolio balances and display stats about portfolio's performance over time.
+- New commands in `lak` that exposes some functionality of the
+`lakshmi.performance` module:
+    - `lak add checkpoint`
+    - `lak edit checkpoint`
+    - `lak delete checkpoint`
+    - `lak list checkpoints`
+    - `lak list performance`
+    - `lak info performance`
+- Support in `.lakrc` to specify where the portfolio performance related data
+(checkpoints) are stored.
+### Fixed
+- Help message now shows default values for `lak analyze rebalance`.
+- Added validation for I/EE bond purchase dates.
+
 ## [v2.2.0] - 2021-11-26
 ### Added
 - [New flag](https://github.com/sarvjeets/lakshmi/blob/develop/docs/lak.md#lakrc)

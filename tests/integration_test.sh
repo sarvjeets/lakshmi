@@ -3,8 +3,7 @@
 # There are a number of unit-tests for lakshmi. This files add some
 # integration tests for lak to make sure all commands are running without
 # errors. It doesn't check for correctness -- that is left to unittest.
-# What it does check is if commands are executing without errors. For example,
-# it can catch issues with packaging files incorrectly.
+# For example, it can catch issues with packaging files incorrectly.
 
 # Tests if command works
 testcmd () {
@@ -45,6 +44,7 @@ mkdir -p $TMP_DIR
 cat << HERE > $TMP_DIR/lakrc
 portfolio: $TMP_DIR/portfolio.yaml
 cache: $CACHE
+performance: $TMP_DIR/performance.yaml
 HERE
 
 export LAK_CONFIG=$TMP_DIR/lakrc
@@ -61,6 +61,7 @@ testcmd "lak add asset -t account -p TickerAsset"
 testcmd "lak add asset -t account -p VanguardFund"
 testcmd "lak add asset -t account -p IBonds"
 testcmd "lak add asset -t account -p EEBonds"
+testcmd "lak add checkpoint -e"
 testcmd "lak list al"
 testcmd "lak list aa"
 testcmd "lak list aa --no-compact"
@@ -69,9 +70,12 @@ testcmd "lak list assets -s -q"
 testcmd "lak list total"
 testcmd "lak list whatifs"
 testcmd "lak list lots"
+testcmd "lak list checkpoints"
+testcmd "lak list performance"
 testcmd "lak info account -t account"
 testcmd "lak info asset -a ITOT"
 testcmd "lak info asset -a EE"
+testcmd "lak info performance"
 testcmd "lak whatif account -t account 10"
 testcmd "lak whatif account -t account -10"
 testcmd "lak whatif asset -a ITOT 10"
@@ -80,5 +84,7 @@ testcmd "lak analyze tlh"
 testcmd "lak analyze rebalance"
 testcmd "lak edit account -t account"
 testcmd "lak edit asset -a ITOT"
+testcmd "lak edit checkpoint --date `date +%Y/%m/%d`"
 testcmd "lak delete asset -a ITOT --yes"
 testcmd "lak delete account -t account --yes"
+testcmd "lak delete checkpoint --yes --date `date +%Y/%m/%d`"

@@ -261,12 +261,7 @@ class TaxLot:
 
         Raises: AssertionError if date is not in the right format.
         """
-        # Do some sanity check.
-        date_pattern = re.compile('\\d{4}/\\d{2}/\\d{2}')
-        assert date_pattern.match(
-            date), 'Tax lot dates should be in format YYYY/MM/DD'
-
-        self.date = date
+        self.date = utils.validate_date(date)
         self.quantity = quantity
         self.unit_cost = unit_cost
 
@@ -625,7 +620,9 @@ class _TreasuryBonds(Asset):
                 denom: The denomination of this bond.
             """
             self.series = series
-            self.issue_date = issue_date
+            # Validate issue date and convert it into standard format.
+            self.issue_date = datetime.datetime.strptime(
+                issue_date, '%m/%Y').strftime('%m/%Y')
             self.denom = denom
             self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 

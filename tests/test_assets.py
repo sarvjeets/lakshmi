@@ -232,9 +232,13 @@ class AssetsTest(unittest.TestCase):
             mock_res.text = html_file.read()
         mock_post.return_value = mock_res
         mock_date.now.strftime.return_value = '04/2021'
+        # Bypass issue date validation.
+        mock_strptime = MagicMock()
+        mock_strptime.strftime.return_value = '03/2020'
+        mock_date.strptime.return_value = mock_strptime
 
         ibonds = assets.IBonds({'All': 1.0})
-        ibonds.add_bond('03/2020', 10000)
+        ibonds.add_bond('3/2020', 10000)
 
         mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',
@@ -272,9 +276,13 @@ class AssetsTest(unittest.TestCase):
             mock_res.text = html_file.read()
         mock_post.return_value = mock_res
         mock_date.now.strftime.return_value = '04/2021'
+        # Bypass issue date validation.
+        mock_strptime = MagicMock()
+        mock_strptime.strftime.return_value = '03/2020'
+        mock_date.strptime.return_value = mock_strptime
 
         eebonds = assets.EEBonds({'All': 1.0})
-        eebonds.add_bond('03/2020', 10000)
+        eebonds.add_bond('3/2020', 10000)
 
         mock_post.asset_called_once_with(
             'http://www.treasurydirect.gov/BC/SBCPrice',

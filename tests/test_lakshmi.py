@@ -509,6 +509,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(80, asset2.adjusted_value())
         self.assertAlmostEqual(20, account1.available_cash())
         self.assertAlmostEqual(200, portfolio.total_value())
+        self.assertAlmostEqual(200, portfolio.total_value(False))
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual([['Account 1', '+$20.00']],
                              account_whatifs.str_list())
@@ -519,6 +520,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(120, asset1.adjusted_value())
         self.assertAlmostEqual(0, account1.available_cash())
         self.assertAlmostEqual(200, portfolio.total_value())
+        self.assertAlmostEqual(200, portfolio.total_value(False))
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual([], account_whatifs.str_list())
         self.assertListEqual(
@@ -540,6 +542,7 @@ class LakshmiTest(unittest.TestCase):
         portfolio.what_if_add_cash('Account 1', 30)
         self.assertAlmostEqual(30, account1.available_cash())
         self.assertAlmostEqual(230, portfolio.total_value())
+        self.assertAlmostEqual(200, portfolio.total_value(False))
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual(
             [['Account 1', '+$30.00']],
@@ -552,6 +555,7 @@ class LakshmiTest(unittest.TestCase):
         portfolio.what_if_add_cash('Account 2', 460)
         self.assertAlmostEqual(460, account2.available_cash())
         self.assertAlmostEqual(690, portfolio.total_value())
+        self.assertAlmostEqual(200, portfolio.total_value(False))
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual(
             [['Account 1', '+$30.00'],
@@ -573,6 +577,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertAlmostEqual(0, account1.available_cash())
         self.assertAlmostEqual(0, account2.available_cash())
         self.assertAlmostEqual(200, portfolio.total_value())
+        self.assertAlmostEqual(200, portfolio.total_value(False))
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual([], account_whatifs.str_list())
         self.assertListEqual([], asset_whatifs.str_list())

@@ -5,6 +5,7 @@ as library (by design it keeps a lot of global state and is not safe to be
 called multiple times from the same program). If there is ever need to use
 it as a library, this code requires major refactoring to clean it up."""
 
+from datetime import date
 from pathlib import Path
 
 import click
@@ -13,6 +14,7 @@ import yaml
 import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
+import lakshmi.performance
 from lakshmi import Portfolio
 from lakshmi.table import Table
 
@@ -21,6 +23,7 @@ class LakContext:
     """Context class with utilities to help the script keep state and
     share it."""
     DEFAULT_PORTFOLIO = '~/portfolio.yaml'
+    DEFAULT_PERFORMANCE = '~/.performance.yaml'
 
     def _return_config(self, lakrc):
         """Internal function to read and return config file."""
@@ -46,15 +49,24 @@ class LakContext:
         self.whatifs = None
         # The loaded portfolio.
         self.portfolio = None
+        # The loaded performance object.
+        self.performance = None
         self.tablefmt = None
 
         config = self._return_config(lakrc)
 
+        # Setup portfolio filename.
         portfolio_filename = config.pop(
             'portfolio', LakContext.DEFAULT_PORTFOLIO)
         self.portfolio_filename = str(Path(portfolio_filename).expanduser())
 
-        # Setup cache directory.
+        # Setup performance filename.
+        performance_filename = config.pop(
+            'performance', LakContext.DEFAULT_PERFORMANCE)
+        self.performance_filename = str(
+            Path(performance_filename).expanduser())
+
+        # Setup cache directory. If nothing is set, ~/.lakshmicache is used.
         if 'cache' in config:
             cache_dir = config.pop('cache')
             if cache_dir is None:
@@ -97,7 +109,7 @@ class LakContext:
         if not self.portfolio:
             # Check if portfolio file doesn't exist and print helpful error
             # message.
-            portfolio_file = Path(self.portfolio_filename).expanduser()
+            portfolio_file = Path(self.portfolio_filename)
             if not portfolio_file.exists():
                 raise click.ClickException(
                     f'Portfolio file {portfolio_file} does not exist. Please '
@@ -110,11 +122,32 @@ class LakContext:
         """Save self.portfolio back to file."""
         self.portfolio.save(self.portfolio_filename)
 
+    def init_performance(self, checkpoint):
+        """Intitializes performance object with single checkpoint."""
+        assert not self.performance
+        self.performance = lakshmi.performance.Performance(
+            lakshmi.performance.Timeline([checkpoint]))
+
+    def get_performance(self):
+        """Loads and returns the performance stats of the portfolio."""
+        if not self.performance:
+            try:
+                self.performance = lakshmi.performance.Performance.load(
+                    self.performance_filename)
+            except FileNotFoundError:
+                raise click.ClickException(
+                    f'Performance file {self.performance_filename} not found. '
+                    'Please use `lak add checkpoint` to create checkpoints.')
+        return self.performance
+
+    def save_performance(self):
+        """Saves self.performance back to a file."""
+        self.performance.save(self.performance_filename)
+
 
 # Global variable to save and pass context between click commands.
-#
 # I tried using click's builtin context, but it was too troublesome
-# and didn't exactly give us the functionality that I wanted
+# and didn't exactly give us the functionality that I wanted.
 # -- sarvjeets
 lakctx = None
 
@@ -306,6 +339,32 @@ def lots():
         click.echo(output)
 
 
+@list.command()
+@click.option('--begin', '-b', metavar='DATE',
+              help='Start printing the checkpoints from this date '
+              '(Format: YYYY/MM/DD). If not provided, defaults to earliest '
+              'date for which a checkpoint exists.')
+@click.option('--end', '-e', metavar='DATE',
+              help='Stop printing the checkpoints at this date '
+              '(Format: YYYY/MM/DD). If not provided, defaults to the latest '
+              'date for which a checkpoint exists.')
+def checkpoints(begin, end):
+    """Prints the portfolio's saved checkpoints."""
+    global lakctx
+    lakctx.optional_separator()
+    click.echo(lakctx.get_performance().get_timeline().to_table(
+        begin, end).string(lakctx.tablefmt))
+
+
+@list.command()
+def performance():
+    """Prints summary stats about portfolio's performance."""
+    global lakctx
+    lakctx.optional_separator()
+    perf = lakctx.get_performance()
+    click.echo(perf.summary_table().string(lakctx.tablefmt))
+
+
 @lak.group(chain=True,
            invoke_without_command=True)
 @click.option('--reset', '-r', is_flag=True,
@@ -361,7 +420,7 @@ def asset(asset, account, delta):
 
 @lak.group(chain=True)
 def info():
-    """Print detailed information about an asset or account."""
+    """Print detailed information about parts of the portfolio."""
     pass
 
 
@@ -375,7 +434,9 @@ def account(account):
 
     portfolio = lakctx.get_portfolio()
     account_name = portfolio.get_account_name_by_substr(account)
-    click.echo(portfolio.get_account(account_name).string())
+    with Spinner():
+        output = portfolio.get_account(account_name).string()
+    click.echo(output)
 
 
 @info.command()
@@ -395,6 +456,22 @@ def asset(asset, account):
         account if account is not None else '', asset)
     click.echo(portfolio.get_account(
         account_name).get_asset(asset_name).string())
+
+
+@info.command()
+@click.option('--begin', '-b', metavar='DATE',
+              help='Begining date from which to start computing performance '
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
+              'earliest possible date.')
+@click.option('--end', '-e', metavar='DATE',
+              help='Ending date at which to stop computing performance '
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
+              'latest possible date.')
+def performance(begin, end):
+    """Print detailed stats about portfolio's performance."""
+    global lakctx
+    lakctx.optional_separator()
+    click.echo(lakctx.get_performance().get_info(begin, end))
 
 
 @lak.group()
@@ -536,9 +613,26 @@ def asset(asset, account):
     lakctx.save_portfolio()
 
 
+@edit.command()
+@click.option('--date', '-d', metavar='DATE', required=True,
+              help='Date of the checkpoint to edit.')
+def checkpoint(date):
+    """Edit a protfolio's checkpoint."""
+    global lakctx
+    timeline = lakctx.get_performance().get_timeline()
+    orig_cp = timeline.get_checkpoint(date, interpolate=True)
+    edited_cp = edit_and_parse(
+        orig_cp.to_dict(show_empty_cashflow=True, show_date=False),
+        lambda x: lakshmi.performance.Checkpoint.from_dict(
+            x, date=orig_cp.get_date()),
+        'Checkpoint.yaml')
+    timeline.insert_checkpoint(edited_cp, replace=True)
+    lakctx.save_performance()
+
+
 @lak.group()
 def add():
-    """Add new accounts or assets to the portfolio."""
+    """Add new entities to the portfolio."""
     pass
 
 
@@ -562,7 +656,7 @@ def account():
               help='Add asset to this account (a substring that matches the '
               'account name).')
 def asset(asset_type, account):
-    """Edit assets in the portfolio."""
+    """Add a new asset to the portfolio."""
     global lakctx
     portfolio = lakctx.get_portfolio()
 
@@ -577,17 +671,55 @@ def asset(asset_type, account):
     lakctx.save_portfolio()
 
 
+# Used so we can mock today() for testing.
+def _today():
+    return date.today().strftime('%Y/%m/%d')
+
+
+@add.command()
+@click.option('--edit', '-e', is_flag=True,
+              help='If set, edit the checkpoint before saving it.')
+def checkpoint(edit):
+    """Checkpoint the current portfolio value. This creates a new checkpoint
+    for today with the current portofolio value (and no cash-flows). To add
+    cashflows to this checkpoint, please use the --edit flag."""
+    global lakctx
+
+    with Spinner():
+        value = lakctx.get_portfolio().total_value(include_whatifs=False)
+
+    date_str = _today()
+    checkpoint = lakshmi.performance.Checkpoint(date_str, value)
+    if edit:
+        checkpoint = edit_and_parse(
+            checkpoint.to_dict(show_empty_cashflow=True, show_date=False),
+            lambda x: lakshmi.performance.Checkpoint.from_dict(
+                x, date=date_str),
+            'Checkpoint.yaml')
+    try:
+        perf = lakctx.get_performance()
+        perf.get_timeline().insert_checkpoint(checkpoint)
+    except click.ClickException:
+        # File not found. Create one.
+        lakctx.init_performance(checkpoint)
+
+    lakctx.save_performance()
+
+
 @lak.group()
 def delete():
-    """Delete an account or asset."""
+    """Delete different entities from the portfolio."""
     pass
+
+
+# A generic prompt to use for all delete commands.
+_PROMPT_STR = 'This operation is not reversable. Are you sure?'
 
 
 @delete.command()
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
               help='Delete the account that matches this substring')
-@click.confirmation_option(prompt='This operation is not reversable. '
-                           'Are you sure?')
+@click.confirmation_option(prompt=_PROMPT_STR)
 def account(account):
     """Delete an account from the portfolio."""
     global lakctx
@@ -605,8 +737,7 @@ def account(account):
               help='If the asset name is not unique across the portfolio, '
               'optionally a substring to specify the account name '
               'from which the asset should be deleted.')
-@click.confirmation_option(prompt='This operation is not reversable. '
-                           'Are you sure?')
+@click.confirmation_option(prompt=_PROMPT_STR)
 def asset(asset, account):
     """Delete an asset from the portfolio."""
     global lakctx
@@ -617,6 +748,18 @@ def asset(asset, account):
     account_obj = portfolio.get_account(account_name)
     account_obj.remove_asset(asset_name)
     lakctx.save_portfolio()
+
+
+@delete.command()
+@click.option('--date', '-d', metavar='DATE', required=True,
+              help='Date of the checkpoint to delete.')
+@click.confirmation_option(prompt=_PROMPT_STR)
+def checkpoint(date):
+    """Delete checkpoint for a given date."""
+    global lakctx
+    perf = lakctx.get_performance()
+    perf.get_timeline().delete_checkpoint(date)
+    lakctx.save_performance()
 
 
 @lak.group(chain=True)
@@ -650,6 +793,7 @@ def tlh(max_percentage, max_dollars):
               show_default=True,
               help='Max absolute difference before rebalancing.')
 @click.option('--max-relative-percentage', '-r', type=float, default=25,
+              show_default=True,
               help='The max relative difference before rebalancing.')
 def rebalance(max_abs_percentage, max_relative_percentage):
     """Shows if assets needs to be rebalanced based on a band

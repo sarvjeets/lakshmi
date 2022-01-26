@@ -1,13 +1,12 @@
 default_language_version:
-  python: python3.9
+  python: python3
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.0.1
+  rev: v4.1.0
   hooks:
   - id: check-yaml
   - id: end-of-file-fixer
   - id: trailing-whitespace
-
 # isort
 - repo: https://github.com/asottile/seed-isort-config
   rev: v2.2.0
@@ -17,7 +16,6 @@ repos:
   rev: 5.10.1
   hooks:
   - id: isort
-
 # flake8
 - repo: https://github.com/pycqa/flake8
   rev: 4.0.1
@@ -29,13 +27,13 @@ repos:
         - "--select=B,C,E,F,W,T4,B9"
         - "--ignore=W503"
         - "--per-file-ignores=lakshmi/lak.py:F811"
-
+# unittest
 - repo: local
   hooks:
   - id: unittest
     name: unittest
     entry: python -m unittest discover
     language: python
-    additional_dependencies: [click, PyYAML, requests, tabulate, yfinance]
+    additional_dependencies: [click, pyxirr, PyYAML, requests, tabulate, yfinance]
     types: [python]
     pass_filenames: false
