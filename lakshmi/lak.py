@@ -154,13 +154,20 @@ lakctx = None
 
 class Spinner:
     """Prints a progress bar on the screen for cache misses."""
-    SPINNER = ('▰▱▱▱▱▱▱',
-               '▰▰▱▱▱▱▱',
-               '▰▰▰▱▱▱▱',
-               '▰▰▰▰▱▱▱',
-               '▰▰▰▰▰▱▱',
-               '▰▰▰▰▰▰▱',
-               '▰▰▰▰▰▰▰')
+    SPINNER = ('[    ]',
+               '[=   ]',
+               '[==  ]',
+               '[=== ]',
+               '[ ===]',
+               '[  ==]',
+               '[   =]',
+               '[    ]',
+               '[   =]',
+               '[  ==]',
+               '[ ===]',
+               '[=== ]',
+               '[==  ]',
+               '[=   ]')
 
     def __init__(self):
         self._index = 0  # Index within _SPINNER
