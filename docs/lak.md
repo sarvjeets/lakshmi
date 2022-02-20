@@ -18,6 +18,7 @@
    * [lak add](#lak-add)
    * [lak list](#lak-list)
       * [lak list assets](#lak-list-assets)
+      * [lak list accounts](#lak-list-accounts)
       * [lak list lots](#lak-list-lots)
       * [lak list total](#lak-list-total)
       * [lak list aa](#lak-list-aa)
@@ -815,6 +816,45 @@ Schwab Taxable   VTI              1  Vanguard Total Stock Market Index Fund ETF 
 Schwab Taxable   VXUS             1  Vanguard Total International Stock Index Fund ETF Shares   $65.59
 Roth IRA         VXUS             1  Vanguard Total International Stock Index Fund ETF Shares   $65.59
 Vanguard 401(k)  VBMFX           20  Vanguard Total Bond Market Index Fund Investor Shares     $226.80
+```
+
+### lak list accounts
+This command can be used to print the sum total of value grouped by account
+or account types:
+
+```
+$ lak list accounts --help
+Usage: lak list accounts [OPTIONS]
+
+  Prints all the accounts in the portfolio and their current values.
+
+Options:
+  -g, --group  If set, aggregate the account values by account types.
+  --help       Show this message and exit.
+```
+
+For the portfolio created previously:
+
+```
+$ lak list accounts
+Account          Account Type      Value    Percentage
+---------------  --------------  -------  ------------
+Schwab Taxable   Taxable         $280.91           50%
+Roth IRA         Tax-Exempt       $61.54           11%
+Vanguard 401(k)  Tax-Deferred    $215.00           39%
+```
+
+The last columns shows the percentage of value of assets in that account.
+
+The account values can also be aggregated by account types:
+
+```
+$ lak list accounts -g
+Account Type      Value    Percentage
+--------------  -------  ------------
+Taxable         $280.91           50%
+Tax-Exempt       $61.54           11%
+Tax-Deferred    $215.00           39%
 ```
 
 #### lak list lots
