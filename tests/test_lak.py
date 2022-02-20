@@ -168,6 +168,12 @@ class LakTest(unittest.TestCase):
         self.assertRegex(result.output, r'Account +Asset +Value\n')
         self.assertFalse(lak.lakctx.saved_portfolio)
 
+    def test_list_accounts(self):
+        result = run_lak('list accounts')
+        self.assertEqual(0, result.exit_code)
+        self.assertRegex(result.output, r'Account +Account Type +Value')
+        self.assertFalse(lak.lakctx.saved_portfolio)
+
     def test_list_lots(self):
         result = run_lak('list lots')
         self.assertEqual(0, result.exit_code)
