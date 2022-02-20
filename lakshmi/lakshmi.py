@@ -622,6 +622,52 @@ class Portfolio:
                           else asset.value())
         return total
 
+    def list_accounts(self, group_by_type=False):
+        """Returns all the accounts and their values.
+
+        Args:
+            group_by_type: If set, account values are aggregated and grouped
+            by account type.
+
+        Returns: A table.Table object representing all the accounts. The
+        columns correspond to Account name (not shown if group_by_type is set),
+        account type, total value and percentage of total portfolio that the
+        value represents.
+        """
+        # Rows with account name, account type, total value.
+        rows = []
+        # Map of account_type to total value.
+        account_type_to_value = {}
+        total = 0.0  # Sum of value of all accounts.
+
+        for account in self.accounts():
+            total_assets = account.total_assets()
+            rows.append([account.name(),
+                         account.account_type,
+                         total_assets])
+            account_type_to_value[account.account_type] = (
+                account_type_to_value.get(account.account_type, 0)
+                + total_assets)
+            total += total_assets
+
+        if not group_by_type:
+            table = Table(
+                4,
+                headers=['Account', 'Account Type', 'Value', 'Percentage'],
+                coltypes=['str', 'str', 'dollars', 'percentage'])
+            for row in rows:
+                table.add_row(row + ([row[2] / total] if total else []))
+            return table
+        else:
+            table = Table(
+                3,
+                headers=['Account Type', 'Value', 'Percentage'],
+                coltypes=['str', 'dollars', 'percentage'])
+            for account_type, value in account_type_to_value.items():
+                table.add_row([account_type, value]
+                              + ([value / total] if total else []))
+            return table
+
     # TODO: Renmame this to list_assets for consistency.
     def assets(self, short_name=False, quantity=False):
         """Returns all the assets.
