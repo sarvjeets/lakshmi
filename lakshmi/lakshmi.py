@@ -50,14 +50,17 @@ class Account:
         assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
         return ret_obj
 
+    def total_assets(self):
+        """Returns the total value of assets in this account."""
+        return sum([asset.adjusted_value()
+                    for asset in self._assets.values()])
+
     def string(self):
         """Returns a string representation of this object."""
         table = Table(2)
-        table.add_row(['Name:', f'{self._name}'])
-        table.add_row(['Type:', f'{self.account_type}'])
-        total = sum([asset.adjusted_value()
-                    for asset in self._assets.values()])
-        table.add_row(['Total:', utils.format_money(total)])
+        table.add_row(['Name:', self._name])
+        table.add_row(['Type:', self.account_type])
+        table.add_row(['Total:', utils.format_money(self.total_assets())])
         if self._cash:
             table.add_row(['Available Cash:',
                            utils.format_money_delta(self._cash)])
