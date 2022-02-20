@@ -26,7 +26,7 @@ class Account:
         d = {'Name': self._name,
              'Account Type': self.account_type}
         if self._assets:
-            d['Assets'] = [to_dict(asset) for asset in self._assets.values()]
+            d['Assets'] = [to_dict(asset) for asset in self.assets()]
         if self._cash != 0:
             d['Available Cash'] = self._cash
         return d
@@ -50,17 +50,29 @@ class Account:
         assert len(d) == 0, 'Extra attributes found: ' + str(list(d.keys()))
         return ret_obj
 
-    def total_assets(self):
-        """Returns the total value of assets in this account."""
-        return sum([asset.adjusted_value()
-                    for asset in self._assets.values()])
+    def total(self, include_whatifs=True):
+        """Returns the total value of assets in this account.
+
+        Args:
+            include_whatifs: If set, any hypothetical what ifs for assets
+            and available cash is included in the total.
+
+        Returns:
+            Total value of this account (float).
+        """
+        if not include_whatifs:
+            return sum([asset.value() for asset in self.assets()])
+        else:
+            return self.available_cash() + sum(
+                [asset.adjusted_value() for asset in self.assets()])
 
     def string(self):
         """Returns a string representation of this object."""
         table = Table(2)
         table.add_row(['Name:', self._name])
         table.add_row(['Type:', self.account_type])
-        table.add_row(['Total:', utils.format_money(self.total_assets())])
+        table.add_row(['Total:', utils.format_money(
+            self.total() - self.available_cash())])
         if self._cash:
             table.add_row(['Available Cash:',
                            utils.format_money_delta(self._cash)])
@@ -613,14 +625,8 @@ class Portfolio:
         Returns:
             The total value of all assets in all accounts.
         """
-        total = 0.0
-        for account in self.accounts():
-            if include_whatifs:
-                total += account.available_cash()
-            for asset in account.assets():
-                total += (asset.adjusted_value() if include_whatifs
-                          else asset.value())
-        return total
+        return sum([account.total(include_whatifs)
+                   for account in self.accounts()])
 
     def list_accounts(self, group_by_type=False):
         """Returns all the accounts and their values.
@@ -641,10 +647,9 @@ class Portfolio:
         total = 0.0  # Sum of value of all accounts.
 
         for account in self.accounts():
-            total_assets = account.total_assets()
-            rows.append([account.name(),
-                         account.account_type,
-                         total_assets])
+            total_assets = account.total()
+            rows.append([
+                account.name(), account.account_type, total_assets])
             account_type_to_value[account.account_type] = (
                 account_type_to_value.get(account.account_type, 0)
                 + total_assets)
