@@ -90,6 +90,10 @@ Commands:
   list     Command to list various parts of the portfolio.
   whatif   Run hypothetical what if scenarios by modifying the total...
 ```
+The following section gives a quick summary of how to create a new portfolio.
+For detailed help, please read
+[creating a portfolio](./docs/lak.md#creating-a-portfolio) section of the
+[lak user guide](./docs/lak.md).
 
 A new portfolio can be created by either:
 
