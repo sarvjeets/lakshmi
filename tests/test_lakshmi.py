@@ -286,6 +286,36 @@ class LakshmiTest(unittest.TestCase):
             ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
 
+    def test_list_accounts_no_money(self):
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable'))
+
+        self.assertListEqual(
+            [['Schwab', 'Taxable', '$0.00']],
+            portfolio.list_accounts().str_list())
+        self.assertListEqual(
+            [['Taxable', '$0.00']],
+            portfolio.list_accounts(group_by_type=True).str_list())
+
+    def test_list_accounts(self):
+        portfolio = (Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable').add_asset(
+                ManualAsset('Fund', 100.0, {'All': 1.0})))
+            .add_account(Account('Vanguard', 'Taxable').add_asset(
+                ManualAsset('Fund', 50.0, {'All': 1.0})))
+            .add_account(Account('Fidelity', '401K').add_asset(
+                ManualAsset('F', 50.0, {'All': 1.0}))))
+
+        self.assertListEqual(
+            [['Schwab', 'Taxable', '$100.00', '50%'],
+             ['Vanguard', 'Taxable', '$50.00', '25%'],
+             ['Fidelity', '401K', '$50.00', '25%']],
+            portfolio.list_accounts().str_list())
+        self.assertListEqual(
+            [['Taxable', '$150.00', '75%'],
+             ['401K', '$50.00', '25%']],
+            portfolio.list_accounts(group_by_type=True).str_list())
+
     @patch('yfinance.Ticker')
     def test_list_assets(self, MockTicker):
         ticker = MagicMock()
