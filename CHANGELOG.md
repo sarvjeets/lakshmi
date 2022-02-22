@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v2.4.0] - 2022-02-21
 ### Added
 - A new command `lak list accounts` that allows printing account values and
 percentages by accounts or by account types.
