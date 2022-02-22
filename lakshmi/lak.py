@@ -154,13 +154,20 @@ lakctx = None
 
 class Spinner:
     """Prints a progress bar on the screen for cache misses."""
-    SPINNER = ('▰▱▱▱▱▱▱',
-               '▰▰▱▱▱▱▱',
-               '▰▰▰▱▱▱▱',
-               '▰▰▰▰▱▱▱',
-               '▰▰▰▰▰▱▱',
-               '▰▰▰▰▰▰▱',
-               '▰▰▰▰▰▰▰')
+    SPINNER = ('[    ]',
+               '[=   ]',
+               '[==  ]',
+               '[=== ]',
+               '[ ===]',
+               '[  ==]',
+               '[   =]',
+               '[    ]',
+               '[   =]',
+               '[  ==]',
+               '[ ===]',
+               '[=== ]',
+               '[==  ]',
+               '[=   ]')
 
     def __init__(self):
         self._index = 0  # Index within _SPINNER
@@ -311,6 +318,21 @@ def assets(short_name, quantity):
     with Spinner():
         output = portfolio.assets(
             short_name=short_name, quantity=quantity).string(lakctx.tablefmt)
+    click.echo(output)
+
+
+@list.command()
+@click.option('--group', '-g', is_flag=True,
+              help='If set, aggregate the account values by account types.')
+def accounts(group):
+    """Prints all the accounts in the portfolio and their current values."""
+    global lakctx
+    lakctx.optional_separator()
+    lakctx.warn_for_what_ifs()
+    portfolio = lakctx.get_portfolio()
+    with Spinner():
+        output = portfolio.list_accounts(group_by_type=group).string(
+            lakctx.tablefmt)
     click.echo(output)
 
 
