@@ -44,5 +44,5 @@ setup(
         ],
     },
     test_suite='tests',
-    python_requires='>=3.9.5',
+    python_requires='>=3.7',
 )
