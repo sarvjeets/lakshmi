@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.4.1] - 2022-02-23
+### Fixed
+- Relaxed Python requirement to 3.7.
+
 ## [v2.4.0] - 2022-02-21
 ### Added
 - A new command `lak list accounts` that allows printing account values and
