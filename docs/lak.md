@@ -1412,8 +1412,8 @@ Options:
 $ lak analyze rebalance --help
 Usage: lak analyze rebalance [OPTIONS]
 
-  Shows if assets needs to be rebalanced based on a band based rebalancing
-  scheme. For more information, please refer to
+  Shows if any asset classes need to be rebalanced based on a band based
+  rebalancing scheme. For more information, please refer to
   https://www.whitecoatinvestor.com/rebalancing-the-525-rule/.
 
 Options:
@@ -1431,6 +1431,15 @@ method. Currently, it also doesn't account for
 [wash sales](https://www.bogleheads.org/wiki/Wash_sale), which could
 be problematic. Taxation is a complex topic and users are _strongly_
 advised to do their own research before using this tool.
+
+The `rebalance` command only shows asset classes that don't fall within
+the rebalancing bands. If all asset classes are within the bands, it prints
+a message to that effect:
+
+```
+$ lak analyze rebalance
+Portfolio Asset allocation within bounds.
+```
 
 ### lak edit
 
