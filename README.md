@@ -60,6 +60,7 @@ pip install lakshmi
 ## Command-line interface
 
 For detailed help on the CLI, please see [lak user guide](./docs/lak.md).
+For tips and tricks, please refer to [Lakshmi Recipes](./docs/recipes.md).
 
 The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:

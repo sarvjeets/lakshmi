@@ -31,9 +31,6 @@
    * [lak analyze](#lak-analyze)
    * [lak edit](#lak-edit)
    * [lak delete](#lak-delete)
-* [Miscellaneous](#miscellaneous)
-   * [How to reorder Accounts or Assets in the lak list assets view?](#how-to-reorder-accounts-or-assets-in-the-lak-list-assets-view)
-
 
 ## Introduction
 lak provides a command-line interface to the lakshmi library. lak is meant
@@ -1541,11 +1538,3 @@ Commands:
 `lak delete` sub-commands prompt the user to confirm if they want to delete
 the specified entity before actually deleting it. This can be skipped via
 the `--yes` flag.
-
-## Miscellaneous
-
-### How to reorder Accounts or Assets in the lak list assets view?
-There is currently no automated way to do this, but the
-[portfolio file](#portfolio) can be manually edited and different
-sections can be moved around to achieve this. See also:
-[Portfolio file syntax](#portfolio-file-syntax).
