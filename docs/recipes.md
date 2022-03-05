@@ -15,13 +15,13 @@ using the `lak` tool. For detailed help on the `lak` tool, please
 see the [lak user guide](./lak.md).
 
 ## Clean-up config files
-The default locations of the lak config files are in the user home directory.
+By default, the lak config files are in the user home directory.
 This clutters up the home directory, and many users would prefer to move these
 files elsewhere. `lak` supports overriding these defaults. For linux-based
 systems, it is recommended that the config files are moved to `~/.config/lak`
 directory and the cache is moved to `~/.cache/lakshmicache`.
 
-Here are the steps. First move the config files and cache (if some of these
+First move the config files and cache (if some of these
 files don't exist, you can safely ignore them):
 
 ```shell
@@ -34,7 +34,7 @@ mv ~/.lakshmicache ~/.cache/lakshmicache
 ```
 
 Now modify `lakrc` to point to new configuration directories. Edit
-`~/.config/lak/.lakrc` and replace the existing paths with new paths:
+`~/.config/lak/.lakrc` and replace the existing paths with the new locations:
 
 ```
 portfolio: '~/.config/lak/portfolio.yaml'
@@ -54,8 +54,8 @@ export LAK_CONFIG=~/.config/lak/.lakrc
 
 `lak` is built on top of `click` which supports
 [shell completion](https://click.palletsprojects.com/en/8.0.x/shell-completion)
-for Bash, Zsh and Fish shells. Shell completion suggests command names, option
-names, etc.
+for Bash, Zsh and Fish shells. Shell completion is very useful and suggests
+commands, option names for commands, etc.
 
 Completion can be enabled by invoking `lak` during start-up for every shell
 session, but this is slow. The recommended method is to generate a config
@@ -192,8 +192,8 @@ EMAIL_END
 ```
 
 A scheduling program like [cron](ttps://wiki.archlinux.org/title/cron) can be
-used to run this script periodically. For example, to send this monthly on 5th
-at 5am:
+used to run this script periodically. For example, to send this email monthly
+on the 5th day at 5am:
 ```
 # Entry for lak in crontab:
 00 05 5 * * portfolio_email.sh
