@@ -32,6 +32,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'click~=8.0',
+        'numpy~=1.22'
         'pyxirr~=0.6',
         'PyYAML>=5.4,<7.0',
         'requests~=2.25',

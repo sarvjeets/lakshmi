@@ -125,7 +125,7 @@ class AnalyzeTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'No assets to allocate'):
             analyze.Allocate('Schwab', ['Cash']).analyze(portfolio)
 
-    def xtest_allocate_cash(self):
+    def test_allocate_cash(self):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
@@ -147,12 +147,12 @@ class AnalyzeTest(unittest.TestCase):
              ['Total Bond', '+$1.00']],
             analyze.Allocate('Schwab').analyze(portfolio).str_list())
         self.assertAlmostEqual(
-            54, account.get_asset('Total US').adjusted_value(), places=2)
+            54, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            36, account.get_asset('Total Intl').adjusted_value(), places=2)
+            36, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            10, account.get_asset('Total Bond').adjusted_value(), places=2)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            10, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
         account.add_cash(100)
         self.assertListEqual(
@@ -161,12 +161,12 @@ class AnalyzeTest(unittest.TestCase):
              ['Total Bond', '+$10.00']],
             analyze.Allocate('Schwab').analyze(portfolio).str_list())
         self.assertAlmostEqual(
-            54 * 2, account.get_asset('Total US').adjusted_value(), places=2)
+            54 * 2, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            36 * 2, account.get_asset('Total Intl').adjusted_value(), places=2)
+            36 * 2, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            10 * 2, account.get_asset('Total Bond').adjusted_value(), places=2)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            10 * 2, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
         account.add_cash(-200)
         self.assertListEqual(
@@ -175,14 +175,14 @@ class AnalyzeTest(unittest.TestCase):
              ['Total Bond', '-$20.00']],
             analyze.Allocate('Schwab').analyze(portfolio).str_list())
         self.assertAlmostEqual(
-            0, account.get_asset('Total US').adjusted_value(), places=3)
+            0, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            0, account.get_asset('Total Intl').adjusted_value(), places=3)
+            0, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            0, account.get_asset('Total Bond').adjusted_value(), places=3)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            0, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
-    def xtest_allocate_only_rebalance(self):
+    def test_allocate_only_rebalance(self):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
@@ -204,14 +204,14 @@ class AnalyzeTest(unittest.TestCase):
             analyze.Allocate('Schwab', rebalance=True).analyze(
                 portfolio).str_list())
         self.assertAlmostEqual(
-            54, account.get_asset('Total US').adjusted_value(), places=3)
+            54, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            36, account.get_asset('Total Intl').adjusted_value(), places=3)
+            36, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            10, account.get_asset('Total Bond').adjusted_value(), places=3)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            10, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
-    def xtest_allocate_cash_rebalance(self):
+    def test_allocate_cash_rebalance(self):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
@@ -234,14 +234,43 @@ class AnalyzeTest(unittest.TestCase):
             analyze.Allocate('Schwab', rebalance=True).analyze(
                 portfolio).str_list())
         self.assertAlmostEqual(
-            54, account.get_asset('Total US').adjusted_value(), places=2)
+            54, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            36, account.get_asset('Total Intl').adjusted_value(), places=2)
+            36, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            10, account.get_asset('Total Bond').adjusted_value(), places=2)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            10, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
-    def xtest_allocate_cash_large_portfolio(self):
+    def test_allocate_cash_large_portfolio(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total US', 53e6, {'US': 1.0}))
+            .add_asset(ManualAsset('Total Intl', 35e6, {'Intl': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 9e6, {'Bond': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(3e6)
+        self.assertListEqual(
+            [['Total US', '+$1,000,000.00'],
+             ['Total Intl', '+$1,000,000.00'],
+             ['Total Bond', '+$1,000,000.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
+        self.assertAlmostEqual(
+            54e6, account.get_asset('Total US').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            36e6, account.get_asset('Total Intl').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            10e6, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_cash_rebalance_large_portfolio(self):
         portfolio = Portfolio(
             AssetClass('All')
             .add_subclass(0.9,
@@ -253,20 +282,23 @@ class AnalyzeTest(unittest.TestCase):
             Account('Schwab', 'Taxable')
             .add_asset(ManualAsset('Total US', 50e6, {'US': 1.0}))
             .add_asset(ManualAsset('Total Intl', 40e6, {'Intl': 1.0}))
-            .add_asset(ManualAsset('Total Bond', 1e6, {'Bond': 1.0})))
+            .add_asset(ManualAsset('Total Bond', 0, {'Bond': 1.0})))
 
         account = portfolio.get_account('Schwab')
-        account.add_cash(9e6)
-        analyze.Allocate('Schwab', rebalance=True).analyze(portfolio)
+        account.add_cash(10e6)
+        self.assertListEqual(
+            [['Total US', '+$4,000,000.00'],
+             ['Total Intl', '-$4,000,000.00'],
+             ['Total Bond', '+$10,000,000.00']],
+            analyze.Allocate('Schwab', rebalance=True).analyze(
+                portfolio).str_list())
         self.assertAlmostEqual(
-            54, account.get_asset('Total US').adjusted_value() / 1e6, places=1)
+            54e6, account.get_asset('Total US').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            36, account.get_asset('Total Intl').adjusted_value() / 1e6,
-            places=1)
+            36e6, account.get_asset('Total Intl').adjusted_value(), places=6)
         self.assertAlmostEqual(
-            10, account.get_asset('Total Bond').adjusted_value() / 1e6,
-            places=1)
-        self.assertAlmostEqual(0, account.available_cash(), places=2)
+            10e6, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
 
 
 if __name__ == '__main__':

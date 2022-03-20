@@ -6,6 +6,8 @@ just analyzing the portfolio and output the results (if any).
 
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 from lakshmi.table import Table
 from lakshmi.utils import format_money
 
@@ -157,6 +159,99 @@ class BandRebalance(Analyzer):
         return ret_val
 
 
+class _Solver:
+    """Internal class to help allocate cash to portfolio (see next class).
+
+    TODO: Add actual maths.
+    """
+
+    def __init__(self, aa, assets, cash, total):
+        self.aa = aa
+        self.assets = assets
+        self.total = total
+        self.cash = cash
+
+    def desired_ratio(self, asset_class):
+        return self.aa[asset_class][0]
+
+    def money(self, asset_class):
+        return self.aa[asset_class][1]
+
+    def derivative(self, i):
+        # The actual derivative has (2/total_money) extra term, but as it is
+        # common in all assets, we ignore it.
+        sum = 0
+        for ac in self.assets[i].class2ratio.keys():
+            rel_ratio = (self.money(ac) / (self.desired_ratio(ac) * self.total)
+                         - 1)
+            sum += rel_ratio * (self.assets[i].class2ratio[ac]
+                                / self.desired_ratio(ac))
+        return sum
+
+    def compute_delta(self, i, target_derivative):
+        term1 = term2 = term3 = 0
+        for ac in self.assets[i].class2ratio.keys():
+            term1 += self.assets[i].class2ratio[ac] / self.desired_ratio(ac)
+            term2 += (self.assets[i].class2ratio[ac]
+                      * self.money(ac)
+                      / self.desired_ratio(ac) ** 2)
+            term3 += (self.assets[i].class2ratio[ac] ** 2
+                      / self.desired_ratio(ac) ** 2)
+        ans = (self.total * (target_derivative + term1) - term2) / term3
+        assert (ans >= 0) ^ (self.cash < 0)  # i.e. they have same sign.
+        return ans
+
+    def sorted_index_and_derivatives(self):
+        index_and_derivative = [
+            (i, self.derivative(i)) for i in range(len(self.assets))]
+        # Sorted index gives a prioritized list of assets to which the money
+        # should be added (if cash > 0) or removed from (if cash < 0).
+        sorted_index_derivative = sorted(index_and_derivative,
+                                         key=lambda x: x[1],
+                                         reverse=(self.cash < 0))
+        return ([x[0] for x in sorted_index_derivative],
+                [x[1] for x in sorted_index_derivative])
+
+    def update_aa(self, new_money):
+        for asset, money in zip(self.assets, new_money):
+            for ac, ratio in asset.class2ratio.items():
+                self.aa[ac] = self.aa[ac][0], self.aa[ac][1] + ratio * money
+
+    def solve(self):
+        indices, derivatives = self.sorted_index_and_derivatives()
+
+        x = np.zeros(len(indices))  # The return values (transformed).
+        left_cash = self.cash
+
+        for next_i in range(1, len(x)):
+            target_derivative = derivatives[next_i]
+            new_deltas = np.array([self.compute_delta(i, target_derivative)
+                                   for i in indices[:next_i]])
+            new_deltas = np.pad(new_deltas, (0, len(x) - next_i))
+            new_cash = np.sum(new_deltas)
+
+            if abs(new_cash) >= abs(left_cash):
+                x += new_deltas * left_cash / new_cash
+                left_cash = 0
+                break
+
+            x += new_deltas
+            self.update_aa([new_deltas[i] for i in indices])
+            left_cash = left_cash - new_cash
+
+        # Handle the cash when left_cash > 0.
+        if left_cash != 0:
+            fake_derivative = derivatives[-1] + (
+                derivatives[-1] - derivatives[0])
+            new_deltas = np.array(
+                [self.compute_delta(i, fake_derivative) for i in indices])
+            new_cash = np.sum(new_deltas)
+            x += new_deltas * left_cash / new_cash
+
+        # Transform and return answer
+        return [float(x[i]) for i in indices]
+
+
 class Allocate(Analyzer):
     """Allocates any unallocated cash in the account to assets.
 
@@ -188,16 +283,16 @@ class Allocate(Analyzer):
         self.blacklisted_assets = blacklisted_assets
         self.rebalance = rebalance
 
-    def _apply_whatifs(self, portfolio, assets, deltas):
+    def _apply_whatifs(self, portfolio, assets, deltas, saved_whatifs=None):
         """Apply whatifs given by deltas to assets in the portfolio."""
         table = Table(2, ['Asset', 'Delta'], ['str', 'delta_dollars'])
-        for asset, delta in zip(assets, deltas):
-            # Float conversation is need to make sure we don't save
-            # numpy floats when converting what ifs to yaml.
+        if not saved_whatifs:
+            saved_whatifs = [0] * len(assets)
+        for asset, delta, saved in zip(assets, deltas, saved_whatifs):
             portfolio.what_if(self.account_name,
                               asset.short_name(),
-                              float(delta))
-            table.add_row([asset.short_name(), delta])
+                              delta)
+            table.add_row([asset.short_name(), delta - saved])
         return table
 
     def analyze(self, portfolio):
@@ -232,6 +327,16 @@ class Allocate(Analyzer):
                   self.blacklisted_assets]
         assert len(assets) != 0, 'No assets to allocate cash to.'
 
+        saved_whatifs = None
+        if self.rebalance:
+            saved_whatifs = []
+            # Withdraw all cash and reallocate.
+            for asset in assets:
+                saved_whatifs += [asset.adjusted_value()]
+                portfolio.what_if(self.account_name, asset.short_name(),
+                                  -asset.adjusted_value())
+            cash = account.available_cash()
+
         total = sum([asset.adjusted_value() for asset in assets])
         if abs(total + cash) < 1e-6:
             # Withdraw all cash and return.
@@ -248,6 +353,11 @@ class Allocate(Analyzer):
                 portfolio.asset_classes.leaves()).list():
             asset_allocation[row[0]] = row[2], row[3]
 
-        # TODO: Add logic.
-        result = [0] * len(assets)
-        return self._apply_whatifs(portfolio, assets, result)
+        for asset in assets:
+            for ac in asset.class2ratio.keys():
+                assert asset_allocation[ac][0] != 0, (
+                    f'Desired ratio of asset class {ac} cannot be zero.')
+
+        result = _Solver(
+            asset_allocation, assets, cash, portfolio.total_value()).solve()
+        return self._apply_whatifs(portfolio, assets, result, saved_whatifs)
