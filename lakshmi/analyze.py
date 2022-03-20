@@ -7,6 +7,7 @@ just analyzing the portfolio and output the results (if any).
 from abc import ABC, abstractmethod
 
 from lakshmi.table import Table
+from lakshmi.utils import format_money
 
 
 # TODO(sarvjeets): This is not needed/used anywhere. Consider removing it.
@@ -154,3 +155,99 @@ class BandRebalance(Analyzer):
                 ret_val.add_row(row)
 
         return ret_val
+
+
+class Allocate(Analyzer):
+    """Allocates any unallocated cash in the account to assets.
+
+    If an account has any unallocated cash (aka what if) then this class
+    allocates that cash to the assets in the account. The allocation is done
+    with the goal of minimizing the relative ratio of actual allocation of
+    asset classes to the desired allocation. Cash could be negative in which
+    case money is removed from the assets.
+
+    The allocation to assets is done via lakshmi.Portfolio.what_if function;
+    and hence can be reset easily (by calling
+    lakshmi.Portfolio.reset.what_ifs).
+    """
+
+    def __init__(self, account_name, blacklisted_assets=[], rebalance=False):
+        """
+        Args:
+            account_name: The full name of the account to analyze.
+            blacklisted_assets: A list of asset short names (strings) which
+            will not be allocated any new cash from the account as a result
+            of calling analyze.
+            rebalance: If False, money is either only added (in case cash is
+            positive) or removed (in case cash is negative) from the assets.
+            If set, money is added and removed (as needed) from assets
+            to minimize the relative difference from the desired asset
+            allocation.
+        """
+        self.account_name = account_name
+        self.blacklisted_assets = blacklisted_assets
+        self.rebalance = rebalance
+
+    def _apply_whatifs(self, portfolio, assets, deltas):
+        """Apply whatifs given by deltas to assets in the portfolio."""
+        table = Table(2, ['Asset', 'Delta'], ['str', 'delta_dollars'])
+        for asset, delta in zip(assets, deltas):
+            # Float conversation is need to make sure we don't save
+            # numpy floats when converting what ifs to yaml.
+            portfolio.what_if(self.account_name,
+                              asset.short_name(),
+                              float(delta))
+            table.add_row([asset.short_name(), delta])
+        return table
+
+    def analyze(self, portfolio):
+        """Modifies portfolio by allocating any cash and returns the resulting
+        changes.
+
+        Args:
+            portfolio: The portfolio on which to operate on. This portfolio is
+            modified by applying what_ifs to the assets in the provided
+            account.
+
+        Returns:
+            A table.Table of asset names and an delta for each of the asset.
+
+        Throws:
+            AssertionError: In case of
+            - There is no cash to allocation and rebalance is False.
+            - An asset class's desired allocation ratio is zero.
+            - No assets are present in the Account after taking out the
+            blacklisted assets.
+            - Cash to withdraw is more than the total value of assets in the
+            portfolio.
+            - For some reason, we can't minimize the difference between
+            relative error of actual vs desired allocation, given all the
+            constraints.
+        """
+        account = portfolio.get_account(self.account_name)
+        cash = account.available_cash()
+        assert cash != 0 or self.rebalance, (
+            f'No available cash to allocate in {self.account_name}.')
+        assets = [x for x in account.assets() if x.short_name() not in
+                  self.blacklisted_assets]
+        assert len(assets) != 0, 'No assets to allocate cash to.'
+
+        total = sum([asset.adjusted_value() for asset in assets])
+        if abs(total + cash) < 1e-6:
+            # Withdraw all cash and return.
+            return self._apply_whatifs(
+                portfolio, assets,
+                [-asset.adjusted_value() for asset in assets])
+        assert -cash < total, (
+            f'Cash to withdraw ({format_money(-cash)}) is more than the total '
+            f'available money in the account ({format_money(total)}).')
+
+        # Map of leave asset classes -> (desired%, money)
+        asset_allocation = {}
+        for row in portfolio.asset_allocation(
+                portfolio.asset_classes.leaves()).list():
+            asset_allocation[row[0]] = row[2], row[3]
+
+        # TODO: Add logic.
+        result = [0] * len(assets)
+        return self._apply_whatifs(portfolio, assets, result)
