@@ -833,5 +833,47 @@ def rebalance(max_abs_percentage, max_relative_percentage):
         click.echo(table.string())
 
 
+@analyze.command()
+@click.option('--account', '-t', type=str, metavar='substr', required=True,
+              help='Allocate any cash in the account that matches this '
+              'substring.')
+@click.option('--blacklisted-assets', '-a', type=str, default='',
+              help='If provided, these assets in the account are not '
+              'allocated any cash. This is a comma separated list of assets '
+              'specified by their short names.')
+@click.option('--rebalance', '-r', is_flag=True,
+              help='If not set (the default), money is either only added '
+              '(in case the acccount has any unallocated cash) or only '
+              'removed (in case the account has negative unallocated cash) '
+              'from the assets. If set, money is both added and removed (as '
+              'needed) from the assets to minimize the relative difference '
+              'from the desired asset allocation.')
+def allocate(account, blacklisted_assets, rebalance):
+    """Allocates any unallocated cash in an account to assets. If an account
+    has any unallocated cash (aka what if) then this command allocates that
+    cash to the assets in the account. This allocation is done with the goal
+    of minimizing the relative ratio of actual allocation to the desired
+    ratio of asset classes.
+
+    The unallocated cash in the account could be negative in which cash money
+    is removed from the assets.
+
+    This command modifies the portfolio by applying the resulting deltas to
+    it (similar to `lak whatif` command).
+    """
+    global lakctx
+    lakctx.optional_separator()
+
+    portfolio = lakctx.get_portfolio()
+    account_name = portfolio.get_account_name_by_substr(account)
+    bl_assets_list = [a.strip() for a in blacklisted_assets.split(',')]
+
+    with Spinner():
+        table = lakshmi.analyze.Allocate(
+            account_name, bl_assets_list, rebalance).analyze(portfolio)
+    click.echo(table.string())
+    lakctx.save_portfolio()
+
+
 if __name__ == '__main__':
     lak()
