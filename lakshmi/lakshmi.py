@@ -397,11 +397,9 @@ class AssetClass:
         value = self.value_mapped(money_allocation)
         actual_alloc = self.Allocation(self.name, value)
 
-        if value == 0:
-            return [actual_alloc]
-
         for asset_class, desired_ratio in self._children:
-            actual_ratio = asset_class.value_mapped(money_allocation) / value
+            actual_ratio = (asset_class.value_mapped(money_allocation) / value
+                            if value != 0 else 0)
             actual_alloc.add_child(
                 asset_class.name,
                 actual_ratio,

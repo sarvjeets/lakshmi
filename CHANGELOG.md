@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Earlier asset classes with no money mapped to them were not returned by
+all AA methods (including their children). Now it returns them (the correct
+behavior in almost all cases).
+
 ### Added
 - A new
 [recipes doc](https://github.com/sarvjeets/lakshmi/blob/develop/docs/recipes.md)
