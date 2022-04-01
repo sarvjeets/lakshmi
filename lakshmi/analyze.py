@@ -220,14 +220,21 @@ class _Solver:
     def solve(self):
         indices, derivatives = self.sorted_index_and_derivatives()
 
+        def transform(arr):
+            ret = np.zeros(len(indices))
+            for i, val in zip(indices, arr):
+                ret[i] = val
+            return ret
+
         x = np.zeros(len(indices))  # The return values (transformed).
         left_cash = self.cash
 
         for next_i in range(1, len(x)):
             target_derivative = derivatives[next_i]
+
             new_deltas = np.array([self.compute_delta(i, target_derivative)
                                    for i in indices[:next_i]])
-            new_deltas = np.pad(new_deltas, (0, len(x) - next_i))
+            new_deltas = np.pad(new_deltas, (0, len(indices) - next_i))
             new_cash = np.sum(new_deltas)
 
             if abs(new_cash) >= abs(left_cash):
@@ -236,7 +243,7 @@ class _Solver:
                 break
 
             x += new_deltas
-            self.update_aa([new_deltas[i] for i in indices])
+            self.update_aa(transform(new_deltas))
             left_cash = left_cash - new_cash
 
         # Handle the cash when left_cash > 0.
@@ -249,7 +256,7 @@ class _Solver:
             x += new_deltas * left_cash / new_cash
 
         # Transform and return answer
-        return [float(x[i]) for i in indices]
+        return transform(x)
 
 
 class Allocate(Analyzer):
