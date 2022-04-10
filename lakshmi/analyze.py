@@ -159,6 +159,37 @@ class BandRebalance(Analyzer):
         return ret_val
 
 
+def _dedup_assets(orig_assets):
+    """Dedup assets which have exactly the same allocation accross asset
+    classes (i.e. they are identical for allocation purposes). The dedups
+    assets are stored in mapping, where key is index of deduped assets and
+    values are the dups from orig_assets.
+    """
+    def has_same_allocation(asset1, asset2):
+        for ac in asset1.class2ratio:
+            if abs(asset1.class2ratio.get(ac, 0)
+                   - asset2.class2ratio.get(ac, 0)) >= 1e-6:
+                return False
+        return True
+
+    assets = []
+    mapping = {}
+    dups = []
+
+    for i in range(len(orig_assets)):
+        if i in dups:
+            continue
+        new_index = len(assets)
+        mapping[new_index] = [i]
+        assets.append(orig_assets[i])
+
+        for j in range(i + 1, len(orig_assets)):
+            if has_same_allocation(orig_assets[i], orig_assets[j]):
+                mapping[new_index].append(j)
+                dups.append(j)
+    return assets, mapping
+
+
 class _Solver:
     """Internal class to help allocate cash to portfolio (see next class).
 
@@ -167,9 +198,9 @@ class _Solver:
 
     def __init__(self, aa, assets, cash, total):
         self.aa = aa
-        self.assets = assets
         self.total = total
         self.cash = cash
+        self.assets, self.mapping = _dedup_assets(assets)
 
     def desired_ratio(self, asset_class):
         return self.aa[asset_class][0]
@@ -177,86 +208,133 @@ class _Solver:
     def money(self, asset_class):
         return self.aa[asset_class][1]
 
-    def derivative(self, i):
-        # The actual derivative has (2/total_money) extra term, but as it is
-        # common in all assets, we ignore it.
-        sum = 0
-        for ac in self.assets[i].class2ratio.keys():
-            rel_ratio = (self.money(ac) / (self.desired_ratio(ac) * self.total)
-                         - 1)
-            sum += rel_ratio * (self.assets[i].class2ratio[ac]
-                                / self.desired_ratio(ac))
-        return sum
-
-    def compute_delta(self, i, target_derivative):
-        term1 = term2 = term3 = 0
-        for ac in self.assets[i].class2ratio.keys():
-            term1 += self.assets[i].class2ratio[ac] / self.desired_ratio(ac)
-            term2 += (self.assets[i].class2ratio[ac]
-                      * self.money(ac)
-                      / self.desired_ratio(ac) ** 2)
-            term3 += (self.assets[i].class2ratio[ac] ** 2
-                      / self.desired_ratio(ac) ** 2)
-        ans = (self.total * (target_derivative + term1) - term2) / term3
-        assert (ans >= 0) ^ (self.cash < 0)  # i.e. they have same sign.
-        return ans
-
-    def sorted_index_and_derivatives(self):
-        index_and_derivative = [
-            (i, self.derivative(i)) for i in range(len(self.assets))]
-        # Sorted index gives a prioritized list of assets to which the money
-        # should be added (if cash > 0) or removed from (if cash < 0).
-        sorted_index_derivative = sorted(index_and_derivative,
-                                         key=lambda x: x[1],
-                                         reverse=(self.cash < 0))
-        return ([x[0] for x in sorted_index_derivative],
-                [x[1] for x in sorted_index_derivative])
-
     def update_aa(self, new_money):
         for asset, money in zip(self.assets, new_money):
             for ac, ratio in asset.class2ratio.items():
                 self.aa[ac] = self.aa[ac][0], self.aa[ac][1] + ratio * money
 
+    def derivative(self, i):
+        # The actual derivative has (2/total_money) extra term, but as it is
+        # common in all assets, we ignore it.
+        sum = 0.0
+        for j in self.assets[i].class2ratio.keys():
+            rel_ratio = (self.money(j) / (self.desired_ratio(j) * self.total)
+                         - 1)
+            sum += rel_ratio * (self.assets[i].class2ratio[j]
+                                / self.desired_ratio(j))
+        return sum
+
+    def expand_dup_assets(self, x):
+        max_index = max(map(max, self.mapping.values()))
+        ret_val = [None] * (max_index + 1)
+
+        for i, dest_assets in self.mapping.items():
+            for j in dest_assets:
+                ret_val[j] = float(x[i] / len(dest_assets))
+
+        return ret_val
+
+    def compute_delta(self, source_assets, target_asset):
+        a = []
+        b = []
+        n = target_asset
+        alpha = self.derivative(n)
+
+        for i in source_assets:
+            equation_i = []
+            for k in source_assets:
+                coeff = 0.0
+                for j in self.assets[k].class2ratio.keys():
+                    coeff += ((self.assets[k].class2ratio[j]
+                               / self.desired_ratio(j) ** 2)
+                              * (self.assets[i].class2ratio.get(j, 0)
+                                 - self.assets[n].class2ratio.get(j, 0)))
+                equation_i.append(coeff)
+            a.append(equation_i)
+            const_i = self.total * alpha
+            for j in self.assets[i].class2ratio.keys():
+                const_i += ((self.assets[i].class2ratio[j]
+                             / self.desired_ratio(j) ** 2)
+                            * (self.desired_ratio(j) * self.total
+                               - self.money(j)))
+            if abs(const_i) <= 1e-10:
+                b.append(0)
+            else:
+                b.append(const_i)
+
+        solution = np.linalg.solve(a, b).tolist()
+        x = np.zeros(len(self.assets))
+
+        final_derivative = alpha
+        for k in source_assets:
+            x[k] = solution.pop(0)
+            sum = 0.0
+            for j in self.assets[n].class2ratio.keys():
+                sum += (self.assets[n].class2ratio[j]
+                        * self.assets[k].class2ratio.get(j, 0)
+                        / self.desired_ratio(j) ** 2)
+            final_derivative += sum * x[k] / self.total
+
+        return x, final_derivative
+
+    def allocate_all_cash(self, cash_to_allocate):
+        a = []
+        for i in range(len(self.assets)):
+            equation_i = []
+            for k in range(len(self.assets)):
+                coeff = 0.0
+                for j in self.assets[i].class2ratio.keys():
+                    coeff += (self.assets[i].class2ratio[j]
+                              * self.assets[k].class2ratio.get(j, 0)
+                              / self.desired_ratio(j) ** 2)
+                equation_i.append(coeff)
+            a.append(equation_i)
+        x = np.linalg.solve(a, [0.1 * self.total] * len(self.assets))
+        x *= cash_to_allocate / np.sum(x)
+        return x
+
     def solve(self):
-        indices, derivatives = self.sorted_index_and_derivatives()
+        # Used to pick either the min or max gradient.
+        best_gradient = np.argmin if self.cash > 0 else np.argmax
 
-        def transform(arr):
-            ret = np.zeros(len(indices))
-            for i, val in zip(indices, arr):
-                ret[i] = val
-            return ret
-
-        x = np.zeros(len(indices))  # The return values (transformed).
+        equal_gradient_funds = set([best_gradient(
+            [self.derivative(i) for i in range(len(self.assets))])])
+        x = np.zeros(len(self.assets))
         left_cash = self.cash
 
-        for next_i in range(1, len(x)):
-            target_derivative = derivatives[next_i]
+        while len(equal_gradient_funds) != len(self.assets):
+            derivatives = []
+            deltas = []
+            indices = []
+            # Compute the min increase in gradient.
+            for n in set(range(len(self.assets))) - equal_gradient_funds:
+                delta, derivative = self.compute_delta(
+                    equal_gradient_funds, n)
+                derivatives.append(derivative)
+                deltas.append(delta)
+                indices.append(n)
 
-            new_deltas = np.array([self.compute_delta(i, target_derivative)
-                                   for i in indices[:next_i]])
-            new_deltas = np.pad(new_deltas, (0, len(indices) - next_i))
-            new_cash = np.sum(new_deltas)
+            # Pick the highest or lowest derivative.
+            best_fund_index = best_gradient(derivatives)
+            best_delta = deltas[best_fund_index]
+            new_cash = np.sum(best_delta)
 
             if abs(new_cash) >= abs(left_cash):
-                x += new_deltas * left_cash / new_cash
+                # We have allocated more cash than what was left.
+                x += best_delta * left_cash / new_cash
                 left_cash = 0
                 break
 
-            x += new_deltas
-            self.update_aa(transform(new_deltas))
+            equal_gradient_funds.add(indices[best_fund_index])
+            x += best_delta
+            self.update_aa(best_delta)
             left_cash = left_cash - new_cash
 
-        # Handle the cash when left_cash > 0.
+        # Handle any left over cash.
         if left_cash != 0:
-            fake_derivative = derivatives[-1] + (
-                derivatives[-1] - derivatives[0])
-            new_deltas = np.array(
-                [self.compute_delta(i, fake_derivative) for i in indices])
-            new_cash = np.sum(new_deltas)
-            x += new_deltas * left_cash / new_cash
+            x += self.allocate_all_cash(left_cash)
 
-        # Transform and return answer
-        return transform(x)
+        return self.expand_dup_assets(x)
 
 
 class Allocate(Analyzer):

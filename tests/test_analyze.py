@@ -125,6 +125,18 @@ class AnalyzeTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'No assets to allocate'):
             analyze.Allocate('Schwab', ['Cash']).analyze(portfolio)
 
+    def test_allocate_solve_dedup(self):
+        assets = [
+            ManualAsset('Total US', 100, {'US': 1.0}),
+            ManualAsset('US-ish', 200, {'US': 1.0}),
+            ManualAsset('Intl', 10, {'Del': 0.75, 'Emer': 0.25}),
+            ManualAsset('Bond', 12, {'Bonds': 1.0}),
+            ManualAsset('Ex-US', 20, {'Del': 0.75, 'Emer': 0.25})]
+        deduped, mapping = analyze._dedup_assets(assets)
+        self.assertDictEqual({0: [0, 1], 1: [2, 4], 2: [3]}, mapping)
+        names = [asset.name() for asset in deduped]
+        self.assertEqual(['Total US', 'Intl', 'Bond'], names)
+
     def test_allocate_cash(self):
         portfolio = Portfolio(
             AssetClass('All')
@@ -181,6 +193,62 @@ class AnalyzeTest(unittest.TestCase):
         self.assertAlmostEqual(
             0, account.get_asset('Total Bond').adjusted_value(), places=6)
         self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_cash_indentical_assets(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4, AssetClass('Intl')))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total US', 53.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Total Intl', 17.5, {'Intl': 1.0}))
+            .add_asset(ManualAsset('Ex US', 17.5, {'Intl': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 9.0, {'Bond': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(3)
+        self.assertListEqual(
+            [['Total US', '+$1.00'],
+             ['Total Intl', '+$0.50'],
+             ['Ex US', '+$0.50'],
+             ['Total Bond', '+$1.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
+
+    def test_allocate_cash_overlapping_assets(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4,
+                                        AssetClass('Intl')
+                                        .add_subclass(
+                                            0.7, AssetClass('Developed'))
+                                        .add_subclass(
+                                            0.3, AssetClass('Emerging'))))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total US', 53.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Intl', 17.5, {'Developed': 0.7,
+                                                  'Emerging': 0.3}))
+            .add_asset(ManualAsset('Devel', 12.25, {'Developed': 1.0}))
+            .add_asset(ManualAsset('Emer', 5.25, {'Emerging': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 9.0, {'Bond': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(3)
+        self.assertListEqual(
+            [['Total US', '+$1.00'],
+             ['Intl', '+$0.96'],
+             ['Devel', '+$0.03'],
+             ['Emer', '+$0.01'],
+             ['Total Bond', '+$1.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
 
     def test_allocate_only_rebalance(self):
         portfolio = Portfolio(
