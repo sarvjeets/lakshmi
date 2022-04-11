@@ -860,6 +860,9 @@ def allocate(account, blacklisted_assets, rebalance):
 
     This command modifies the portfolio by applying the resulting deltas to
     it (similar to `lak whatif` command).
+
+    WARNING: This is a BETA feature and is subject to change or be removed.
+    Always sanity check the suggestions before acting on them.
     """
     global lakctx
     lakctx.optional_separator()
