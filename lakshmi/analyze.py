@@ -191,40 +191,129 @@ def _dedup_assets(orig_assets):
 
 
 class _Solver:
-    """Internal class to help allocate cash to portfolio (see next class).
+    """Internal class to help allocate cash to portfolio (helper class for the
+    next class).
 
-    TODO: Add actual maths.
+    I tried using scipy optimize instead of this custom solver and it was
+    extremely flaky for this purposes (even after scaling/conditioning the
+    inputs well). So finally, I came up these heuristics which work (mostly).
+    This class can be further optimized/fixed, but for now it serves its
+    purpose.
+
+    Notation:
+    - f_i: Money in fund i orginally.
+    - x_i: New money to be added to fund i (what we are solving for).
+    - A_j: Money in asset class j.
+    - C_j: Money in asset class j before adding new money (implementd as
+    self.money)
+    - d_j: Desired ratio of asset class j (implemented as self.desired_ratio).
+    - a_{ij}: Ratio of fund i in asset class j (implemented as
+    self.allocation).
+
+    So,
+    A_j = \\sum_i a_{ij} (f_i + x_i)
+    \\sum_j A_j = T (a constant, given by self.total)
+
+    Error E = \\sum_j (A_j/(d_j T) - 1)^2
+
+    Derivative wrt a fund i (implemented as self.derivative)
+    dE/dx_i = (2/T) \\sum_j (a_{ij} / d_j) (A_j/(d_j T) - 1)
+    Rate of change of above derivative wrt fund k:
+    d^2E/{dx_i dx_k} = (2/T^2) \\sum_j (a_{ij} a_{kj} / d^2_j)
+
+    The algorithm (somewhat of a heuristic right now, althrough I suspect that
+    it is correct, but I haven't formally proved it):
+    0. Without lost of generality, assume cash to be allocated is positive (
+    the other way round just replaces min with max in the following algo). We
+    also dedup same funds so that the equations in Step 2 has a unique
+    solution.
+    1. Start by the lowest derivative fund.
+    2. Add money to fund to match a target fund. Pick the argmin of target
+    fund based on whichever target fund leads to lowest derivative.
+    3. Now we have two funds with same derivatives, keep repeating step 2
+    until all funds have same derivatives.
+    4. If we run out of cash to allocate before all funds have same derivative,
+    exit early.
+    5. If we still have money after all funds have same derivative, add extra
+    money to all funds while keeping their derivatives the same.
+
+    For step 2, we solve the following linear equations:
+    k is summing over funds with same derivatives. n is target fund to which
+    we are not adding money (aka x_n = 0).
+
+    For each i:
+    dE/dx_i + \\sum_{k != i} x_k d^2E/{dx_i dx_k} =
+                 dE/dx_n + \\sum_k x_k d^2E/{dx_i dx_k}
+    (This equation is solved in self.compute_delta).
+
+    self.allocate_all_cash solves:
+    dE/dx_i + \\sum_{k != i} x_k d^2E/{dx_i dx_k} =
+                 dE/dx_i (without x_i allocated to it) + 0.1
+    which simplifies to:
+    for each i:
+    \\sum_k (x_k \\sum_j a{ij} a_{kj} / d^2_j = 0.1T
     """
 
     def __init__(self, aa, assets, cash, total):
+        """Creates a new object.
+
+        Args:
+            aa: Map of asset class name to a tuple of desired_ratio and
+            money allocated to it.
+            assets: List of lakshmi.Assets to which to allocate the money to.
+            cash: The cash to be allocated.
+            total: The total value of the portfolio (T in equation above).
+        """
         self.aa = aa
         self.total = total
         self.cash = cash
         self.assets, self.mapping = _dedup_assets(assets)
 
     def desired_ratio(self, asset_class):
+        """Helper function to give desired ratio of an asset class."""
         return self.aa[asset_class][0]
 
     def money(self, asset_class):
+        """Helper function to give money allocated to an asset class."""
         return self.aa[asset_class][1]
 
+    def asset_classes(self):
+        """Returns list of asset classes."""
+        return self.aa.keys()
+
+    def allocation(self, i, j):
+        """Returns allocation of fund i in asset class j."""
+        return self.assets[i].class2ratio.get(j, 0.0)
+
     def update_aa(self, new_money):
+        """Updates self.aa with new_money.
+
+        Args:
+            new_money: A list of deltas to be which new_money[i] is for
+            self.assets[i].
+        """
         for asset, money in zip(self.assets, new_money):
             for ac, ratio in asset.class2ratio.items():
                 self.aa[ac] = self.aa[ac][0], self.aa[ac][1] + ratio * money
 
     def derivative(self, i):
-        # The actual derivative has (2/total_money) extra term, but as it is
-        # common in all assets, we ignore it.
+        """Computes dE/dx_i. The actual derivative has (2/T) extra
+        term, but as it is common in all assets, we ignore it (the rest of the
+        computations in equations are done correctly to account for a missing
+        2/T factor).
+        """
         sum = 0.0
-        for j in self.assets[i].class2ratio.keys():
+        for j in self.asset_classes():
             rel_ratio = (self.money(j) / (self.desired_ratio(j) * self.total)
                          - 1)
-            sum += rel_ratio * (self.assets[i].class2ratio[j]
-                                / self.desired_ratio(j))
+            sum += rel_ratio * (self.allocation(i, j) / self.desired_ratio(j))
         return sum
 
     def expand_dup_assets(self, x):
+        """Expands deduped assets again to the original provided. The assets
+        when passed in the constructor are de-duped. This expands the x
+        (calculated delta) on the deduped assets back to the deltas on
+        the original ones."""
         max_index = max(map(max, self.mapping.values()))
         ret_val = [None] * (max_index + 1)
 
@@ -235,6 +324,20 @@ class _Solver:
         return ret_val
 
     def compute_delta(self, source_assets, target_asset):
+        """Heart of this solver. This computes deltas (x) on the source_
+        assets, so that the derivative of the error function wrt source_assets
+        is equal to the target_asset.
+
+        Args:
+            source_assets: A set of indices referring to self.assets
+            representing assets on which to compute deltas on.
+            target_asset: An index referring to an asset in self.assets. The
+            delta is computed for source_assets to make their error
+            derivative equal to the target_asset.
+
+        Returns: A tuple of computed deltas and the final derivative. The
+        derivative of target asset can change based on the deltas computed.
+        """
         a = []
         b = []
         n = target_asset
@@ -244,23 +347,18 @@ class _Solver:
             equation_i = []
             for k in source_assets:
                 coeff = 0.0
-                for j in self.assets[k].class2ratio.keys():
-                    coeff += ((self.assets[k].class2ratio[j]
-                               / self.desired_ratio(j) ** 2)
-                              * (self.assets[i].class2ratio.get(j, 0)
-                                 - self.assets[n].class2ratio.get(j, 0)))
+                for j in self.asset_classes():
+                    coeff += (
+                        (self.allocation(k, j) / self.desired_ratio(j) ** 2)
+                        * (self.allocation(i, j) - self.allocation(n, j)))
                 equation_i.append(coeff)
             a.append(equation_i)
             const_i = self.total * alpha
-            for j in self.assets[i].class2ratio.keys():
-                const_i += ((self.assets[i].class2ratio[j]
-                             / self.desired_ratio(j) ** 2)
-                            * (self.desired_ratio(j) * self.total
-                               - self.money(j)))
-            if abs(const_i) <= 1e-10:
-                b.append(0)
-            else:
-                b.append(const_i)
+            for j in self.asset_classes():
+                const_i += (
+                    (self.allocation(i, j) / self.desired_ratio(j) ** 2)
+                    * (self.desired_ratio(j) * self.total - self.money(j)))
+            b.append(const_i if abs(const_i) > 1e-10 else 0.0)
 
         solution = np.linalg.solve(a, b).tolist()
         x = np.zeros(len(self.assets))
@@ -269,23 +367,35 @@ class _Solver:
         for k in source_assets:
             x[k] = solution.pop(0)
             sum = 0.0
-            for j in self.assets[n].class2ratio.keys():
-                sum += (self.assets[n].class2ratio[j]
-                        * self.assets[k].class2ratio.get(j, 0)
+            for j in self.asset_classes():
+                sum += (self.allocation(n, j) * self.allocation(k, j)
                         / self.desired_ratio(j) ** 2)
             final_derivative += sum * x[k] / self.total
 
         return x, final_derivative
 
     def allocate_all_cash(self, cash_to_allocate):
+        """Allocates all the remaining cash. This function assumes that
+        all the derivatives of the error function wrt assets are the same.
+        Then it solves for extra deltas in each asset that will increase
+        the derivative by 0.1 (arbitrary numbers). It then re-scales this
+        number to make sure that the new deltas equal to cash_to_allocate.
+        The exact computation is listed in the class level comment.
+
+        Args:
+            cash_to_allocate: The cash to allocate.
+
+        Returns: deltas (x), one for each self.asset that sums up to
+        cash_to_allocate and ensures the final derivatives of error function
+        wrt all assets are equal.
+        """
         a = []
         for i in range(len(self.assets)):
             equation_i = []
             for k in range(len(self.assets)):
                 coeff = 0.0
-                for j in self.assets[i].class2ratio.keys():
-                    coeff += (self.assets[i].class2ratio[j]
-                              * self.assets[k].class2ratio.get(j, 0)
+                for j in self.asset_classes():
+                    coeff += (self.allocation(i, j) * self.allocation(k, j)
                               / self.desired_ratio(j) ** 2)
                 equation_i.append(coeff)
             a.append(equation_i)
@@ -294,19 +404,24 @@ class _Solver:
         return x
 
     def solve(self):
+        """The main method. This method implements the algorithm listed in the
+        class comment.
+        """
         # Used to pick either the min or max gradient.
         best_gradient = np.argmin if self.cash > 0 else np.argmax
 
+        # Pick the lowest error gradient asset.
         equal_gradient_funds = set([best_gradient(
             [self.derivative(i) for i in range(len(self.assets))])])
         x = np.zeros(len(self.assets))
         left_cash = self.cash
 
+        # Keep equalizing and adding an asset to equal_gradient_funds.
         while len(equal_gradient_funds) != len(self.assets):
             derivatives = []
             deltas = []
             indices = []
-            # Compute the min increase in gradient.
+            # Compute the min increase in gradient among the remaining funds.
             for n in set(range(len(self.assets))) - equal_gradient_funds:
                 delta, derivative = self.compute_delta(
                     equal_gradient_funds, n)
