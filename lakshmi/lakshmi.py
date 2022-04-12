@@ -127,6 +127,8 @@ class Account:
     def add_cash(self, delta):
         """Adds cash to this account."""
         self._cash += delta
+        if abs(self._cash) < 1e-6:
+            self._cash = 0
 
     def available_cash(self):
         """Returns the available cash in this account."""
