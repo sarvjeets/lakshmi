@@ -215,7 +215,7 @@ class PerformanceTest(unittest.TestCase):
         self.assertEqual(['1 Month', '$100.00', '$50.00'],
                          perf_table.str_list()[0][:3])
         self.assertEqual(
-            ['Overall', '$100.00', '$50.00', '+$110.00', '110%'],
+            ['Overall', '$100.00', '$50.00', '+$110.00', '110.0%'],
             perf_table.str_list()[1][:5])
 
     def test_summary_table_1year(self):
@@ -242,5 +242,5 @@ class PerformanceTest(unittest.TestCase):
         self.assertRegex(info, r'Outflows + \$1,000\.00')
         self.assertRegex(info, r'Portfolio growth +\+\$0\.00')
         self.assertRegex(info, r'Market growth +\+\$1,000\.00')
-        self.assertRegex(info, r'Portfolio growth \% +0%')
-        self.assertRegex(info, r'Internal.+62%')
+        self.assertRegex(info, r'Portfolio growth \% +0\.0%')
+        self.assertRegex(info, r'Internal.+61\.6%')

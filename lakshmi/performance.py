@@ -404,8 +404,8 @@ class Performance:
         table = Table(6,
                       headers=['Period', 'Inflows', 'Outflows',
                                'Portfolio Change', 'Change %', 'IRR'],
-                      coltypes=['str', 'dollars', 'dollars',
-                                'delta_dollars', 'percentage', 'percentage'])
+                      coltypes=['str', 'dollars', 'dollars', 'delta_dollars',
+                                'percentage_1', 'percentage_1'])
         # Not enough data for any points.
         if self._timeline.begin() == self._timeline.end():
             return table
@@ -451,6 +451,8 @@ class Performance:
         change = data.end_balance - data.begin_balance
 
         table = Table(2, coltypes=['str', 'str'])
+        growth = round(100 * change / data.begin_balance, 1)
+        irr = round(100 * xirr(data.dates, data.amounts), 1)
         table.set_rows([
             ['Start date', begin],
             ['End date', end],
@@ -461,7 +463,6 @@ class Performance:
             ['Portfolio growth', utils.format_money_delta(change)],
             ['Market growth', utils.format_money_delta(
                 change - data.inflows + data.outflows)],
-            ['Portfolio growth %', f'{round(100*change/data.begin_balance)}%'],
-            ['Internal Rate of Return',
-             f'{round(100*xirr(data.dates, data.amounts))}%']])
+            ['Portfolio growth %', f'{growth}%'],
+            ['Internal Rate of Return', f'{irr}%']])
         return table.string(tablefmt='plain')
