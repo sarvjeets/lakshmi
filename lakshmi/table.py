@@ -21,6 +21,7 @@ class Table():
         'dollars': lambda x: utils.format_money(x),
         'delta_dollars': lambda x: utils.format_money_delta(x),
         'percentage': lambda x: f'{round(100*x)}%',
+        'percentage_1': lambda x: f'{round(100*x,1)}%',
         'float': lambda x: str(float(x)),
     }
 
@@ -31,6 +32,7 @@ class Table():
         'dollars': 'right',
         'delta_dollars': 'right',
         'percentage': 'right',
+        'percentage_1': 'right',
         'float': 'decimal',
     }
 
