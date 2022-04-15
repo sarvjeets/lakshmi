@@ -659,7 +659,7 @@ class Portfolio:
             table = Table(
                 4,
                 headers=['Account', 'Account Type', 'Value', 'Percentage'],
-                coltypes=['str', 'str', 'dollars', 'percentage'])
+                coltypes=['str', 'str', 'dollars', 'percentage_1'])
             for row in rows:
                 table.add_row(row + ([row[2] / total] if total else []))
             return table
@@ -667,7 +667,7 @@ class Portfolio:
             table = Table(
                 3,
                 headers=['Account Type', 'Value', 'Percentage'],
-                coltypes=['str', 'dollars', 'percentage'])
+                coltypes=['str', 'dollars', 'percentage_1'])
             for account_type, value in account_type_to_value.items():
                 table.add_row([account_type, value]
                               + ([value / total] if total else []))
@@ -718,7 +718,8 @@ class Portfolio:
         table = Table(
             5,
             headers=['Short Name', 'Date', 'Cost', 'Gain', 'Gain%'],
-            coltypes=['str', 'str', 'dollars', 'delta_dollars', 'percentage'])
+            coltypes=['str', 'str', 'dollars', 'delta_dollars',
+                      'percentage_1'])
         for account in self.accounts():
             for asset in account.assets():
                 if hasattr(asset, 'list_lots'):
@@ -750,7 +751,7 @@ class Portfolio:
         table = Table(
             4,
             headers=['Asset Class', 'Account Type', 'Percentage', 'Value'],
-            coltypes=['str', 'str', 'percentage', 'dollars'])
+            coltypes=['str', 'str', 'percentage_1', 'dollars'])
 
         for asset_class, type2value in class2type.items():
             first = True
@@ -795,7 +796,8 @@ class Portfolio:
         """
         table = Table(4,
                       headers=['Class', 'Actual%', 'Desired%', 'Value'],
-                      coltypes=['str', 'percentage', 'percentage', 'dollars'])
+                      coltypes=['str', 'percentage_1', 'percentage_1',
+                                'dollars'])
         first_row = True
         for alloc in self.asset_classes.return_allocation(
                 self._get_asset_class_to_value(), levels):
@@ -856,7 +858,7 @@ class Portfolio:
         table = Table(
             5,
             headers=['Class', 'Actual%', 'Desired%', 'Value', 'Difference'],
-            coltypes=['str', 'percentage', 'percentage', 'dollars',
+            coltypes=['str', 'percentage_1', 'percentage_1', 'dollars',
                       'delta_dollars'])
         for child in alloc.children:
             table.add_row([child.name, child.actual_allocation,
@@ -929,6 +931,7 @@ class Portfolio:
                   headers=['Class', 'A%', 'D%'] * int(cols / 3)
                   + leaf_aa.headers()[1:],
                   coltypes=['str', 'percentage', 'percentage'] * int(cols / 3)
-                  + ['percentage', 'percentage', 'dollars', 'delta_dollars'])
+                  + ['percentage_1', 'percentage_1', 'dollars',
+                      'delta_dollars'])
         t.set_rows(ret_list)
         return t

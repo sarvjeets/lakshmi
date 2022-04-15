@@ -230,11 +230,11 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
                              portfolio.assets().str_list())
         self.assertAlmostEqual(100.0, portfolio.total_value())
-        self.assertListEqual([['Equity', 'Pre-tax', '100%', '$100.00']],
+        self.assertListEqual([['Equity', 'Pre-tax', '100.0%', '$100.00']],
                              portfolio.asset_location().str_list())
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual(
-            [['Equity', '100%', '100%', '$100.00', '+$0.00']],
+            [['Equity', '100.0%', '100.0%', '$100.00', '+$0.00']],
             portfolio.asset_allocation(['Equity']).str_list())
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual([], portfolio.asset_allocation_compact().list())
@@ -268,22 +268,23 @@ class LakshmiTest(unittest.TestCase):
                              portfolio.assets().str_list())
         self.assertAlmostEqual(100.0, portfolio.total_value())
         self.assertListEqual(
-            [['Equity', 'Taxable', '100%', '$60.00'],
-             ['Fixed Income', 'Taxable', '100%', '$40.00']],
+            [['Equity', 'Taxable', '100.0%', '$60.00'],
+             ['Fixed Income', 'Taxable', '100.0%', '$40.00']],
             portfolio.asset_location().str_list())
 
         self.assertListEqual(
             [['All:'],
-             ['Equity', '60%', '50%', '$60.00'],
-                ['Fixed Income', '40%', '50%', '$40.00']],
+             ['Equity', '60.0%', '50.0%', '$60.00'],
+                ['Fixed Income', '40.0%', '50.0%', '$40.00']],
             portfolio.asset_allocation_tree().str_list())
         self.assertListEqual(
-            [['Equity', '60%', '50%', '$60.00', '-$10.00'],
-             ['Fixed Income', '40%', '50%', '$40.00', '+$10.00']],
+            [['Equity', '60.0%', '50.0%', '$60.00', '-$10.00'],
+             ['Fixed Income', '40.0%', '50.0%', '$40.00', '+$10.00']],
             portfolio.asset_allocation(['Equity', 'Fixed Income']).str_list())
         self.assertListEqual([
-            ['Equity', '60%', '50%', '60%', '50%', '$60.00', '-$10.00'],
-            ['Fixed Income', '40%', '50%', '40%', '50%', '$40.00', '+$10.00']],
+            ['Equity', '60%', '50%', '60.0%', '50.0%', '$60.00', '-$10.00'],
+            ['Fixed Income', '40%', '50%', '40.0%', '50.0%', '$40.00',
+             '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
 
     def test_list_accounts_no_money(self):
@@ -307,13 +308,13 @@ class LakshmiTest(unittest.TestCase):
                 ManualAsset('F', 50.0, {'All': 1.0}))))
 
         self.assertListEqual(
-            [['Schwab', 'Taxable', '$100.00', '50%'],
-             ['Vanguard', 'Taxable', '$50.00', '25%'],
-             ['Fidelity', '401K', '$50.00', '25%']],
+            [['Schwab', 'Taxable', '$100.00', '50.0%'],
+             ['Vanguard', 'Taxable', '$50.00', '25.0%'],
+             ['Fidelity', '401K', '$50.00', '25.0%']],
             portfolio.list_accounts().str_list())
         self.assertListEqual(
-            [['Taxable', '$150.00', '75%'],
-             ['401K', '$50.00', '25%']],
+            [['Taxable', '$150.00', '75.0%'],
+             ['401K', '$50.00', '25.0%']],
             portfolio.list_accounts(group_by_type=True).str_list())
 
     @patch('yfinance.Ticker')
@@ -362,10 +363,10 @@ class LakshmiTest(unittest.TestCase):
          .add_account(Account('Account2', 'Pre-tax')
                       .add_asset(ManualAsset('Bond A', 40.0, {'Bonds': 1.0}))))
         self.assertEqual(
-            [['US', 'Taxable', '100%', '$60.00'],
-             ['Intl', 'Taxable', '100%', '$30.00'],
-             ['Bonds', 'Pre-tax', '80%', '$40.00'],
-             ['', 'Taxable', '20%', '$10.00']],
+            [['US', 'Taxable', '100.0%', '$60.00'],
+             ['Intl', 'Taxable', '100.0%', '$30.00'],
+             ['Bonds', 'Pre-tax', '80.0%', '$40.00'],
+             ['', 'Taxable', '20.0%', '$10.00']],
             portfolio.asset_location().str_list())
 
     def test_flat_asset_allocation(self):
@@ -386,13 +387,13 @@ class LakshmiTest(unittest.TestCase):
             portfolio.asset_allocation(['Equity', 'Intl'])
 
         self.assertListEqual(
-            [['US', '60%', '48%', '$60.00', '-$12.00'],
-             ['Intl', '30%', '32%', '$30.00', '+$2.00'],
-                ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
+            [['US', '60.0%', '48.0%', '$60.00', '-$12.00'],
+             ['Intl', '30.0%', '32.0%', '$30.00', '+$2.00'],
+             ['Bonds', '10.0%', '20.0%', '$10.00', '+$10.00']],
             portfolio.asset_allocation(['US', 'Intl', 'Bonds']).str_list())
         self.assertListEqual(
-            [['Equity', '90%', '80%', '$90.00', '-$10.00'],
-             ['Bonds', '10%', '20%', '$10.00', '+$10.00']],
+            [['Equity', '90.0%', '80.0%', '$90.00', '-$10.00'],
+             ['Bonds', '10.0%', '20.0%', '$10.00', '+$10.00']],
             portfolio.asset_allocation(['Equity', 'Bonds']).str_list())
 
     def test_asset_allocation_compact(self):
@@ -409,21 +410,21 @@ class LakshmiTest(unittest.TestCase):
             .add_asset(ManualAsset('Bond Asset', 10.0, {'Bonds': 1.0})))
 
         self.assertListEqual(
-            [['Equity', '90%', '80%', 'US', '67%', '60%', '60%', '48%',
-                '$60.00', '-$12.00'],
-             ['', '', '', 'Intl', '33%', '40%', '30%', '32%',
-                 '$30.00', '+$2.00'],
-             ['Bonds', '10%', '20%', '', '', '', '10%', '20%',
-                 '$10.00', '+$10.00']],
+            [['Equity', '90%', '80%', 'US', '67%', '60%', '60.0%', '48.0%',
+              '$60.00', '-$12.00'],
+             ['', '', '', 'Intl', '33%', '40%', '30.0%', '32.0%',
+              '$30.00', '+$2.00'],
+             ['Bonds', '10%', '20%', '', '', '', '10.0%', '20.0%',
+              '$10.00', '+$10.00']],
             portfolio.asset_allocation_compact().str_list())
         self.assertListEqual(
             [['All:'],
-             ['Equity', '90%', '80%', '$90.00'],
-             ['Bonds', '10%', '20%', '$10.00'],
+             ['Equity', '90.0%', '80.0%', '$90.00'],
+             ['Bonds', '10.0%', '20.0%', '$10.00'],
              [' '],
              ['Equity:'],
-             ['US', '67%', '60%', '$60.00'],
-             ['Intl', '33%', '40%', '$30.00']],
+             ['US', '66.7%', '60.0%', '$60.00'],
+             ['Intl', '33.3%', '40.0%', '$30.00']],
             portfolio.asset_allocation_tree().str_list())
 
     def test_multiple_accounts_and_assets(self):
@@ -565,8 +566,8 @@ class LakshmiTest(unittest.TestCase):
 
         self.assertListEqual(
             [['All:'],
-             ['Equity', '60%', '60%', '$120.00'],
-             ['Bonds', '40%', '40%', '$80.00']],
+             ['Equity', '60.0%', '60.0%', '$120.00'],
+             ['Bonds', '40.0%', '40.0%', '$80.00']],
             portfolio.asset_allocation_tree().str_list())
 
         portfolio.what_if_add_cash('Account 1', 30)
@@ -597,8 +598,8 @@ class LakshmiTest(unittest.TestCase):
             asset_whatifs.str_list())
 
         self.assertListEqual(
-            [['Equity', 'Taxable', '100%', '$120.00'],
-             ['Bonds', 'Taxable', '100%', '$80.00']],
+            [['Equity', 'Taxable', '100.0%', '$120.00'],
+             ['Bonds', 'Taxable', '100.0%', '$80.00']],
             portfolio.asset_location().str_list())
 
         portfolio.reset_what_ifs()
@@ -701,9 +702,9 @@ class LakshmiTest(unittest.TestCase):
             .add_asset(vxus))
         # Order of lots: ShortName, Date, Cost, Gain, Gain%
         self.assertListEqual(
-            [['VTI', '2020/01/01', '$5,000.00', '+$5,000.00', '100%'],
-             ['VTI', '2021/01/01', '$15,000.00', '-$5,000.00', '-33%'],
-             ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33%']],
+            [['VTI', '2020/01/01', '$5,000.00', '+$5,000.00', '100.0%'],
+             ['VTI', '2021/01/01', '$15,000.00', '-$5,000.00', '-33.3%'],
+             ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33.3%']],
             portfolio.list_lots().str_list())
 
 
