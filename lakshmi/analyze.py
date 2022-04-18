@@ -163,22 +163,20 @@ class _Solver:
     """Internal class to help allocate cash to portfolio (helper class for the
     next class).
 
-    TODO: Fix this documentation.
-
     I tried using scipy optimize instead of this custom solver and it was
-    extremely flaky for this purposes (even after scaling/conditioning the
-    inputs well). So finally, I came up these heuristics which work (mostly).
-    This class can be further optimized/fixed, but for now it serves its
-    purpose.
+    extremely flaky for this purpose (even after scaling/conditioning the
+    inputs well). So finally, I came up theis heuristic algo which I 'feel'
+    works, but I haven't proved it formally.  This class can be further
+    optimized/fixed, but for now it serves its purpose.  -- sarvjeets
 
     Notation:
-    - f_i: Money in fund i orginally.
-    - x_i: New money to be added to fund i (what we are solving for).
+    - f_i: Money in asset i orginally.
+    - x_i: New money to be added to asset i (what we are solving for).
     - A_j: Money in asset class j.
     - C_j: Money in asset class j before adding new money (implementd as
     self.money)
     - d_j: Desired ratio of asset class j (implemented as self.desired_ratio).
-    - a_{ij}: Ratio of fund i in asset class j (implemented as
+    - a_{ij}: Ratio of asset i in asset class j (implemented as
     self.allocation).
 
     So,
@@ -187,29 +185,34 @@ class _Solver:
 
     Error E = \\sum_j (A_j/(d_j T) - 1)^2
 
-    Derivative wrt a fund i (implemented as self.derivative)
+    Derivative wrt a asset i (implemented as self.derivative)
     dE/dx_i = (2/T) \\sum_j (a_{ij} / d_j) (A_j/(d_j T) - 1)
-    Rate of change of above derivative wrt fund k:
+    Rate of change of above derivative wrt asset k:
     d^2E/{dx_i dx_k} = (2/T^2) \\sum_j (a_{ij} a_{kj} / d^2_j)
 
-    The algorithm (somewhat of a heuristic right now, althrough I suspect that
-    it is correct, but I haven't formally proved it):
+    The algorithm (very loose description here, if this works, I'll probably
+    write it more formally):
     0. Without lost of generality, assume cash to be allocated is positive (
     the other way round just replaces min with max in the following algo). We
-    also dedup same funds so that the equations in Step 2 has a unique
+    also dedup same assets so that the equations in Step 2 has a unique
     solution.
-    1. Start by the lowest derivative fund.
-    2. Add money to fund to match a target fund. Pick the next target
-    fund based on whichever target fund leads to lowest derivative.
-    3. Now we have two funds with same derivatives, keep repeating step 2
-    until all funds have same derivatives.
-    4. If we run out of cash to allocate before all funds have same derivative,
-    exit early.
-    5. If we still have money after all funds have same derivative, add extra
-    money to all funds while keeping their derivatives the same.
+    1. Start by the lowest derivative asset.
+    2. Add money to asset to match the derivative of a target asset. Pick the
+    next target asset based on whichever target asset leads to lowest
+    derivative.
+    3. Now we have two assets with same derivatives, keep repeating step 2
+    until all assets have same derivatives.
+    4. If we run out of cash to allocate before all assets have same
+    derivative, exit early.
+    5. If we still have money after all assets have same derivative, add extra
+    money to all assets while keeping their derivatives the same.
+
+    There is special case where we run out of money in an asset. In that case,
+    we just zero out the asset, take it from the list of assets that are
+    being optimized and go back to step 2.
 
     For step 2, we solve the following linear equations:
-    k is summing over funds with same derivatives. n is target fund to which
+    k is summing over assets with same derivatives. n is target asset to which
     we are not adding money (aka x_n = 0).
 
     For each i:
@@ -219,15 +222,14 @@ class _Solver:
 
     self.allocate_all_cash solves:
     dE/dx_i + \\sum_{k != i} x_k d^2E/{dx_i dx_k} =
-                 dE/dx_i (without x_i allocated to it) + 0.1
+                 dE/dx_i (without any additional money allocated to it) + 0.1
     which simplifies to:
     for each i:
     \\sum_k (x_k \\sum_j a{ij} a_{kj} / d^2_j = 0.1T
     """
 
     def __init__(self, aa, assets, cash, total):
-        """Creates a new object.
-
+        """
         Args:
             aa: Map of asset class name to a tuple of desired_ratio and
             money allocated to it.
@@ -256,7 +258,7 @@ class _Solver:
         return self.aa.keys()
 
     def allocation(self, i, j):
-        """Returns allocation of fund i in asset class j."""
+        """Returns allocation of asset i in asset class j."""
         return self.assets[i].class2ratio.get(j, 0.0)
 
     def update_aa(self, new_money):
@@ -334,7 +336,7 @@ class _Solver:
 
         return x, final_derivative
 
-    def allocate_all_cash(self, cash_to_allocate, equal_gradient_funds):
+    def allocate_all_cash(self, cash_to_allocate, equal_gradient_assets):
         """Allocates all the remaining cash. This function assumes that
         all the derivatives of the error function wrt assets are the same.
         Then it solves for extra deltas in each asset that will increase
@@ -350,56 +352,65 @@ class _Solver:
         wrt all assets are equal.
         """
         a = []
-        for i in equal_gradient_funds:
+        for i in equal_gradient_assets:
             equation_i = []
-            for k in equal_gradient_funds:
+            for k in equal_gradient_assets:
                 coeff = 0.0
                 for j in self.asset_classes():
                     coeff += (self.allocation(i, j) * self.allocation(k, j)
                               / self.desired_ratio(j) ** 2)
                 equation_i.append(coeff)
             a.append(equation_i)
-        x = np.linalg.lstsq(a, [0.1 * self.total] * len(equal_gradient_funds),
+        x = np.linalg.lstsq(a, [0.1 * self.total] * len(equal_gradient_assets),
                             rcond=None)[0]
         x *= cash_to_allocate / np.sum(x)
 
         ret_val = [0] * len(self.assets)
-        for i, j in zip(equal_gradient_funds,
-                        range(len(equal_gradient_funds))):
+        for i, j in zip(equal_gradient_assets,
+                        range(len(equal_gradient_assets))):
             ret_val[i] = x[j]
 
         return ret_val
 
-    def bound_at_zero(self, x, deltas, equal_gradient_funds, zeroed_funds):
-        """Ensure that none of the solution exceeds the available money in the
-        fund.
+    def bound_at_zero(self, x, deltas, equal_gradient_assets, zeroed_assets):
+        """Ensure that none of the solution exceeds the available money in
+        assets. If that happens, it zeros out the asset, removes the asset
+        from the set of assets that are being optmized (equal_gradient_assets).
+        It additinally adds the funds to zeroed_assets.
 
-        TODO: Add documentation.
+        Args:
+            x: The current solution.
+            deltas: The new delta on the solution that is being considered to
+            be added to x.
+            equal_gradient_assets: Assets that have equal error gradients.
+            zeroed_assets: Assets that have zero balance.
+
+        Returns:
+            None, if applying (x+deltas) to assets would not cause their
+            balance to become negative.
+            new_deltas, a list of len(self.assets), otherwise. new_deltas
+            is computed to zero out money in any asset which would have
+            gotton a negative balance if (x+deltas) was applied to it.
         """
         if self.cash > 0:
             # in this case, we don't have to worry about bounding the money,
-            # as we only add money to funds and never remove it.
+            # as we only add money to assets and never remove it.
             return None
 
         new_deltas = [0] * len(deltas)
         adjusted = False
 
-        for i in equal_gradient_funds:
+        for i in equal_gradient_assets:
             money_removed = -(x[i] + deltas[i])
             if money_removed > self.adjusted_values[i]:
                 # Withdrew too much money.
                 new_deltas[i] = -(self.adjusted_values[i] + x[i])
-                zeroed_funds.add(i)
+                zeroed_assets.add(i)
                 adjusted = True
             else:
                 new_deltas[i] = 0
 
-        equal_gradient_funds -= zeroed_funds
-
-        # Handle the case when we zero out all equal_gradient_funds.
-
-        # TODO: Fix me! AA needs to be updated.
-
+        equal_gradient_assets -= zeroed_assets
         return new_deltas if adjusted else None
 
     def solve(self):
@@ -407,35 +418,36 @@ class _Solver:
         class comment.
         """
         # Pick the lowest error gradient asset.
-        equal_gradient_funds = set([self.best_gradient_fn(
+        equal_gradient_assets = set([self.best_gradient_fn(
             [self.derivative(i) for i in range(len(self.assets))])])
-        zeroed_funds = set({})
+        zeroed_assets = set({})
         x = np.zeros(len(self.assets))
         left_cash = self.cash
 
-        # Keep equalizing and adding an asset to equal_gradient_funds.
-        while ((len(equal_gradient_funds)
-                + len(zeroed_funds) != len(self.assets))
+        # Keep equalizing and adding an asset to equal_gradient_assets.
+        while ((len(equal_gradient_assets)
+                + len(zeroed_assets) != len(self.assets))
                and abs(left_cash) > 1e-6):
-            if len(equal_gradient_funds) == 0:
-                equal_gradient_funds.add(self.best_gradient_fn(
+            # Handle the case when we zero out all equal_gradient_assets.
+            if len(equal_gradient_assets) == 0:
+                equal_gradient_assets.add(self.best_gradient_fn(
                     [self.derivative(i) for i in range(len(self.assets)) if
-                     i not in zeroed_funds]))
+                     i not in zeroed_assets]))
 
             derivatives = []
             deltas = []
             indices = []
-            # Compute the min increase in gradient among the remaining funds.
-            for n in set(range(len(self.assets))) - equal_gradient_funds:
+            # Compute the min increase in gradient among the remaining assets.
+            for n in set(range(len(self.assets))) - equal_gradient_assets:
                 delta, derivative = self.compute_delta(
-                    equal_gradient_funds, n)
+                    equal_gradient_assets, n)
                 derivatives.append(derivative)
                 deltas.append(delta)
                 indices.append(n)
 
             # Pick the highest or lowest derivative.
-            best_fund_index = self.best_gradient_fn(derivatives)
-            best_delta = deltas[best_fund_index]
+            best_asset_index = self.best_gradient_fn(derivatives)
+            best_delta = deltas[best_asset_index]
             new_cash = np.sum(best_delta)
 
             if abs(new_cash) >= abs(left_cash):
@@ -444,20 +456,21 @@ class _Solver:
                 new_cash = left_cash
 
             new_delta = self.bound_at_zero(
-                x, best_delta, equal_gradient_funds, zeroed_funds)
+                x, best_delta, equal_gradient_assets, zeroed_assets)
             if new_delta:
                 best_delta = new_delta
+                new_cash = np.sum(new_delta)
             x += best_delta
             self.update_aa(best_delta)
-            left_cash -= np.sum(best_delta)
-            if not new_delta:  # No zeroed funds.
-                equal_gradient_funds.add(indices[best_fund_index])
+            left_cash -= new_cash
+            if not new_delta:  # No zeroed assets.
+                equal_gradient_assets.add(indices[best_asset_index])
 
         # Handle any left over cash.
         while abs(left_cash) > 1e-6:
-            delta = self.allocate_all_cash(left_cash, equal_gradient_funds)
-            new_delta = self.bound_at_zero(x, delta, equal_gradient_funds,
-                                           zeroed_funds)
+            delta = self.allocate_all_cash(left_cash, equal_gradient_assets)
+            new_delta = self.bound_at_zero(x, delta, equal_gradient_assets,
+                                           zeroed_assets)
             if new_delta:
                 delta = new_delta
             x += delta
@@ -506,7 +519,7 @@ class Allocate(Analyzer):
         for asset, delta, saved in zip(assets, deltas, saved_whatifs):
             portfolio.what_if(self.account_name,
                               asset.short_name(),
-                              delta)
+                              float(delta))  # delta could be a np.float
             table.add_row([asset.short_name(), delta - saved])
         return table
 
