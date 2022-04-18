@@ -125,17 +125,14 @@ class AnalyzeTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'No assets to allocate'):
             analyze.Allocate('Schwab', ['Cash']).analyze(portfolio)
 
-    def test_allocate_solve_dedup(self):
-        assets = [
-            ManualAsset('Total US', 100, {'US': 1.0}),
-            ManualAsset('US-ish', 200, {'US': 1.0}),
-            ManualAsset('Intl', 10, {'Del': 0.75, 'Emer': 0.25}),
-            ManualAsset('Bond', 12, {'Bonds': 1.0}),
-            ManualAsset('Ex-US', 20, {'Del': 0.75, 'Emer': 0.25})]
-        deduped, mapping = analyze._dedup_assets(assets)
-        self.assertDictEqual({0: [0, 1], 1: [2, 4], 2: [3]}, mapping)
-        names = [asset.name() for asset in deduped]
-        self.assertEqual(['Total US', 'Intl', 'Bond'], names)
+    def test_allocate_one_assets(self):
+        account = Account('Schwab', 'Taxable').add_asset(
+            ManualAsset('Cash', 100.0, {'All': 1.0}))
+        account.add_cash(200)
+        portfolio = Portfolio(AssetClass('All')).add_account(account)
+        self.assertListEqual(
+            [['Cash', '+$200.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
 
     def test_allocate_cash(self):
         portfolio = Portfolio(
@@ -244,9 +241,9 @@ class AnalyzeTest(unittest.TestCase):
         account.add_cash(3)
         self.assertListEqual(
             [['Total US', '+$1.00'],
-             ['Intl', '+$0.96'],
-             ['Devel', '+$0.03'],
-             ['Emer', '+$0.01'],
+             ['Intl', '+$0.33'],
+             ['Devel', '+$0.47'],
+             ['Emer', '+$0.20'],
              ['Total Bond', '+$1.00']],
             analyze.Allocate('Schwab').analyze(portfolio).str_list())
 
@@ -367,6 +364,95 @@ class AnalyzeTest(unittest.TestCase):
         self.assertAlmostEqual(
             10e6, account.get_asset('Total Bond').adjusted_value(), places=6)
         self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_cash_going_negative_corr(self):
+        # In this test case, due to coorelation between funds, the solution
+        # will drive Developed/emerging funds to negative balance.
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4,
+                                        AssetClass('Intl')
+                                        .add_subclass(
+                                            0.7, AssetClass('Developed'))
+                                        .add_subclass(
+                                            0.3, AssetClass('Emerging'))))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total US', 54.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Intl', 16.2, {'Developed': 0.7,
+                                                  'Emerging': 0.3}))
+            .add_asset(ManualAsset('Devel', 11.34, {'Developed': 1.0}))
+            .add_asset(ManualAsset('Emer', 4.86, {'Emerging': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10.0, {'Bond': 1.0})))
+
+        portfolio.get_account('Schwab').add_cash(3)
+        self.assertListEqual(
+            [['Total US', '+$0.00'],
+             ['Intl', '+$0.98'],
+             ['Devel', '+$1.36'],
+             ['Emer', '+$0.66'],
+             ['Total Bond', '+$0.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
+
+    def test_allocate_cash_going_positive_corr(self):
+        # In this test case, due to coorelation between funds, the solution
+        # will drive Developed/emerging funds to positive balance.
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9,
+                          AssetClass('Equity')
+                          .add_subclass(0.6, AssetClass('US'))
+                          .add_subclass(0.4,
+                                        AssetClass('Intl')
+                                        .add_subclass(
+                                            0.7, AssetClass('Developed'))
+                                        .add_subclass(
+                                            0.3, AssetClass('Emerging'))))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total US', 54.0, {'US': 1.0}))
+            .add_asset(ManualAsset('Intl', 19.8, {'Developed': 0.7,
+                                                  'Emerging': 0.3}))
+            .add_asset(ManualAsset('Devel', 13.86, {'Developed': 1.0}))
+            .add_asset(ManualAsset('Emer', 5.94, {'Emerging': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10.0, {'Bond': 1.0})))
+
+        portfolio.get_account('Schwab').add_cash(-3)
+        self.assertListEqual(
+            [['Total US', '+$0.00'],
+             ['Intl', '-$0.98'],
+             ['Devel', '-$1.36'],
+             ['Emer', '-$0.66'],
+             ['Total Bond', '+$0.00']],
+            analyze.Allocate('Schwab').analyze(portfolio).str_list())
+
+    def test_allocate_cash_withdrawing_more(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('US', 90, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Bonds', 20, {'Bond': 1.0})))
+        portfolio.add_account(
+            Account('401K', 'Tax-Deferred')
+            .add_asset(ManualAsset('US', 3, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Bonds', 1, {'Bond': 1.0})))
+
+        portfolio.get_account('401K').add_cash(-2)
+
+        # We should ideally withdraw money from bonds, but it doesn't have
+        # any balance to withdraw.
+        self.assertListEqual(
+            [['US', '-$1.00'],
+             ['Bonds', '-$1.00']],
+            analyze.Allocate('401K').analyze(portfolio).str_list())
 
 
 if __name__ == '__main__':

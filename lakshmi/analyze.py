@@ -159,40 +159,11 @@ class BandRebalance(Analyzer):
         return ret_val
 
 
-def _dedup_assets(orig_assets):
-    """Dedup assets which have exactly the same allocation accross asset
-    classes (i.e. they are identical for allocation purposes). The dedups
-    assets are stored in mapping, where key is index of deduped assets and
-    values are the dups from orig_assets.
-    """
-    def has_same_allocation(asset1, asset2):
-        for ac in asset1.class2ratio:
-            if abs(asset1.class2ratio.get(ac, 0)
-                   - asset2.class2ratio.get(ac, 0)) >= 1e-6:
-                return False
-        return True
-
-    assets = []
-    mapping = {}
-    dups = []
-
-    for i in range(len(orig_assets)):
-        if i in dups:
-            continue
-        new_index = len(assets)
-        mapping[new_index] = [i]
-        assets.append(orig_assets[i])
-
-        for j in range(i + 1, len(orig_assets)):
-            if has_same_allocation(orig_assets[i], orig_assets[j]):
-                mapping[new_index].append(j)
-                dups.append(j)
-    return assets, mapping
-
-
 class _Solver:
     """Internal class to help allocate cash to portfolio (helper class for the
     next class).
+
+    TODO: Fix this documentation.
 
     I tried using scipy optimize instead of this custom solver and it was
     extremely flaky for this purposes (even after scaling/conditioning the
@@ -228,7 +199,7 @@ class _Solver:
     also dedup same funds so that the equations in Step 2 has a unique
     solution.
     1. Start by the lowest derivative fund.
-    2. Add money to fund to match a target fund. Pick the argmin of target
+    2. Add money to fund to match a target fund. Pick the next target
     fund based on whichever target fund leads to lowest derivative.
     3. Now we have two funds with same derivatives, keep repeating step 2
     until all funds have same derivatives.
@@ -267,7 +238,10 @@ class _Solver:
         self.aa = aa
         self.total = total
         self.cash = cash
-        self.assets, self.mapping = _dedup_assets(assets)
+        self.assets = assets
+        # Used to pick either the min or max gradient.
+        self.best_gradient_fn = np.argmin if cash > 0 else np.argmax
+        self.adjusted_values = [asset.adjusted_value() for asset in assets]
 
     def desired_ratio(self, asset_class):
         """Helper function to give desired ratio of an asset class."""
@@ -309,20 +283,6 @@ class _Solver:
             sum += rel_ratio * (self.allocation(i, j) / self.desired_ratio(j))
         return sum
 
-    def expand_dup_assets(self, x):
-        """Expands deduped assets again to the original provided. The assets
-        when passed in the constructor are de-duped. This expands the x
-        (calculated delta) on the deduped assets back to the deltas on
-        the original ones."""
-        max_index = max(map(max, self.mapping.values()))
-        ret_val = [None] * (max_index + 1)
-
-        for i, dest_assets in self.mapping.items():
-            for j in dest_assets:
-                ret_val[j] = float(x[i] / len(dest_assets))
-
-        return ret_val
-
     def compute_delta(self, source_assets, target_asset):
         """Heart of this solver. This computes deltas (x) on the source_
         assets, so that the derivative of the error function wrt source_assets
@@ -358,9 +318,9 @@ class _Solver:
                 const_i += (
                     (self.allocation(i, j) / self.desired_ratio(j) ** 2)
                     * (self.desired_ratio(j) * self.total - self.money(j)))
-            b.append(const_i if abs(const_i) > 1e-10 else 0.0)
+            b.append(const_i)
 
-        solution = np.linalg.solve(a, b).tolist()
+        solution = np.linalg.lstsq(a, b, rcond=None)[0].tolist()
         x = np.zeros(len(self.assets))
 
         final_derivative = alpha
@@ -374,11 +334,11 @@ class _Solver:
 
         return x, final_derivative
 
-    def allocate_all_cash(self, cash_to_allocate):
+    def allocate_all_cash(self, cash_to_allocate, equal_gradient_funds):
         """Allocates all the remaining cash. This function assumes that
         all the derivatives of the error function wrt assets are the same.
         Then it solves for extra deltas in each asset that will increase
-        the derivative by 0.1 (arbitrary numbers). It then re-scales this
+        the derivative by 0.1 (arbitrary number). It then re-scales this
         number to make sure that the new deltas equal to cash_to_allocate.
         The exact computation is listed in the class level comment.
 
@@ -390,34 +350,78 @@ class _Solver:
         wrt all assets are equal.
         """
         a = []
-        for i in range(len(self.assets)):
+        for i in equal_gradient_funds:
             equation_i = []
-            for k in range(len(self.assets)):
+            for k in equal_gradient_funds:
                 coeff = 0.0
                 for j in self.asset_classes():
                     coeff += (self.allocation(i, j) * self.allocation(k, j)
                               / self.desired_ratio(j) ** 2)
                 equation_i.append(coeff)
             a.append(equation_i)
-        x = np.linalg.solve(a, [0.1 * self.total] * len(self.assets))
+        x = np.linalg.lstsq(a, [0.1 * self.total] * len(equal_gradient_funds),
+                            rcond=None)[0]
         x *= cash_to_allocate / np.sum(x)
-        return x
+
+        ret_val = [0] * len(self.assets)
+        for i, j in zip(equal_gradient_funds,
+                        range(len(equal_gradient_funds))):
+            ret_val[i] = x[j]
+
+        return ret_val
+
+    def bound_at_zero(self, x, deltas, equal_gradient_funds, zeroed_funds):
+        """Ensure that none of the solution exceeds the available money in the
+        fund.
+
+        TODO: Add documentation.
+        """
+        if self.cash > 0:
+            # in this case, we don't have to worry about bounding the money,
+            # as we only add money to funds and never remove it.
+            return None
+
+        new_deltas = [0] * len(deltas)
+        adjusted = False
+
+        for i in equal_gradient_funds:
+            money_removed = -(x[i] + deltas[i])
+            if money_removed > self.adjusted_values[i]:
+                # Withdrew too much money.
+                new_deltas[i] = -(self.adjusted_values[i] + x[i])
+                zeroed_funds.add(i)
+                adjusted = True
+            else:
+                new_deltas[i] = 0
+
+        equal_gradient_funds -= zeroed_funds
+
+        # Handle the case when we zero out all equal_gradient_funds.
+
+        # TODO: Fix me! AA needs to be updated.
+
+        return new_deltas if adjusted else None
 
     def solve(self):
         """The main method. This method implements the algorithm listed in the
         class comment.
         """
-        # Used to pick either the min or max gradient.
-        best_gradient = np.argmin if self.cash > 0 else np.argmax
-
         # Pick the lowest error gradient asset.
-        equal_gradient_funds = set([best_gradient(
+        equal_gradient_funds = set([self.best_gradient_fn(
             [self.derivative(i) for i in range(len(self.assets))])])
+        zeroed_funds = set({})
         x = np.zeros(len(self.assets))
         left_cash = self.cash
 
         # Keep equalizing and adding an asset to equal_gradient_funds.
-        while len(equal_gradient_funds) != len(self.assets):
+        while ((len(equal_gradient_funds)
+                + len(zeroed_funds) != len(self.assets))
+               and abs(left_cash) > 1e-6):
+            if len(equal_gradient_funds) == 0:
+                equal_gradient_funds.add(self.best_gradient_fn(
+                    [self.derivative(i) for i in range(len(self.assets)) if
+                     i not in zeroed_funds]))
+
             derivatives = []
             deltas = []
             indices = []
@@ -430,26 +434,37 @@ class _Solver:
                 indices.append(n)
 
             # Pick the highest or lowest derivative.
-            best_fund_index = best_gradient(derivatives)
+            best_fund_index = self.best_gradient_fn(derivatives)
             best_delta = deltas[best_fund_index]
             new_cash = np.sum(best_delta)
 
             if abs(new_cash) >= abs(left_cash):
                 # We have allocated more cash than what was left.
-                x += best_delta * left_cash / new_cash
-                left_cash = 0
-                break
+                best_delta = best_delta * left_cash / new_cash
+                new_cash = left_cash
 
-            equal_gradient_funds.add(indices[best_fund_index])
+            new_delta = self.bound_at_zero(
+                x, best_delta, equal_gradient_funds, zeroed_funds)
+            if new_delta:
+                best_delta = new_delta
             x += best_delta
             self.update_aa(best_delta)
-            left_cash = left_cash - new_cash
+            left_cash -= np.sum(best_delta)
+            if not new_delta:  # No zeroed funds.
+                equal_gradient_funds.add(indices[best_fund_index])
 
         # Handle any left over cash.
-        if left_cash != 0:
-            x += self.allocate_all_cash(left_cash)
+        while abs(left_cash) > 1e-6:
+            delta = self.allocate_all_cash(left_cash, equal_gradient_funds)
+            new_delta = self.bound_at_zero(x, delta, equal_gradient_funds,
+                                           zeroed_funds)
+            if new_delta:
+                delta = new_delta
+            x += delta
+            self.update_aa(delta)
+            left_cash -= np.sum(delta)
 
-        return self.expand_dup_assets(x)
+        return x
 
 
 class Allocate(Analyzer):
