@@ -837,7 +837,7 @@ def rebalance(max_abs_percentage, max_relative_percentage):
 @click.option('--account', '-t', type=str, metavar='substr', required=True,
               help='Allocate any cash in the account that matches this '
               'substring.')
-@click.option('--blacklisted-assets', '-a', type=str, default='',
+@click.option('--exclude-assets', '-e', type=str, default='',
               help='If provided, these assets in the account are not '
               'allocated any cash. This is a comma separated list of assets '
               'specified by their short names.')
@@ -848,7 +848,7 @@ def rebalance(max_abs_percentage, max_relative_percentage):
               'from the assets. If set, money is both added and removed (as '
               'needed) from the assets to minimize the relative difference '
               'from the desired asset allocation.')
-def allocate(account, blacklisted_assets, rebalance):
+def allocate(account, exclude_assets, rebalance):
     """Allocates any unallocated cash in an account to assets. If an account
     has any unallocated cash (aka what if) then this command allocates that
     cash to the assets in the account. This allocation is done with the goal
@@ -869,11 +869,11 @@ def allocate(account, blacklisted_assets, rebalance):
 
     portfolio = lakctx.get_portfolio()
     account_name = portfolio.get_account_name_by_substr(account)
-    bl_assets_list = [a.strip() for a in blacklisted_assets.split(',')]
+    exclude_assets_list = [a.strip() for a in exclude_assets.split(',')]
 
     with Spinner():
         table = lakshmi.analyze.Allocate(
-            account_name, bl_assets_list, rebalance).analyze(portfolio)
+            account_name, exclude_assets_list, rebalance).analyze(portfolio)
     click.echo(table.string())
     lakctx.save_portfolio()
 

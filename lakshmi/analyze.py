@@ -494,11 +494,11 @@ class Allocate(Analyzer):
     lakshmi.Portfolio.reset.what_ifs).
     """
 
-    def __init__(self, account_name, blacklisted_assets=[], rebalance=False):
+    def __init__(self, account_name, exclude_assets=[], rebalance=False):
         """
         Args:
             account_name: The full name of the account to analyze.
-            blacklisted_assets: A list of asset short names (strings) which
+            exclude_assets: A list of asset short names (strings) which
             will not be allocated any new cash from the account as a result
             of calling analyze.
             rebalance: If False, money is either only added (in case cash is
@@ -508,7 +508,7 @@ class Allocate(Analyzer):
             allocation.
         """
         self.account_name = account_name
-        self.blacklisted_assets = blacklisted_assets
+        self.exclude_assets = exclude_assets
         self.rebalance = rebalance
 
     def _apply_whatifs(self, portfolio, assets, deltas, saved_whatifs=None):
@@ -540,7 +540,7 @@ class Allocate(Analyzer):
             - There is no cash to allocation and rebalance is False.
             - An asset class's desired allocation ratio is zero.
             - No assets are present in the Account after taking out the
-            blacklisted assets.
+            exlcuded assets.
             - Cash to withdraw is more than the total value of assets in the
             portfolio.
             - For some reason, we can't minimize the difference between
@@ -552,7 +552,7 @@ class Allocate(Analyzer):
         assert cash != 0 or self.rebalance, (
             f'No available cash to allocate in {self.account_name}.')
         assets = [x for x in account.assets() if x.short_name() not in
-                  self.blacklisted_assets]
+                  self.exclude_assets]
         assert len(assets) != 0, 'No assets to allocate cash to.'
 
         saved_whatifs = None

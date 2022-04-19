@@ -115,7 +115,7 @@ class AnalyzeTest(unittest.TestCase):
         portfolio = Portfolio(AssetClass('All')).add_account(account)
         with self.assertRaisesRegex(AssertionError, 'Cash to withdraw'):
             analyze.Allocate(
-                'Schwab', blacklisted_assets=['Black Cash']).analyze(portfolio)
+                'Schwab', exclude_assets=['Black Cash']).analyze(portfolio)
 
     def test_allocate_no_assets(self):
         account = Account('Schwab', 'Taxable').add_asset(
