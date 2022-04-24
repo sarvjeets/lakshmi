@@ -20,9 +20,9 @@ documenting tips and tricks for using Lakshmi.
 ### Changed
 - Changed some of the common methods to return percentages rounded to 1 digit
 rather than 0.
-- Earlier asset classes with no money mapped to them were not returned by
-all AA methods (including their children). Now it returns them (the correct
-behavior in almost all cases).
+- Earlier asset classes with no money mapped to them were not returned when
+returning asset allocation. Now all asset classes are returned regardless of
+whether they have money mapped or not.
 
 ## [v2.4.1] - 2022-02-23
 ### Fixed
