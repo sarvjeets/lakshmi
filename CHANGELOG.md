@@ -2,9 +2,27 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.5.0] - 2022-04-22
+### Added
+- A new command `lak analyze allocate` which suggests how to allocate new cash,
+while making sure the actual asset allocation remains close to the desired
+allocation. This command can also be used to get rebalancing suggestions or to
+withdraw money from the portfolio. In all cases, it will suggest changes that
+will minimize the relative difference between actual asset allocation and the
+desired asset allocation.
+- A new
+[recipes doc](https://github.com/sarvjeets/lakshmi/blob/develop/docs/recipes.md)
+documenting tips and tricks for using Lakshmi.
+
+### Changed
+- Changed some of the common methods to return percentages rounded to 1 digit
+rather than 0.
+- Earlier asset classes with no money mapped to them were not returned when
+returning asset allocation. Now all asset classes are returned regardless of
+whether they have money mapped or not.
 
 ## [v2.4.1] - 2022-02-23
 ### Fixed

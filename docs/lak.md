@@ -29,11 +29,11 @@
    * [lak info](#lak-info)
    * [lak whatif](#lak-whatif)
    * [lak analyze](#lak-analyze)
+      * [lak analyze allocate](#lak-analyze-allocate)
+      * [lak analyze rebalance](#lak-analyze-rebalance)
+      * [lak analyze tlh](#lak-analyze-tlh)
    * [lak edit](#lak-edit)
    * [lak delete](#lak-delete)
-* [Miscellaneous](#miscellaneous)
-   * [How to reorder Accounts or Assets in the lak list assets view?](#how-to-reorder-accounts-or-assets-in-the-lak-list-assets-view)
-
 
 ## Introduction
 lak provides a command-line interface to the lakshmi library. lak is meant
@@ -1381,8 +1381,7 @@ Schwab Taxable  Vanguard Total International Stock Index Fund ETF Shares  +$50.0
 
 ### lak analyze
 
-This command can be used to analyze the portfolio. The two sub-commands
-under this command are `rebalance` and `tlh`:
+This command is used to analyze the portfolio:
 
 ```
 $ lak analyze --help
@@ -1394,9 +1393,160 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  rebalance  Shows if assets needs to be rebalanced based on a band based...
+  allocate   Allocates any unallocated cash in an account to assets.
+  rebalance  Shows if any asset classes need to be rebalanced based on a...
   tlh        Shows which tax lots can be Tax-loss harvested (TLH).
+```
 
+#### lak analyze allocate
+
+```
+$ lak analyze allocate --help
+Usage: lak analyze allocate [OPTIONS]
+
+  Allocates any unallocated cash in an account to assets. If an account has
+  any unallocated cash (aka what if) then this command allocates that cash to
+  the assets in the account. This allocation is done with the goal of
+  minimizing the relative ratio of actual allocation to the desired ratio of
+  asset classes.
+
+  The unallocated cash in the account could be negative in which cash money is
+  removed from the assets.
+
+  This command modifies the portfolio by applying the resulting deltas to it
+  (similar to `lak whatif` command).
+
+  WARNING: This is a BETA feature and is subject to change or be removed.
+  Always sanity check the suggestions before acting on them.
+
+Options:
+  -t, --account substr       Allocate any cash in the account that matches
+                             this substring.  [required]
+  -e, --exclude-assets TEXT  If provided, these assets in the account are not
+                             allocated any cash. This is a comma separated
+                             list of assets specified by their short names.
+  -r, --rebalance            If not set (the default), money is either only
+                             added (in case the acccount has any unallocated
+                             cash) or only removed (in case the account has
+                             negative unallocated cash) from the assets. If
+                             set, money is both added and removed (as needed)
+                             from the assets to minimize the relative
+                             difference from the desired asset allocation.
+  --help                     Show this message and exit.
+```
+
+As an example, let's consider the example portfolio:
+
+```
+$ lak list assets aa
+Account          Asset                                                       Value
+---------------  --------------------------------------------------------  -------
+Schwab Taxable   Vanguard Total Stock Market Index Fund ETF Shares         $214.22
+Schwab Taxable   Vanguard Total International Stock Index Fund ETF Shares   $57.01
+Roth IRA         Vanguard Total International Stock Index Fund ETF Shares   $57.01
+Vanguard 401(k)  Vanguard Total Bond Market Index Fund Investor Shares     $201.20
+
+Class      A%    D%  Class      A%    D%    Actual%    Desired%    Value    Difference
+-------  ----  ----  -------  ----  ----  ---------  ----------  -------  ------------
+Equity    62%   60%  US        65%   60%        40%         36%  $214.22       -$23.62
+                     Intl      35%   40%        22%         24%  $114.02       +$13.05
+Bonds     38%   40%                             38%         40%  $201.20       +$10.58
+```
+
+Let's assume we wanted to invest an extra $20 in the `Schwab Taxable` account
+and wanted to know which asset to allocate the cash to. Let's first tell
+`lakshmi` that we have extra cash in an account:
+
+```
+$ lak whatif account -t 'Taxable' 20
+```
+
+After that we can ask it to allocate the cash:
+
+```
+$ lak analyze allocate -t 'Taxable'
+Asset      Delta
+-------  -------
+VTI       +$0.00
+VXUS     +$20.00
+
+$ lak list whatifs aa
+Account         Asset                                                       Delta
+--------------  --------------------------------------------------------  -------
+Schwab Taxable  Vanguard Total International Stock Index Fund ETF Shares  +$20.00
+
+Class      A%    D%  Class      A%    D%    Actual%    Desired%    Value    Difference
+-------  ----  ----  -------  ----  ----  ---------  ----------  -------  ------------
+Equity    63%   60%  US        62%   60%        39%         36%  $214.22       -$16.42
+                     Intl      38%   40%        24%         24%  $134.02        -$2.15
+Bonds     37%   40%                             37%         40%  $201.20       +$18.58
+
+# Let's reset the whatifs
+$ lak whatif -r
+```
+
+We can also use the same command to see how to rebalance within an account.
+Let's asssume we wanted to rebalance the portfolio by only selling & buying
+assets in the Schwab account. (This is a made up example. In most cases,
+one would want to avoid rebalancing in a taxable account. A better account to
+rebalance would be a 401(K) or Roth as there are no tax consequences for
+doing so.)
+
+```
+$ lak list aa
+Class      A%    D%  Class      A%    D%    Actual%    Desired%    Value    Difference
+-------  ----  ----  -------  ----  ----  ---------  ----------  -------  ------------
+Equity    62%   60%  US        65%   60%        40%         36%  $214.22       -$23.62
+                     Intl      35%   40%        22%         24%  $114.02       +$13.05
+Bonds     38%   40%                             38%         40%  $201.20       +$10.58
+
+$ lak analyze allocate -t 'Taxable' -r
+Asset      Delta
+-------  -------
+VTI      -$16.30
+VXUS     +$16.30
+
+$ lak list aa
+Warning: Hypothetical what ifs are set.
+
+Class      A%    D%  Class      A%    D%    Actual%    Desired%    Value    Difference
+-------  ----  ----  -------  ----  ----  ---------  ----------  -------  ------------
+Equity    62%   60%  US        60%   60%        37%         36%  $197.92        -$7.32
+                     Intl      40%   40%        25%         24%  $130.32        -$3.25
+Bonds     38%   40%                             38%         40%  $201.20       +$10.58
+```
+
+#### lak analyze rebalance
+
+```
+$ lak analyze rebalance --help
+Usage: lak analyze rebalance [OPTIONS]
+
+  Shows if any asset classes need to be rebalanced based on a band based
+  rebalancing scheme. For more information, please refer to
+  https://www.whitecoatinvestor.com/rebalancing-the-525-rule/.
+
+Options:
+  -a, --max-abs-percentage FLOAT  Max absolute difference before rebalancing.
+                                  [default: 5]
+  -r, --max-relative-percentage FLOAT
+                                  The max relative difference before
+                                  rebalancing.  [default: 25]
+  --help                          Show this message and exit.
+```
+
+The `rebalance` command only shows asset classes that don't fall within
+the rebalancing bands. If all asset classes are within the bands, it prints
+a message to that effect:
+
+```
+$ lak analyze rebalance
+Portfolio Asset allocation within bounds.
+```
+
+#### lak analyze tlh
+
+```
 $ lak analyze tlh --help
 Usage: lak analyze tlh [OPTIONS]
 
@@ -1408,21 +1558,6 @@ Options:
   -d, --max-dollars INTEGER   The max absolute loss for an asset (across all
                               tax lots) before TLHing.
   --help                      Show this message and exit.
-
-$ lak analyze rebalance --help
-Usage: lak analyze rebalance [OPTIONS]
-
-  Shows if assets needs to be rebalanced based on a band based rebalancing
-  scheme. For more information, please refer to
-  https://www.whitecoatinvestor.com/rebalancing-the-525-rule/.
-
-Options:
-  -a, --max-abs-percentage FLOAT  Max absolute difference before rebalancing.
-                                  [default: 5]
-  -r, --max-relative-percentage FLOAT
-                                  The max relative difference before
-                                  rebalancing.  [default: 25]
-  --help                          Show this message and exit.
 ```
 
 **A word of caution about the `tlh` command**: This command assumes that
@@ -1532,11 +1667,3 @@ Commands:
 `lak delete` sub-commands prompt the user to confirm if they want to delete
 the specified entity before actually deleting it. This can be skipped via
 the `--yes` flag.
-
-## Miscellaneous
-
-### How to reorder Accounts or Assets in the lak list assets view?
-There is currently no automated way to do this, but the
-[portfolio file](#portfolio) can be manually edited and different
-sections can be moved around to achieve this. See also:
-[Portfolio file syntax](#portfolio-file-syntax).
