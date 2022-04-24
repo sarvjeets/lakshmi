@@ -552,6 +552,20 @@ class LakTest(unittest.TestCase):
         self.assertEqual(0, result.exit_code)
         self.assertRegex(result.output, r'Bonds +0')
 
+    def test_analyze_allocate_no_cash(self):
+        result = run_lak('analyze allocate -t Schwab')
+        self.assertEqual(1, result.exit_code)
+        self.assertIn('No available cash', str(result.exception))
+        self.assertFalse(lak.lakctx.saved_portfolio)
+
+    def test_analyze_allocate(self):
+        self.assertEqual(0, run_lak('whatif account -t Schwab 100').exit_code)
+        result = run_lak('analyze allocate -t Schwab')
+        self.assertEqual(0, result.exit_code)
+        self.assertIn('+$100.00', result.output)
+        self.assertTrue(lak.lakctx.saved_portfolio)
+        self.assertEqual(0, run_lak('whatif -r').exit_code)
+
 
 if __name__ == '__main__':
     unittest.main()

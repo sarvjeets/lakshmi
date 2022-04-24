@@ -34,6 +34,10 @@ inside those accounts. The market value of these assets is automatically
 updated.
 - Support for running what-if scenarios to see how it impacts the overall asset
 allocation.
+- Suggests which funds to allocate new money to (or withdraw money from) to
+keep the actual asset allocation close to the desired asset allocation.
+- Suggests how to rebalance the funds in a given account to bring the actual
+asset allocation close to the desired asset allocation.
 - Ability to track portfolio performance
 ([IRR](https://www.investopedia.com/terms/i/irr.asp#:~:text=The%20internal%20rate%20of%20return,a%20discounted%20cash%20flow%20analysis.))
 and cash flows.
