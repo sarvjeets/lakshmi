@@ -251,6 +251,38 @@ class CacheTest(unittest.TestCase):
         write_bytes.assert_called_once_with(pickle.dumps(1))
         read_bytes.assert_not_called()
 
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_return_cached_funcs(self, set_cache_dir):
+        def side_effect(x):
+            cache._ctx[cache._CACHE_STR] = x
+        set_cache_dir.side_effect = side_effect
+        prefetch = cache.Prefetch()
+        c = Cached('key1', 1)
+        self.assertEqual(2, len(prefetch._return_cached_funcs(c)))
+
+    @patch('pathlib.Path.read_bytes')
+    @patch('pathlib.Path.write_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.get_file_age')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_cache_miss_prefetch(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
+        def side_effect(x):
+            cache._ctx[cache._CACHE_STR] = x
+        set_cache_dir.side_effect = side_effect
+        exists.return_value = False
+
+        c = Cached('key1', 1)
+        cache.prefetch_add(c)
+        cache.prefetch()
+
+        set_cache_dir.assert_called_once()
+        get_file_age.assert_not_called()
+        exists.assert_called()
+        write_bytes.assert_called()  # Called twice.
+        read_bytes.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
