@@ -13,7 +13,7 @@ import yfinance
 
 import lakshmi.constants
 import lakshmi.utils as utils
-from lakshmi.cache import Cacheable, cache
+from lakshmi.cache import Cacheable, cache, prefetch_add
 from lakshmi.table import Table
 
 
@@ -188,6 +188,11 @@ class Asset(ABC):
     @abstractmethod
     def short_name(self):
         """Returns the short name of this asset (ideally < 10 chars)."""
+        pass
+
+    def prefetch_add(self):
+        """If possible, add this object to be prefetched in parallel using
+        cache.prefetch_add function."""
         pass
 
 
@@ -510,6 +515,9 @@ class TickerAsset(TradedAsset, Cacheable):
                 'from Yahoo Finance')
         return self.yticker.info['regularMarketPrice']
 
+    def prefetch_add(self):
+        prefetch_add(self)
+
 
 class VanguardFund(TradedAsset, Cacheable):
     """An asset class representing Vanguard trust fund represented by a
@@ -604,6 +612,9 @@ class VanguardFund(TradedAsset, Cacheable):
         req.raise_for_status()  # Raise if error
         return float(req.json()['currentPrice']
                      ['dailyPrice']['regular']['price'])
+
+    def prefetch_add(self):
+        prefetch_add(self)
 
 
 class _TreasuryBonds(Asset):
@@ -769,6 +780,10 @@ class _TreasuryBonds(Asset):
     def short_name(self):
         """Returns short name (same as name)."""
         return self.name()
+
+    def prefetch_add(self):
+        for b in self.bonds():
+            prefetch_add(b)
 
 
 class IBonds(_TreasuryBonds):
