@@ -131,13 +131,17 @@ def set_cache_dir(cache_dir):
             file.unlink()
 
 
-def _valid_cached_value(file, days):
+def _valid_cached_value(file, days, add_to_ignored=True):
     """Helper function to check if the cached value from file is valid.
 
     Args:
         file: The Path object representing a file potentially containing
         previously cached value.
         days: Number of days after which the cached value becomes invalid.
+        add_to_ignored: If force_refresh is set and this arg is set, the
+        file is added to an ignored set of files so that this function doesn't
+        return False for the same file if it is called again (this prevents
+        refreshing the same cached value multiple times).
 
     Returns: True iff the cached value in file is valid.
     """
@@ -148,7 +152,8 @@ def _valid_cached_value(file, days):
         and file.name not in _ctx[_FORCED_FILES_STR]
     ):
         # Ignore cached value.
-        _ctx[_FORCED_FILES_STR].add(file.name)
+        if add_to_ignored:
+            _ctx[_FORCED_FILES_STR].add(file.name)
         return False
     return (file.exists() and get_file_age(file) < days)
 
@@ -244,7 +249,8 @@ class Prefetch:
         for func in self._return_cached_funcs(class_obj):
             file = self.cache_dir / _cache_filename(
                 class_obj, func, func.cached_days)
-            if not _valid_cached_value(file, func.cached_days):
+            if not _valid_cached_value(file, func.cached_days,
+                                       add_to_ignored=False):
                 funcs_to_refresh.append(func)
 
         self.cache_key_to_funcs[cache_key] = funcs_to_refresh
