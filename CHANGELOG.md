@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Added functionality in the `cache` module to prefetch multiple cached objects
+in parallel threads.
+- Added prefetch method in assets that calls the newly added functionality
+in the `cache` module. Also, added a prefetch method to portfolio that
+prefetches the prices/names for all the assets in the portfolio in parallel.
+
+### Changed
+- lak command that access the whole portfolio now uses prefetch to
+speed up refreshing the prices of the portfolio by using multiple threads to
+do so.
+
 ## [v2.5.0] - 2022-04-22
 ### Added
 - A new command `lak analyze allocate` which suggests how to allocate new cash,

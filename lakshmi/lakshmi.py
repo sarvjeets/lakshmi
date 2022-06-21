@@ -4,6 +4,7 @@ import yaml
 
 import lakshmi.utils as utils
 from lakshmi.assets import from_dict, to_dict
+from lakshmi.cache import prefetch
 from lakshmi.table import Table
 
 
@@ -614,6 +615,13 @@ class Portfolio:
             account.add_cash(-account.available_cash())
             for asset in account.assets():
                 asset.what_if(-asset.get_what_if())
+
+    def prefetch(self):
+        """Prefetches all cached assets."""
+        for account in self.accounts():
+            for asset in account.assets():
+                asset.prefetch_add()
+        prefetch()
 
     def total_value(self, include_whatifs=True):
         """Returns total value of the portfolio.
