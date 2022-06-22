@@ -247,6 +247,7 @@ def total():
     portfolio = lakctx.get_portfolio()
 
     with Spinner():
+        portfolio.prefetch()
         output = Table(2, coltypes=['str', 'dollars']).add_row(
             ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt)
     click.echo(output)
@@ -262,6 +263,7 @@ def al():
     lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
     with Spinner():
+        portfolio.prefetch()
         output = portfolio.asset_location().string(lakctx.tablefmt)
     click.echo(output)
 
@@ -284,6 +286,7 @@ def aa(compact, asset_class):
 
     portfolio = lakctx.get_portfolio()
     with Spinner():
+        portfolio.prefetch()
         if asset_class:
             if not compact:
                 raise click.UsageError(
@@ -316,6 +319,7 @@ def assets(short_name, quantity):
     lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
     with Spinner():
+        portfolio.prefetch()
         output = portfolio.assets(
             short_name=short_name, quantity=quantity).string(lakctx.tablefmt)
     click.echo(output)
@@ -331,6 +335,7 @@ def accounts(group):
     lakctx.warn_for_what_ifs()
     portfolio = lakctx.get_portfolio()
     with Spinner():
+        portfolio.prefetch()
         output = portfolio.list_accounts(group_by_type=group).string(
             lakctx.tablefmt)
     click.echo(output)
@@ -706,9 +711,10 @@ def checkpoint(edit):
     for today with the current portofolio value (and no cash-flows). To add
     cashflows to this checkpoint, please use the --edit flag."""
     global lakctx
-
+    portfolio = lakctx.get_portfolio()
     with Spinner():
-        value = lakctx.get_portfolio().total_value(include_whatifs=False)
+        portfolio.prefetch()
+        value = portfolio.total_value(include_whatifs=False)
 
     date_str = _today()
     checkpoint = lakshmi.performance.Checkpoint(date_str, value)
@@ -823,10 +829,12 @@ def rebalance(max_abs_percentage, max_relative_percentage):
     https://www.whitecoatinvestor.com/rebalancing-the-525-rule/."""
     global lakctx
     lakctx.optional_separator()
+    portfolio = lakctx.get_portfolio()
     with Spinner():
+        portfolio.prefetch()
         table = lakshmi.analyze.BandRebalance(
             max_abs_percentage / 100, max_relative_percentage / 100).analyze(
-            lakctx.get_portfolio())
+            portfolio)
     if not table.list():
         click.echo('Portfolio Asset allocation within bounds.')
     else:
@@ -872,6 +880,7 @@ def allocate(account, exclude_assets, rebalance):
     exclude_assets_list = [a.strip() for a in exclude_assets.split(',')]
 
     with Spinner():
+        portfolio.prefetch()
         table = lakshmi.analyze.Allocate(
             account_name, exclude_assets_list, rebalance).analyze(portfolio)
     click.echo(table.string())
