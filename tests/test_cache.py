@@ -256,7 +256,7 @@ class CacheTest(unittest.TestCase):
         def side_effect(x):
             cache._ctx[cache._CACHE_STR] = x
         set_cache_dir.side_effect = side_effect
-        prefetch = cache.Prefetch()
+        prefetch = cache._Prefetch()
         c = Cached('key1', 1)
         self.assertEqual(2, len(prefetch._return_cached_funcs(c)))
 

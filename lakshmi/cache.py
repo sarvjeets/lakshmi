@@ -216,7 +216,7 @@ def cache(days):
     return decorator
 
 
-class Prefetch:
+class _Prefetch:
     """Class to help with prefetching and caching of multiple values in
     parallel threads."""
 
@@ -295,7 +295,7 @@ def prefetch_add(class_obj):
     prefetched."""
     global _prefetch_obj
     if _prefetch_obj is None:
-        _prefetch_obj = Prefetch()
+        _prefetch_obj = _Prefetch()
     _prefetch_obj.add(class_obj)
 
 
