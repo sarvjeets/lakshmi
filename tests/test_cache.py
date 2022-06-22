@@ -280,7 +280,30 @@ class CacheTest(unittest.TestCase):
         set_cache_dir.assert_called_once()
         get_file_age.assert_not_called()
         exists.assert_called()
-        write_bytes.assert_called()  # Called twice.
+        self.assertEqual(2, write_bytes.call_count)
+        read_bytes.assert_not_called()
+
+    @patch('pathlib.Path.read_bytes')
+    @patch('pathlib.Path.write_bytes')
+    @patch('pathlib.Path.exists')
+    @patch('lakshmi.cache.get_file_age')
+    @patch('lakshmi.cache.set_cache_dir')
+    def test_force_refresh_with_prefetch(
+            self, set_cache_dir, get_file_age, exists, write_bytes,
+            read_bytes):
+        cache._ctx[cache._CACHE_STR] = Path('/fake/dir')
+        cache.set_force_refresh(True)
+        get_file_age.return_value = 2
+
+        c = Cached('key2', 9)
+        cache.prefetch_add(c)
+        cache.prefetch()
+        self.assertEqual(9, c.get_value())
+
+        set_cache_dir.assert_not_called()
+        self.assertEqual(2, get_file_age.call_count)
+        self.assertEqual(2, exists.call_count)
+        self.assertEqual(2, write_bytes.call_count)
         read_bytes.assert_not_called()
 
 
