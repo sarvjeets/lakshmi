@@ -6,6 +6,8 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v2.6.0] - 2022-06-21
 ### Added
 - Added functionality in the `cache` module to prefetch multiple cached objects
 in parallel threads.
