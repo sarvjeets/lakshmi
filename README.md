@@ -227,7 +227,7 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 
 # Run unittests
-$ python -m unittests
+$ python -m unittest
 
 # Install pre-commit hooks to run it automatically on commits
 $ pre-commit install
