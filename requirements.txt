@@ -17,7 +17,7 @@ idna==3.3
 importlib-metadata==4.11.4
 jeepney==0.8.0
 keyring==23.6.0
-lxml==4.9.0
+lxml==4.9.1
 multitasking==0.0.10
 nodeenv==1.6.0
 numpy==1.22.4
