@@ -280,6 +280,9 @@ class _Solver:
         """
         sum = 0.0
         for j in self.asset_classes():
+            if self.desired_ratio(j) == 0:
+                continue
+
             rel_ratio = (self.money(j) / (self.desired_ratio(j) * self.total)
                          - 1)
             sum += rel_ratio * (self.allocation(i, j) / self.desired_ratio(j))
@@ -310,6 +313,9 @@ class _Solver:
             for k in source_assets:
                 coeff = 0.0
                 for j in self.asset_classes():
+                    if self.desired_ratio(j) == 0:
+                        continue
+
                     coeff += (
                         (self.allocation(k, j) / self.desired_ratio(j) ** 2)
                         * (self.allocation(i, j) - self.allocation(n, j)))
@@ -317,6 +323,9 @@ class _Solver:
             a.append(equation_i)
             const_i = self.total * alpha
             for j in self.asset_classes():
+                if self.desired_ratio(j) == 0:
+                    continue
+
                 const_i += (
                     (self.allocation(i, j) / self.desired_ratio(j) ** 2)
                     * (self.desired_ratio(j) * self.total - self.money(j)))
@@ -330,6 +339,9 @@ class _Solver:
             x[k] = solution.pop(0)
             sum = 0.0
             for j in self.asset_classes():
+                if self.desired_ratio(j) == 0:
+                    continue
+
                 sum += (self.allocation(n, j) * self.allocation(k, j)
                         / self.desired_ratio(j) ** 2)
             final_derivative += sum * x[k] / self.total
@@ -580,11 +592,6 @@ class Allocate(Analyzer):
         for row in portfolio.asset_allocation(
                 portfolio.asset_classes.leaves()).list():
             asset_allocation[row[0]] = row[2], row[3]
-
-        for asset in assets:
-            for ac in asset.class2ratio.keys():
-                assert asset_allocation[ac][0] != 0, (
-                    f'Desired ratio of asset class {ac} cannot be zero.')
 
         result = _Solver(
             asset_allocation, assets, cash, portfolio.total_value()).solve()
