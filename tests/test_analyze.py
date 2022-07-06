@@ -276,6 +276,34 @@ class AnalyzeTest(unittest.TestCase):
             10, account.get_asset('Total Bond').adjusted_value(), places=6)
         self.assertAlmostEqual(0, account.available_cash(), places=6)
 
+    def test_allocate_zero(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(10)
+        self.assertListEqual(
+            [['Total Market', '+$9.00'],
+             ['Total Bond', '+$1.00'],
+             ['Total Zero', '+$0.00']],
+            analyze.Allocate('Schwab', rebalance=False).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            99, account.get_asset('Total Market').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            11, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            0, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
     def test_allocate_zero_rebalance(self):
         portfolio = Portfolio(
             AssetClass('All')
