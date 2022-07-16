@@ -367,7 +367,7 @@ class TradedAsset(Asset):
         table = Table(5,
                       headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
                       coltypes=['str', 'float', 'dollars', 'delta_dollars',
-                                'percentage'])
+                                'percentage_1'])
         if not self._tax_lots:
             return table
 

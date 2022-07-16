@@ -127,8 +127,8 @@ class AssetsTest(unittest.TestCase):
         vti.set_lots(lots)
 
         self.assertListEqual(
-            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
-             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
+            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50.0%'],
+             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25.0%']],
             vti.list_lots().str_list())
 
     @patch('lakshmi.assets.TickerAsset.name')
