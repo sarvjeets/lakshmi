@@ -715,28 +715,43 @@ class Portfolio:
                 table.add_row(row)
         return table
 
-    def list_lots(self):
+    def list_lots(self, include_account=False, include_term=False):
         """Returns all the tax lots in the portfolio.
+
+        Args:
+            include_account: If set, the returned table includes a column for
+            account name as well.
+            include_term: If set, the returned table has a column indicating
+            how long a partficular lot has been held. For more information on
+            this column, please see assets.TradedAsset.list_lots function's
+            docstring.
 
         Returns: A table.Table object representing tax lots
         for assets that support it. The columns of the returned table are
         short name (of asset), date of lot, cost basis of lot, gain (+ve or
         -ve) and percentage gain.
         """
-        table = Table(
-            5,
-            headers=['Short Name', 'Date', 'Cost', 'Gain', 'Gain%'],
-            coltypes=['str', 'str', 'dollars', 'delta_dollars',
-                      'percentage_1'])
+        headers = ((['Account'] if include_account else [])
+                   + ['Short Name', 'Date', 'Cost', 'Gain', 'Gain%']
+                   + (['Term'] if include_term else []))
+        coltypes = (
+            (['str'] if include_account else [])
+            + ['str', 'str', 'dollars', 'delta_dollars', 'percentage_1']
+            + (['str'] if include_term else []))
+
+        table = Table(5 + int(include_account) + int(include_term),
+                      headers=headers, coltypes=coltypes)
+
         for account in self.accounts():
             for asset in account.assets():
                 if hasattr(asset, 'list_lots'):
-                    lots = asset.list_lots()
-                    assert (
-                        lots.headers()
-                        == ['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'])
+                    account_entry = (
+                        [account.name()] if include_account else [])
+                    lots = asset.list_lots(include_term=include_term)
                     for lot in lots.list():
-                        table.add_row([asset.short_name()] + lot[:1] + lot[2:])
+                        table.add_row(
+                            account_entry
+                            + [asset.short_name()] + lot[:1] + lot[2:])
         return table
 
     def asset_location(self):

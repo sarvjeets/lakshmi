@@ -707,6 +707,42 @@ class LakshmiTest(unittest.TestCase):
              ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33.3%']],
             portfolio.list_lots().str_list())
 
+    @patch('yfinance.Ticker')
+    def test_list_lots_with_account_and_term(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'regularMarketPrice': 200.0, 'longName': 'Unused'}
+        MockTicker.return_value = ticker
+
+        vti = TickerAsset('VTI', 100.0, {'All': 1.0})
+        vti.set_lots([TaxLot('2020/01/01', 50, 100.0),
+                      TaxLot('2021/01/01', 50, 300.0)])
+        vxus = TickerAsset('VXUS', 50.0, {'All': 1.0})
+        vxus.set_lots([TaxLot('2019/01/01', 50, 150.0)])
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(vti)
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0}))
+            .add_asset(vxus))
+        # Order of lots: Account, ShortName, Date, Cost, Gain, Gain%
+        self.assertListEqual(
+            [['Schwab', 'VTI', '2020/01/01', '$5,000.00', '+$5,000.00',
+              '100.0%'],
+             ['Schwab', 'VTI', '2021/01/01', '$15,000.00', '-$5,000.00',
+              '-33.3%'],
+             ['Schwab', 'VXUS', '2019/01/01', '$7,500.00', '+$2,500.00',
+              '33.3%']],
+            portfolio.list_lots(include_account=True).str_list())
+
+        # We just check that term is included in the row instead of exact
+        # calculatin of term
+        self.assertListEqual(
+            [6, 6, 6],
+            list(map(len, portfolio.list_lots(include_term=True).list())))
+        self.assertListEqual(
+            [7, 7, 7],
+            list(map(len, portfolio.list_lots(
+                include_account=True, include_term=True).list())))
+
 
 if __name__ == '__main__':
     unittest.main()
