@@ -295,6 +295,11 @@ class TaxLot:
         return ret_obj
 
 
+# Used so we can mock date.today() for testing.
+def _today():
+    return datetime.datetime.today()
+
+
 class TradedAsset(Asset):
     """Abstract class representing an asset that is traded on stock market.
 
@@ -355,19 +360,44 @@ class TradedAsset(Asset):
         self._tax_lots = tax_lots_list
         return self
 
-    def list_lots(self):
+    def list_lots(self, include_term=False):
         """Returns a table of tax lots.
 
         This function returns a Table of tax lots which can be used to
         pretty-print the tax lot information.
 
+        Args:
+            include_term: If set, the returned table has a column indicating
+            how long a partficular lot has been held. This column will
+            contain actual days if the lot is held for <= 61 days ago or "ST"
+            (short-term) if lot is held > 61 but < year; and "LT" if the lot
+            is more than a year old. This information is useful for
+            tax-planning purposes when selling the lots. Please see
+            https://www.bogleheads.org/wiki/Tax_loss_harvesting#Fine_points_about_tax_loss_harvesting
+            for more information.
+
         Returns: lakshmi.table.Table object containing Date, Quantity,
         Cost, Gain and Gain% fields for all the lots.
         """
-        table = Table(5,
-                      headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%'],
+        # Internal function to compute term.
+        def term(from_date):
+            d1 = datetime.datetime.strptime(from_date, '%Y/%m/%d')
+            d2 = _today()
+            days = (d2 - d1).days
+            if days <= 61:
+                return str((d2 - d1).days)
+            elif days > 61 and days <= 365:
+                return 'ST'
+            else:
+                return 'LT'
+
+        table = Table(5 + int(include_term),
+                      headers=['Date', 'Quantity', 'Cost', 'Gain', 'Gain%']
+                      + (['Term'] if include_term else []),
                       coltypes=['str', 'float', 'dollars', 'delta_dollars',
-                                'percentage_1'])
+                                'percentage_1']
+                      + (['str'] if include_term else []))
+
         if not self._tax_lots:
             return table
 
@@ -377,7 +407,8 @@ class TradedAsset(Asset):
                  lot.quantity,
                  lot.unit_cost * lot.quantity,
                  (self.price() - lot.unit_cost) * lot.quantity,
-                 self.price() / lot.unit_cost - 1])
+                 self.price() / lot.unit_cost - 1]
+                + ([term(lot.date)] if include_term else []))
         return table
 
     def to_table(self):
