@@ -356,12 +356,25 @@ def whatifs():
 
 
 @list.command()
-def lots():
+@click.option('--show-account', '-a', is_flag=True,
+              help='Print account name with each tax lot.')
+@click.option('--show-term', '-t', is_flag=True,
+              help='Print term for each tax lot. This would either be a '
+              'number, "ST" or "LT". If the lot is held for <= 61 days, the '
+              'exact number of days since the lot was bought is printed. ST '
+              'and LT refers to short-term (less than a year) and long-term '
+              '(more than a year) respectively. This information is useful '
+              'for tax-planning purposes when selling the lots. Please see '
+              'https://www.bogleheads.org/wiki/Tax_loss_harvesting'
+              '#Fine_points_about_tax_loss_harvesting for more informatoin.')
+def lots(show_account, show_term):
     """Prints tax lot information for all the assets."""
     global lakctx
     lakctx.optional_separator()
     with Spinner():
-        output = lakctx.get_portfolio().list_lots().string(lakctx.tablefmt)
+        output = lakctx.get_portfolio().list_lots(
+            include_account=show_account, include_term=show_term).string(
+                lakctx.tablefmt)
     if output:
         click.echo(output)
 
