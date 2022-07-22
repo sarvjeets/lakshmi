@@ -6,6 +6,9 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added functionality in `lak list lots` to optionally print account names
+and terms for the tax lots.
 
 ## [v2.6.0] - 2022-06-21
 ### Added
