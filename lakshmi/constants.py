@@ -1,4 +1,4 @@
 """Lakshmi constants."""
 
 NAME = 'lakshmi'
-VERSION = '2.6.0'
+VERSION = '2.7.0'

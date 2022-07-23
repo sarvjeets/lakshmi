@@ -227,7 +227,7 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 
 # Run unittests
-$ python -m unittests
+$ python -m unittest
 
 # Install pre-commit hooks to run it automatically on commits
 $ pre-commit install
@@ -243,12 +243,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Acknowledgements
 
-This project would not have been possible without my wife
-[Niharika](http://niharika.org), who encouraged me to
-start working on this project and continued supporting me throughout
-the development.
-
-In addition, I am indebted to the following folks whose wisdom has helped me
+I am indebted to the following folks whose wisdom has helped me
 tremendously in my investing journey:
 [John Bogle](https://en.wikipedia.org/wiki/John_C._Bogle),
 [Taylor Larimore](https://www.bogleheads.org/wiki/Taylor_Larimore),
@@ -256,6 +251,11 @@ tremendously in my investing journey:
 [Livesoft](https://www.bogleheads.org/forum/viewtopic.php?t=237269),
 [Mel Lindauer](https://www.bogleheads.org/wiki/Mel_Lindauer) and
 [LadyGeek](https://www.bogleheads.org/blog/2018/12/04/interview-with-ladygeek-bogleheads-site-administrator/).
+
+This project would not have been possible without my wife
+[Niharika](http://niharika.org), who helped me come up with the initial idea
+and encouraged me to start working on this project.
+
 
 ## The not-so-fine print
 

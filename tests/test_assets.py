@@ -1,4 +1,5 @@
 """Tests for lakshmi.assets module."""
+import datetime
 import json
 import pathlib
 import unittest
@@ -127,9 +128,28 @@ class AssetsTest(unittest.TestCase):
         vti.set_lots(lots)
 
         self.assertListEqual(
-            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50%'],
-             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25%']],
+            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50.0%'],
+             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25.0%']],
             vti.list_lots().str_list())
+
+    @patch('lakshmi.assets._today')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_list_lots_with_term(self, mock_price, mock_today):
+        mock_price.return_value = 15.0
+        mock_today.return_value = datetime.datetime.strptime(
+            '2012/12/01', '%Y/%m/%d')
+
+        vti = assets.TickerAsset('VTI', 150.0, {'All': 1.0})
+        lots = [assets.TaxLot('2011/01/01', 50, 10.0),
+                assets.TaxLot('2012/01/01', 50, 20.0),
+                assets.TaxLot('2012/11/01', 50, 20.0)]
+        vti.set_lots(lots)
+
+        self.assertListEqual(
+            [['2011/01/01', '50.0', '$500.00', '+$250.00', '50.0%', 'LT'],
+             ['2012/01/01', '50.0', '$1,000.00', '-$250.00', '-25.0%', 'ST'],
+             ['2012/11/01', '50.0', '$1,000.00', '-$250.00', '-25.0%', '30']],
+            vti.list_lots(include_term=True).str_list())
 
     @patch('lakshmi.assets.TickerAsset.name')
     @patch('lakshmi.assets.TickerAsset.price')

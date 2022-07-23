@@ -454,6 +454,148 @@ class AnalyzeTest(unittest.TestCase):
              ['Bonds', '-$1.00']],
             analyze.Allocate('401K').analyze(portfolio).str_list())
 
+    def test_allocate_zero_ratio(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(10)
+        # These numbers "look" incorrect, but one can manually verify that the
+        # defined error function is minimized at this point.
+        self.assertListEqual(
+            [['Total Market', '+$8.12'],
+             ['Total Bond', '+$1.88'],
+             ['Total Zero', '+$0.00']],
+            analyze.Allocate('Schwab', rebalance=False).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            98.12, account.get_asset('Total Market').adjusted_value(),
+            places=2)
+        self.assertAlmostEqual(
+            11.88, account.get_asset('Total Bond').adjusted_value(), places=2)
+        self.assertAlmostEqual(
+            10, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_zero_ratio_withdraw(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(-10)
+        self.assertListEqual(
+            [['Total Market', '+$0.00'],
+             ['Total Bond', '+$0.00'],
+             ['Total Zero', '-$10.00']],
+            analyze.Allocate('Schwab', rebalance=False).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            90, account.get_asset('Total Market').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            10, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            0, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_zero_ratio_withdraw_less(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(-5)
+        self.assertListEqual(
+            [['Total Market', '+$0.00'],
+             ['Total Bond', '+$0.00'],
+             ['Total Zero', '-$5.00']],
+            analyze.Allocate('Schwab', rebalance=False).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            90, account.get_asset('Total Market').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            10, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            5, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_zero_ratio_withdraw_more(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        account.add_cash(-20)
+        self.assertListEqual(
+            [['Total Market', '-$9.00'],
+             ['Total Bond', '-$1.00'],
+             ['Total Zero', '-$10.00']],
+            analyze.Allocate('Schwab', rebalance=False).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            81, account.get_asset('Total Market').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            9, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            0, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
+    def test_allocate_zero_ratio_rebalance(self):
+        portfolio = Portfolio(
+            AssetClass('All')
+            .add_subclass(0.9, AssetClass('Equity'))
+            .add_subclass(0.1, AssetClass('Bond'))
+            .add_subclass(0, AssetClass('Zero')).validate())
+        portfolio.add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(ManualAsset('Total Market', 90.0, {'Equity': 1.0}))
+            .add_asset(ManualAsset('Total Bond', 10, {'Bond': 1.0}))
+            .add_asset(ManualAsset('Total Zero', 10, {'Zero': 1.0})))
+
+        account = portfolio.get_account('Schwab')
+        self.assertListEqual(
+            [['Total Market', '+$9.00'],
+             ['Total Bond', '+$1.00'],
+             ['Total Zero', '-$10.00']],
+            analyze.Allocate('Schwab', rebalance=True).analyze(
+                portfolio).str_list())
+        self.assertAlmostEqual(
+            99, account.get_asset('Total Market').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            11, account.get_asset('Total Bond').adjusted_value(), places=6)
+        self.assertAlmostEqual(
+            0, account.get_asset('Total Zero').adjusted_value(), places=6)
+        self.assertAlmostEqual(0, account.available_cash(), places=6)
+
 
 if __name__ == '__main__':
     unittest.main()
