@@ -468,6 +468,8 @@ class AnalyzeTest(unittest.TestCase):
 
         account = portfolio.get_account('Schwab')
         account.add_cash(10)
+        # These numbers "look" incorrect, but one can manually verify that the
+        # defined error function is minimized at this point.
         self.assertListEqual(
             [['Total Market', '+$8.12'],
              ['Total Bond', '+$1.88'],
