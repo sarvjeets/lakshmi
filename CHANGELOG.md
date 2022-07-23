@@ -12,7 +12,7 @@ and this project adheres to
 - Added functionality in `lak list lots` to optionally print account names
 and terms for the tax lots.
 
-## Changed
+### Changed
 - `lak analyze allocate' now supports asset classes with zero desired ratio.
 Thanks [rapidleft](https://github.com/rapidleft).
 
