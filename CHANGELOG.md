@@ -10,6 +10,10 @@ and this project adheres to
 - Added functionality in `lak list lots` to optionally print account names
 and terms for the tax lots.
 
+## Changed
+- `lak analyze allocate' now supports asset classes with zero desired ratio.
+Thanks [rapidleft](https://github.com/rapidleft).
+
 ## [v2.6.0] - 2022-06-21
 ### Added
 - Added functionality in the `cache` module to prefetch multiple cached objects
@@ -89,7 +93,8 @@ in `lak` + environment variable support for specifying the `.lakrc` file.
 ### Added
 - pre-commit CI now runs for every push and PRs.
 ### Fixed
-- Fix for assets with missing name fields (e.g. 'BTC-USD'). Thanks [bolapara](https://github.com/bolapara).
+- Fix for assets with missing name fields (e.g. 'BTC-USD').
+Thanks [bolapara](https://github.com/bolapara).
 
 ## [v2.1.1] - 2021-10-22
 ### Added
