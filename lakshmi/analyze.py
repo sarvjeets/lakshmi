@@ -511,16 +511,26 @@ class Allocate(Analyzer):
         self.exclude_assets = exclude_assets
         self.rebalance = rebalance
 
-    def _apply_whatifs(self, portfolio, assets, deltas, saved_whatifs=None):
+    def _zero_ratio_asset(self, asset, zero_acs):
+        """Returns if asset has a asset class which is subset of zero_acs."""
+        for ac in asset.class2ratio.keys():
+            if ac in zero_acs:
+                return True
+        return False
+
+    def _apply_whatifs(self, portfolio, assets, deltas, saved_whatifs={},
+                       zero_ratio_assets=[]):
         """Apply whatifs given by deltas to assets in the portfolio."""
         table = Table(2, ['Asset', 'Delta'], ['str', 'delta_dollars'])
-        if not saved_whatifs:
-            saved_whatifs = [0] * len(assets)
-        for asset, delta, saved in zip(assets, deltas, saved_whatifs):
+        for asset, delta in zip(assets, deltas):
             portfolio.what_if(self.account_name,
                               asset.short_name(),
                               float(delta))  # delta could be a np.float
-            table.add_row([asset.short_name(), delta - saved])
+            saved = saved_whatifs.get(asset.short_name(), 0)
+            table.add_row([asset.short_name(), delta + saved])
+        for asset in zero_ratio_assets:
+            saved = saved_whatifs.get(asset.short_name(), 0)
+            table.add_row([asset.short_name(), saved])
         return table
 
     def analyze(self, portfolio):
@@ -555,12 +565,11 @@ class Allocate(Analyzer):
                   self.exclude_assets]
         assert len(assets) != 0, 'No assets to allocate cash to.'
 
-        saved_whatifs = None
+        saved_whatifs = {}
         if self.rebalance:
-            saved_whatifs = []
             # Withdraw all cash and reallocate.
             for asset in assets:
-                saved_whatifs += [asset.adjusted_value()]
+                saved_whatifs[asset.short_name()] = -asset.adjusted_value()
                 portfolio.what_if(self.account_name, asset.short_name(),
                                   -asset.adjusted_value())
             cash = account.available_cash()
@@ -575,11 +584,37 @@ class Allocate(Analyzer):
             f'Cash to withdraw ({format_money(-cash)}) is more than the total '
             f'available money in the account ({format_money(total)}).')
 
-        # Map of leave asset classes -> (desired%, money)
+        # Map of leave asset classes -> (desired%, money).
         asset_allocation = {}
+        # Asset classes with zero ratio.
+        zero_ratio_acs = set()
         for row in portfolio.asset_allocation(
                 portfolio.asset_classes.leaves()).list():
-            asset_allocation[row[0]] = row[2], row[3]
+            ac = row[0]
+            ratio = row[2]
+            money = row[3]
+            if abs(ratio) < 1e-6:
+                zero_ratio_acs.add(ac)
+            else:
+                asset_allocation[ac] = ratio, money
+
+        zero_ratio_assets = []
+        filtered_assets = []
+        for asset in assets:
+            if zero_ratio_acs and self._zero_ratio_asset(asset,
+                                                         zero_ratio_acs):
+                zero_ratio_assets.append(asset)
+            else:
+                filtered_assets.append(asset)
+        assets = filtered_assets
+
+        if cash < 0 and not self.rebalance:
+            for asset in zero_ratio_assets:
+                withdraw = min(-cash, asset.adjusted_value())
+                saved_whatifs[asset.short_name()] = -withdraw
+                portfolio.what_if(self.account_name, asset.short_name(),
+                                  -withdraw)
+                cash += withdraw
 
         for asset in assets:
             for ac in asset.class2ratio.keys():
@@ -588,4 +623,5 @@ class Allocate(Analyzer):
 
         result = _Solver(
             asset_allocation, assets, cash, portfolio.total_value()).solve()
-        return self._apply_whatifs(portfolio, assets, result, saved_whatifs)
+        return self._apply_whatifs(portfolio, assets, result, saved_whatifs,
+                                   zero_ratio_assets)
