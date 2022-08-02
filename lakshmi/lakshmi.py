@@ -388,7 +388,8 @@ class AssetClass:
                               (desired - actual) * self.value))
 
     def return_allocation(self, money_allocation, levels=-1):
-        """Returns actual and desired allocation based on how money is allocated.
+        """Returns actual and desired allocation based on how money is
+        allocated.
 
         Args:
           money_allocation: A map of leaf_class_name -> money.

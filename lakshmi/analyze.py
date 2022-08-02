@@ -27,8 +27,8 @@ class TLH(Analyzer):
     """
 
     def __init__(self, max_percentage, max_dollars=None):
-        """Triggers if a lot has lost more than max_percentage or the total loss
-        for a given asset exceeds max_dollars.
+        """Triggers if a lot has lost more than max_percentage or the total
+        loss for a given asset exceeds max_dollars.
 
         Args:
             max_percentage: A float representing the max percentage loss after
