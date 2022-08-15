@@ -11,13 +11,12 @@ testcmd () {
     RED='\033[0;31m'
     NC='\033[0m'
 
-    echo -n "Running \"$1\" : "
+    printf "$1"
     if $1 > /dev/null ; then
-        echo -e "${GREEN}Succeeded${NC}"
-     else
-        echo -e "${RED}Failed${NC}"
-        exit 1
-     fi
+        printf "%$((COLUMNS - ${#1}))b\n" "[  ${GREEN}OK${NC}  ]"
+    else
+        printf "%$((COLUMNS - ${#1}))b\n" "[ ${RED}FAIL${NC} ]"
+    fi
 }
 
 # Constants
