@@ -233,9 +233,7 @@ class ManualAsset(Asset):
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
-        ret_obj = ManualAsset(d.pop('Name'),
-                              d.pop('Value', 0),
-                              d.pop('Asset Mapping'))
+        ret_obj = cls(d.pop('Name'), d.pop('Value', 0), d.pop('Asset Mapping'))
         Asset.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
@@ -290,7 +288,7 @@ class TaxLot:
 
         Raises: AssertionError if d can't be parsed properly.
         """
-        ret_obj = TaxLot(d.pop('Date'), d.pop('Quantity'), d.pop('Unit Cost'))
+        ret_obj = cls(d.pop('Date'), d.pop('Quantity'), d.pop('Unit Cost'))
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
@@ -478,10 +476,7 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
-        ret_obj = TickerAsset(
-            d.pop('Ticker'),
-            d.pop('Shares'),
-            d.pop('Asset Mapping'))
+        ret_obj = cls(d.pop('Ticker'), d.pop('Shares'), d.pop('Asset Mapping'))
         TradedAsset.from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
@@ -584,11 +579,9 @@ class VanguardFund(TradedAsset, Cacheable):
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
-        ret_obj = VanguardFund(
-            d.pop('Fund Id'),
-            d.pop('Shares'),
-            d.pop('Asset Mapping'))
-        TradedAsset.from_dict(ret_obj, d)
+        ret_obj = cls(d.pop('Fund Id'), d.pop('Shares'),
+                      d.pop('Asset Mapping'))
+        super().from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
@@ -835,8 +828,8 @@ class IBonds(_TreasuryBonds):
     @classmethod
     def from_dict(cls, d):
         """Returns a new object specified by dictionary d."""
-        ret_obj = IBonds(d.pop('Asset Mapping'))
-        _TreasuryBonds.from_dict(ret_obj, d)
+        ret_obj = cls(d.pop('Asset Mapping'))
+        super().from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
@@ -858,8 +851,8 @@ class EEBonds(_TreasuryBonds):
     @classmethod
     def from_dict(cls, d):
         """Returns a new object specified by dictionary d."""
-        ret_obj = EEBonds(d.pop('Asset Mapping'))
-        _TreasuryBonds.from_dict(ret_obj, d)
+        ret_obj = cls(d.pop('Asset Mapping'))
+        super().from_dict(ret_obj, d)
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 

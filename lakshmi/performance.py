@@ -81,8 +81,8 @@ class Checkpoint:
         """
         if not date:
             date = d.pop('Date')
-        ret_obj = Checkpoint(date, d.pop('Portfolio Value'),
-                             d.pop('Inflow', 0), d.pop('Outflow', 0))
+        ret_obj = cls(date, d.pop('Portfolio Value'), d.pop('Inflow', 0),
+                      d.pop('Outflow', 0))
         assert len(d) == 0, f'Extra attributes found while parsing: {list(d)}'
         return ret_obj
 
@@ -129,7 +129,7 @@ class Timeline:
     @classmethod
     def from_list(cls, timeline_list):
         """Returns a new object given a list (reverse of method above)."""
-        return Timeline([Checkpoint.from_dict(cp) for cp in timeline_list])
+        return cls([Checkpoint.from_dict(cp) for cp in timeline_list])
 
     def to_table(self, begin=None, end=None):
         """Convert this timeline to a Table.
@@ -176,8 +176,8 @@ class Timeline:
         date = utils.validate_date(date)
         return (date >= self.begin() and date <= self.end())
 
-    @classmethod
-    def _interpolate_checkpoint(cls, date, checkpoint1, checkpoint2):
+    @staticmethod
+    def _interpolate_checkpoint(date, checkpoint1, checkpoint2):
         """Given checkpoints 1 and 2, returns new checkpoint for date."""
         date1 = datetime.strptime(checkpoint1.get_date(), Timeline._DATE_FMT)
         date2 = datetime.strptime(checkpoint2.get_date(), Timeline._DATE_FMT)
@@ -363,7 +363,7 @@ class Performance:
     @classmethod
     def from_dict(cls, d):
         """Creates a new Performance object from a dict (reverse of above)."""
-        ret_obj = Performance(Timeline.from_list(d.pop('Timeline')))
+        ret_obj = cls(Timeline.from_list(d.pop('Timeline')))
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
         return ret_obj
 
@@ -376,8 +376,7 @@ class Performance:
     def load(cls, filename):
         """Load Performance object from a file."""
         with open(filename) as f:
-            return Performance.from_dict(
-                yaml.load(f.read(), Loader=yaml.SafeLoader))
+            return cls.from_dict(yaml.load(f.read(), Loader=yaml.SafeLoader))
 
     def _get_periods(self):
         """Returns periods for which summary stats should be printed."""
@@ -391,8 +390,8 @@ class Performance:
         return (Performance._TIME_PERIODS[begin_index:end_index],
                 Performance._TIME_PERIODS_NAMES[begin_index:end_index])
 
-    @classmethod
-    def _create_summary_row(cls, period_name, perf_data):
+    @staticmethod
+    def _create_summary_row(period_name, perf_data):
         """Helper method to create a row in summary table."""
         change = perf_data.end_balance - perf_data.begin_balance
         return [period_name, perf_data.inflows, perf_data.outflows,
