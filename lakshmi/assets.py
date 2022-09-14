@@ -726,7 +726,7 @@ class _TreasuryBonds(Asset):
 
     def to_dict(self):
         """Returns a dict representing this object."""
-        d = {}
+        d = {'Asset Mapping': self.class2ratio}
         d['Bonds'] = []
         for bond in self._bonds:
             d['Bonds'].append(
@@ -734,7 +734,8 @@ class _TreasuryBonds(Asset):
         d.update(super().to_dict())
         return d
 
-    def from_dict(self, d):
+    @classmethod
+    def from_dict(cls, d):
         """Returns a new object specified by dictionary d.
 
         This is reverse of to_dict.
@@ -746,12 +747,14 @@ class _TreasuryBonds(Asset):
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
+        ret_obj = cls(d.pop('Asset Mapping'))
         for bond in d.pop('Bonds'):
-            self.add_bond(bond.pop('Issue Date'), bond.pop('Denomination'))
+            ret_obj.add_bond(bond.pop('Issue Date'), bond.pop('Denomination'))
             assert len(bond) == 0, ('Extra attributes found: '
                                     f'{list(bond.keys())}')
-        Asset.from_dict(self, d)
-        return self
+        Asset.from_dict(ret_obj, d)
+        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
+        return ret_obj
 
     def bonds(self):
         """Returns all bonds as list.
@@ -819,20 +822,6 @@ class IBonds(_TreasuryBonds):
         """
         super().__init__('I', class2ratio)
 
-    def to_dict(self):
-        """Returns a dict representing this object."""
-        d = {'Asset Mapping': self.class2ratio}
-        d.update(super().to_dict())
-        return d
-
-    @classmethod
-    def from_dict(cls, d):
-        """Returns a new object specified by dictionary d."""
-        ret_obj = cls(d.pop('Asset Mapping'))
-        super().from_dict(ret_obj, d)
-        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
-        return ret_obj
-
 
 class EEBonds(_TreasuryBonds):
     def __init__(self, class2ratio):
@@ -841,20 +830,6 @@ class EEBonds(_TreasuryBonds):
             class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
         """
         super().__init__('EE', class2ratio)
-
-    def to_dict(self):
-        """Returns a dict representing this object."""
-        d = {'Asset Mapping': self.class2ratio}
-        d.update(super().to_dict())
-        return d
-
-    @classmethod
-    def from_dict(cls, d):
-        """Returns a new object specified by dictionary d."""
-        ret_obj = cls(d.pop('Asset Mapping'))
-        super().from_dict(ret_obj, d)
-        assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'
-        return ret_obj
 
 
 # A list of all the assets type (classes) defined in this module.
