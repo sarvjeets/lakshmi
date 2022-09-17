@@ -6,6 +6,9 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- `lak` command now don't print stack trace by default. Added a flag `--debug`
+to enable printing the stack trace.
 
 ## [v2.7.0] - 2022-07-23
 ### Added
