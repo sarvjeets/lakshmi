@@ -8,7 +8,7 @@ and this project adheres to
 ## [Unreleased]
 ### Changed
 - `lak` command now don't print stack trace by default. Added a flag `--debug`
-to enable printing the stack trace.
+to enable printing of the stack trace.
 
 ## [v2.7.0] - 2022-07-23
 ### Added
