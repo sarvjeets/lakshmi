@@ -44,7 +44,7 @@ class Account:
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
-        ret_obj = Account(d.pop('Name'), d.pop('Account Type'))
+        ret_obj = cls(d.pop('Name'), d.pop('Account Type'))
         for asset_dict in d.pop('Assets', []):
             ret_obj.add_asset(from_dict(asset_dict))
         ret_obj._cash = d.pop('Available Cash', 0)
@@ -183,7 +183,7 @@ class AssetClass:
 
         Raises: AssertionError if d cannot be parsed correctly.
         """
-        ret_obj = AssetClass(d.pop('Name'))
+        ret_obj = cls(d.pop('Name'))
         for child_dict in d.pop('Children', []):
             ret_obj.add_subclass(
                 child_dict.pop('Ratio'),
@@ -388,7 +388,8 @@ class AssetClass:
                               (desired - actual) * self.value))
 
     def return_allocation(self, money_allocation, levels=-1):
-        """Returns actual and desired allocation based on how money is allocated.
+        """Returns actual and desired allocation based on how money is
+        allocated.
 
         Args:
           money_allocation: A map of leaf_class_name -> money.
@@ -449,7 +450,7 @@ class Portfolio:
         """Loads and returns portfolio from file."""
         with open(filename) as f:
             d = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        return Portfolio.from_dict(d)
+        return cls.from_dict(d)
 
     def to_dict(self):
         """Returns a dictionary representation of this portfolio."""
@@ -462,7 +463,7 @@ class Portfolio:
     @classmethod
     def from_dict(cls, d):
         """Returns a portfolio represented by dict d (reverse of to_dict)."""
-        ret_obj = Portfolio(AssetClass.from_dict(d.pop('Asset Classes')))
+        ret_obj = cls(AssetClass.from_dict(d.pop('Asset Classes')))
         for account_dict in d.pop('Accounts', []):
             ret_obj.add_account(Account.from_dict(account_dict))
         assert len(d) == 0, f'Extra attributes found: {list(d.keys())}'

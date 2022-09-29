@@ -555,6 +555,7 @@ Options:
                      data. For large portfolios, this would be extremely slow.
   -c, --config PATH  The configuration file.  [env var: LAK_CONFIG; default:
                      ~/.lakrc]
+  --debug            If set, prints stack track when an exception is raised.
   --help             Show this message and exit.
 
 Commands:

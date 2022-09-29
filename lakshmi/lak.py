@@ -5,6 +5,7 @@ as library (by design it keeps a lot of global state and is not safe to be
 called multiple times from the same program). If there is ever need to use
 it as a library, this code requires major refactoring to clean it up."""
 
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -210,10 +211,14 @@ class Spinner:
               default='~/.lakrc', show_default=True,
               envvar='LAK_CONFIG', show_envvar=True,
               help='The configuration file.')
-def lak(refresh, config):
+@click.option('--debug', is_flag=True,
+              help='If set, prints stack track when an exception is raised.')
+def lak(refresh, config, debug):
     """lak is a simple command line tool inspired by Bogleheads philosophy.
     Detailed user guide is available at:
     https://sarvjeets.github.io/lakshmi/docs/lak.html"""
+    if not debug:
+        sys.tracebacklimit = 0
     lakshmi.cache.set_force_refresh(refresh)
     global lakctx
     if not lakctx:

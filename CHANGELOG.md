@@ -7,12 +7,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v2.8.0] - 2022-09-28
+### Changed
+- `lak` commands now don't print stack trace by default. Added a flag `--debug`
+to enable printing of the stack trace.
+
 ## [v2.7.0] - 2022-07-23
 ### Added
 - Added functionality in `lak list lots` to optionally print account names
 and terms for the tax lots.
 
-## Changed
+### Changed
 - `lak analyze allocate' now supports asset classes with zero desired ratio.
 Thanks [rapidleft](https://github.com/rapidleft).
 
