@@ -581,32 +581,57 @@ class Portfolio:
         """Changes available cash balance of an account by delta."""
         self.get_account(account_name).add_cash(cash_delta)
 
-    def get_what_ifs(self):
+    def get_what_ifs(self, long_name=True, short_name=False, quantity=False):
         """Returns all what_ifs set by previous methods.
+
+        Args:
+            long_name: If not set, the long name of the asset is not returned.
+            short_name: If set, the short name of the asset is also returned.
+            quantity: If set, for assets that are traded (i.e.
+            Assets.TradedAssets) this method calculates and returns the
+            approximate quantity that corresponds to the Delta of money
+            returned.
 
         Returns: A tuple of two table.Table representing
         account whatifs and asset what ifs respectively. The first
-        table has columns Account and Cash; and the second table has
-        columns Account, Asset and Delta (representing money).
+        table has columns Account and Cash The second table has
+        columns Account, Name (if short name is set), Quantity (if quantity is
+        set), Asset (if long_name is set) and Delta (representing money).
         """
         account_whatifs = Table(
             2,
             headers=['Account', 'Cash'],
             coltypes=['str', 'delta_dollars'])
         asset_whatifs = Table(
-            3,
-            headers=['Account', 'Asset', 'Delta'],
-            coltypes=['str', 'str', 'delta_dollars'])
+            2 + long_name + short_name + quantity,
+            headers=(['Account']
+                     + (['Name'] if short_name else [])
+                     + (['Quantity'] if quantity else [])
+                     + (['Asset'] if long_name else [])
+                     + ['Delta']),
+            coltypes=(['str']
+                      + (['str'] if short_name else [])
+                      + (['str'] if quantity else [])
+                      + (['str'] if long_name else [])
+                      + ['delta_dollars']))
 
         for account in self.accounts():
             if account.available_cash() != 0.0:
                 account_whatifs.add_row(
                     [account.name(), account.available_cash()])
+
             for asset in account.assets():
                 delta = asset.get_what_if()
                 if delta != 0.0:
-                    asset_whatifs.add_row(
-                        [account.name(), asset.name(), delta])
+                    row = ([account.name()]
+                           + ([asset.short_name()] if short_name else [])
+                           + ([asset.name()] if long_name else [])
+                           + [delta])
+                    if quantity:
+                        row.insert(1 + short_name,
+                                   str(round(delta / asset.price()))
+                                   if hasattr(asset, 'price') else None)
+                    asset_whatifs.add_row(row)
 
         return account_whatifs, asset_whatifs
 

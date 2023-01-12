@@ -240,6 +240,25 @@ class LakTest(unittest.TestCase):
         self.assertEqual('', result.output)
         self.assertFalse(lak.lakctx.saved_portfolio)
 
+    def test_what_if_forced(self):
+        result = run_lak('whatif asset -a Test -100')
+        self.assertEqual(0, result.exit_code)
+        self.assertEqual('', result.output)
+        lak.lakctx.reset()
+
+        result = run_lak('list whatifs -s')
+        self.assertEqual(0, result.exit_code)
+        self.assertRegex(result.output, r'Account +Cash\n')
+        self.assertRegex(result.output, r'Account +Name +Asset +Delta\n')
+        lak.lakctx.reset()
+
+        result = run_lak('list assets whatifs -s')
+        self.assertEqual(0, result.exit_code)
+        self.assertRegex(result.output, r'Account +Cash\n')
+        self.assertRegex(result.output, r'Account +Name +Asset +Delta\n')
+        self.assertFalse(lak.lakctx.saved_portfolio)
+        lak.lakctx.reset()
+
     def test_what_if_account(self):
         result = run_lak('whatif account -t Schwab -100')
         self.assertEqual(0, result.exit_code)

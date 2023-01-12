@@ -88,10 +88,21 @@ class LakContext:
         # Set it up so that separator is printed for the next command.
         self.continued = True
 
-    def get_what_ifs(self):
-        """Load and return a list of hypothetical whatifs in the portfolio."""
-        if not self.whatifs:
-            self.whatifs = self.get_portfolio().get_what_ifs()
+    def get_what_ifs(self, long_name=False, short_name=True, quantity=False,
+                     force=False):
+        """Load and return a list of hypothetical whatifs in the portfolio.
+
+        Args:
+            long_name: If set, returns the long name of the asset.
+            short_name: If set, returns the short name of the asset.
+            quantity: If set, returns approx. number of shares that need to be
+            bought or sold.
+            force: If set, the what_ifs are fetched again from the portfolio
+            instead of using the caches value from the previous call.
+        """
+        if not self.whatifs or force:
+            self.whatifs = self.get_portfolio().get_what_ifs(
+                long_name=long_name, short_name=short_name, quantity=quantity)
         return self.whatifs
 
     def warn_for_what_ifs(self):
@@ -354,10 +365,24 @@ def accounts(group):
 
 
 @list.command()
-def whatifs():
+@click.option('--long-name/--no-long-name', default=True, show_default=True,
+              help='Print the long name of the asset.')
+@click.option('--short-name', '-s', is_flag=True,
+              help='Print the short name of the assets as well (e.g. Ticker '
+              'for assets that have it).')
+@click.option('--quantity', '-q', is_flag=True,
+              help='Print the approximate quantity of the asset that needs to '
+              'be bought or sold.')
+def whatifs(long_name, short_name, quantity):
     """Prints hypothetical what ifs for assets and accounts."""
+    if not (long_name or short_name):
+        raise click.ClickException(
+            'Please specify at least one of long_name or short_name')
+
     global lakctx
-    account_whatifs, asset_whatifs = lakctx.get_what_ifs()
+    account_whatifs, asset_whatifs = lakctx.get_what_ifs(
+        long_name=long_name, short_name=short_name, quantity=quantity,
+        force=True)
     if account_whatifs.list():
         lakctx.optional_separator()
         click.echo(account_whatifs.string(lakctx.tablefmt))
