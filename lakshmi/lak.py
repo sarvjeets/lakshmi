@@ -317,8 +317,7 @@ def aa(compact, asset_class):
               help='Print the short name of the assets as well (e.g. Ticker '
               'for assets that have it).')
 @click.option('--quantity', '-q', is_flag=True,
-              help='Print the quantity of the asset (e.g. quantity/shares '
-              'for assets that have it).')
+              help='Print the quantity/shares of the asset as well.')
 def assets(long_name, short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     if not (long_name or short_name):
