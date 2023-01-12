@@ -311,14 +311,20 @@ def aa(compact, asset_class):
 
 
 @list.command()
+@click.option('--long-name/--no-long-name', default=True, show_default=True,
+              help='Print the long name of the asset.')
 @click.option('--short-name', '-s', is_flag=True,
               help='Print the short name of the assets as well (e.g. Ticker '
               'for assets that have it).')
 @click.option('--quantity', '-q', is_flag=True,
               help='Print the quantity of the asset (e.g. quantity/shares '
               'for assets that have it).')
-def assets(short_name, quantity):
+def assets(long_name, short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
+    if not (long_name or short_name):
+        raise click.ClickException(
+            'Please specify at least one of long_name or short_name')
+
     global lakctx
     lakctx.optional_separator()
     lakctx.warn_for_what_ifs()
@@ -326,7 +332,9 @@ def assets(short_name, quantity):
     with Spinner():
         portfolio.prefetch()
         output = portfolio.assets(
-            short_name=short_name, quantity=quantity).string(lakctx.tablefmt)
+            long_name=long_name,
+            short_name=short_name,
+            quantity=quantity).string(lakctx.tablefmt)
     click.echo(output)
 
 
