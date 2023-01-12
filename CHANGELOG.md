@@ -6,6 +6,13 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Option in `lak list assets` that omits printing of the long name (the
+'Asset' column) if short name is being printed.
+- Three Options in `lak list whatifs` to print Asset short name, omit printing
+of long name if short name is being printed, and approximate number of shares
+that need to be bought or sold (corresponding to the dollar delta returned).
+The last field is only printed for assets that have a concept of shares.
 
 ## [v2.8.0] - 2022-09-28
 ### Changed
