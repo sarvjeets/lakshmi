@@ -346,6 +346,10 @@ class LakshmiTest(unittest.TestCase):
             [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
              ['Schwab', '', 'Cash', '$840.00']],
             portfolio.assets(quantity=True).str_list())
+        self.assertListEqual(
+            [['Schwab', 'VMMXX', '$420.00'],
+             ['Schwab', 'Cash', '$840.00']],
+            portfolio.assets(short_name=True, long_name=False).str_list())
 
     def test_asset_location(self):
         portfolio = Portfolio(

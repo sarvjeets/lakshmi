@@ -683,33 +683,37 @@ class Portfolio:
             return table
 
     # TODO: Renmame this to list_assets for consistency.
-    def assets(self, short_name=False, quantity=False):
+    def assets(self, short_name=False, quantity=False, long_name=True):
         """Returns all the assets.
 
         Args:
             short_name: If set, returns the short name of the asset as well.
             quantity: If set, returns the shares/quantity of the asset for
             the assets that support it.
+            long_name: If not set, the name of the asset is not returned.
 
         Returns: A table.Table object representing all the assets.
         The columns correspond to Account name, short name (optional),
         quantity (optional), asset name and value.
         """
         table = Table(
-            3 + short_name + quantity,
+            2 + short_name + quantity + long_name,
             headers=(['Account']
                      + (['Name'] if short_name else [])
                      + (['Quantity'] if quantity else [])
-                     + ['Asset', 'Value']),
+                     + (['Asset'] if long_name else [])
+                     + ['Value']),
             coltypes=(['str']
                       + (['str'] if short_name else [])
                       + (['float'] if quantity else [])
-                      + ['str', 'dollars']))
+                      + (['str'] if long_name else [])
+                      + ['dollars']))
         for account in self.accounts():
             for asset in account.assets():
                 row = ([account.name()]
-                       + ([f'{asset.short_name()}'] if short_name else [])
-                       + [asset.name(), asset.adjusted_value()])
+                       + ([asset.short_name()] if short_name else [])
+                       + ([asset.name()] if long_name else [])
+                       + [asset.adjusted_value()])
                 if quantity:
                     row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)
