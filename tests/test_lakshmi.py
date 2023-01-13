@@ -346,6 +346,10 @@ class LakshmiTest(unittest.TestCase):
             [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
              ['Schwab', '', 'Cash', '$840.00']],
             portfolio.assets(quantity=True).str_list())
+        self.assertListEqual(
+            [['Schwab', 'VMMXX', '$420.00'],
+             ['Schwab', 'Cash', '$840.00']],
+            portfolio.assets(short_name=True, long_name=False).str_list())
 
     def test_asset_location(self):
         portfolio = Portfolio(
@@ -612,6 +616,38 @@ class LakshmiTest(unittest.TestCase):
         account_whatifs, asset_whatifs = portfolio.get_what_ifs()
         self.assertListEqual([], account_whatifs.str_list())
         self.assertListEqual([], asset_whatifs.str_list())
+
+    @patch('yfinance.Ticker')
+    def test_get_what_ifs_options(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
+                       'regularMarketPrice': 2.0}
+        MockTicker.return_value = ticker
+
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(TickerAsset('VMMXX', 420.0, {'All': 1.0}))
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0})))
+
+        portfolio.what_if('Schwab', 'VMMXX', -20)
+        portfolio.what_if('Schwab', 'Cash', 20)
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs()
+        self.assertListEqual(
+            [['Schwab', 'Vanguard Cash Reserves Federal', '-$20.00'],
+             ['Schwab', 'Cash', '+$20.00']],
+            asset_whatifs.str_list())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs(
+            long_name=False, short_name=True)
+        self.assertListEqual(
+            [['Schwab', 'VMMXX', '-$20.00'],
+             ['Schwab', 'Cash', '+$20.00']],
+            asset_whatifs.str_list())
+        account_whatifs, asset_whatifs = portfolio.get_what_ifs(
+            long_name=False, short_name=True, quantity=True)
+        self.assertListEqual(
+            [['Schwab', 'VMMXX', '-10', '-$20.00'],
+             ['Schwab', 'Cash', '', '+$20.00']],
+            asset_whatifs.str_list())
 
     def test_what_ifs_double_add(self):
         portfolio = Portfolio(AssetClass('All'))
