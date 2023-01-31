@@ -54,10 +54,10 @@ class AssetsTest(unittest.TestCase):
     def test_bad_ticker(self, MockTicker):
         bad_ticker = MagicMock()
         bad_ticker.info = {}
+        bad_ticker.fast_info = {}
         MockTicker.return_value = bad_ticker
 
         ticker_asset = assets.TickerAsset('bad', 10, {'All': 1.0})
-
         with self.assertRaisesRegex(assets.NotFoundError,
                                     'Cannot retrieve ticker'):
             ticker_asset.name()
@@ -70,8 +70,8 @@ class AssetsTest(unittest.TestCase):
     @patch('yfinance.Ticker')
     def test_good_ticker(self, MockTicker):
         ticker = MagicMock()
-        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
-                       'regularMarketPrice': 1.0}
+        ticker.info = {'longName': 'Vanguard Cash Reserves Federal'}
+        ticker.fast_info = {'last_price': 1.0}
         MockTicker.return_value = ticker
 
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
@@ -85,8 +85,8 @@ class AssetsTest(unittest.TestCase):
     def test_missing_longname(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'shortName': 'Bitcoin USD',
-                       'name': 'Bitcoin',
-                       'regularMarketPrice': 1.0}
+                       'name': 'Bitcoin'}
+        ticker.fast_info = {'last_price': 1.0}
         MockTicker.return_value = ticker
 
         btc = assets.TickerAsset('BTC-USD', 1.0, {'All': 1.0})
@@ -97,8 +97,8 @@ class AssetsTest(unittest.TestCase):
     @patch('yfinance.Ticker')
     def test_missing_longname_shortname(self, MockTicker):
         ticker = MagicMock()
-        ticker.info = {'name': 'Bitcoin',
-                       'regularMarketPrice': 1.0}
+        ticker.info = {'name': 'Bitcoin'}
+        ticker.fast_info = {'regularMarketPrice': 1.0}
         MockTicker.return_value = ticker
 
         btc = assets.TickerAsset('BTC-USD', 1.0, {'All': 1.0})
@@ -168,8 +168,8 @@ class AssetsTest(unittest.TestCase):
     @patch('yfinance.Ticker')
     def test_dict_ticker(self, MockTicker):
         ticker = MagicMock()
-        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
-                       'regularMarketPrice': 1.0}
+        ticker.info = {'longName': 'Vanguard Cash Reserves Federal'}
+        ticker.fast_info = {'last_price': 1.0}
         MockTicker.return_value = ticker
 
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
