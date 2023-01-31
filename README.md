@@ -1,6 +1,8 @@
 # Lakshmi
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sarvjeets/lakshmi/develop.svg)](https://results.pre-commit.ci/latest/github/sarvjeets/lakshmi/develop)
+[![Downloads](https://pepy.tech/badge/lakshmi)](https://pepy.tech/project/lakshmi)
+[![Downloads](https://pepy.tech/badge/lakshmi/month)](https://pepy.tech/project/lakshmi)
 
 ![Screenshot of lak in action](./docs/lak.png)
 (Screenshot of the `lak` command in action)

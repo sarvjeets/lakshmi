@@ -7,6 +7,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v2.9.0] - 2023-01-30
+### Added
+- Option in `lak list assets` that omits printing of the long name (the
+'Asset' column) if short name is being printed.
+- Three Options in `lak list whatifs` to print Asset short name, omit printing
+of long name if short name is being printed, and approximate number of shares
+that need to be bought or sold (corresponding to the dollar delta returned).
+The last field is only printed for assets that have a concept of shares.
+### Fixed
+- Started using the new fast\_info from yfinance to fetch prices. Hopefully
+this should fix the temporary errors with fetching ticker prices.
+
 ## [v2.8.0] - 2022-09-28
 ### Changed
 - `lak` commands now don't print stack trace by default. Added a flag `--debug`
