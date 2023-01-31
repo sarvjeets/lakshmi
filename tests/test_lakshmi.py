@@ -1,6 +1,6 @@
 """Tests for lakshmi module."""
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import lakshmi.cache
 from lakshmi import Account, AssetClass, Portfolio
@@ -317,12 +317,11 @@ class LakshmiTest(unittest.TestCase):
              ['401K', '$50.00', '25.0%']],
             portfolio.list_accounts(group_by_type=True).str_list())
 
-    @patch('yfinance.Ticker')
-    def test_list_assets(self, MockTicker):
-        ticker = MagicMock()
-        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
-                       'regularMarketPrice': 1.0}
-        MockTicker.return_value = ticker
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_list_assets(self, mock_price, mock_name):
+        mock_price.return_value = 1.0
+        mock_name.return_value = 'Vanguard Cash Reserves Federal'
 
         portfolio = Portfolio(AssetClass('All')).add_account(
             Account('Schwab', 'Taxable')
@@ -617,12 +616,11 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual([], account_whatifs.str_list())
         self.assertListEqual([], asset_whatifs.str_list())
 
-    @patch('yfinance.Ticker')
-    def test_get_what_ifs_options(self, MockTicker):
-        ticker = MagicMock()
-        ticker.info = {'longName': 'Vanguard Cash Reserves Federal',
-                       'regularMarketPrice': 2.0}
-        MockTicker.return_value = ticker
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_get_what_ifs_options(self, mock_price, mock_name):
+        mock_price.return_value = 2.0
+        mock_name.return_value = 'Vanguard Cash Reserves Federal'
 
         portfolio = Portfolio(AssetClass('All')).add_account(
             Account('Schwab', 'Taxable')
@@ -720,11 +718,11 @@ class LakshmiTest(unittest.TestCase):
                 asset_class.return_allocation(
                     allocation, levels=5)))
 
-    @patch('yfinance.Ticker')
-    def test_list_lots(self, MockTicker):
-        ticker = MagicMock()
-        ticker.info = {'regularMarketPrice': 200.0, 'longName': 'Unused'}
-        MockTicker.return_value = ticker
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_list_lots(self, mock_price, mock_name):
+        mock_price.return_value = 200.0
+        mock_name.return_value = 'Unused'
 
         vti = TickerAsset('VTI', 100.0, {'All': 1.0})
         vti.set_lots([TaxLot('2020/01/01', 50, 100.0),
@@ -743,11 +741,11 @@ class LakshmiTest(unittest.TestCase):
              ['VXUS', '2019/01/01', '$7,500.00', '+$2,500.00', '33.3%']],
             portfolio.list_lots().str_list())
 
-    @patch('yfinance.Ticker')
-    def test_list_lots_with_account_and_term(self, MockTicker):
-        ticker = MagicMock()
-        ticker.info = {'regularMarketPrice': 200.0, 'longName': 'Unused'}
-        MockTicker.return_value = ticker
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_list_lots_with_account_and_term(self, mock_price, mock_name):
+        mock_price.return_value = 200.0
+        mock_name.return_value = 'Unused'
 
         vti = TickerAsset('VTI', 100.0, {'All': 1.0})
         vti.set_lots([TaxLot('2020/01/01', 50, 100.0),

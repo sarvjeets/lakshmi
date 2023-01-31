@@ -13,6 +13,9 @@ and this project adheres to
 of long name if short name is being printed, and approximate number of shares
 that need to be bought or sold (corresponding to the dollar delta returned).
 The last field is only printed for assets that have a concept of shares.
+### Fixed
+- Started using the new fast\_info from yfinance to fetch prices. Hopefully
+this should fix the temporary errors with fetching ticker prices.
 
 ## [v2.8.0] - 2022-09-28
 ### Changed

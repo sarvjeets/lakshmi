@@ -535,11 +535,12 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: NotFoundError if the ticker is not found.
         """
-        if self.yticker.info.get('regularMarketPrice') is None:
+        price = self.yticker.fast_info.get('last_price', None)
+        if price is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self._ticker}") '
                 'from Yahoo Finance')
-        return self.yticker.info['regularMarketPrice']
+        return price
 
     def prefetch_add(self):
         prefetch_add(self)
