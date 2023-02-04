@@ -333,7 +333,7 @@ def assets(long_name, short_name, quantity):
     """Prints all assets in the portfolio and their current values."""
     if not (long_name or short_name):
         raise click.ClickException(
-            'Please specify at least one of long_name or short_name')
+            'Please specify at least one of long-name or short-name')
 
     global lakctx
     lakctx.optional_separator()
@@ -377,7 +377,7 @@ def whatifs(long_name, short_name, quantity):
     """Prints hypothetical what ifs for assets and accounts."""
     if not (long_name or short_name):
         raise click.ClickException(
-            'Please specify at least one of long_name or short_name')
+            'Please specify at least one of long-name or short-name')
 
     global lakctx
     account_whatifs, asset_whatifs = lakctx.get_what_ifs(
