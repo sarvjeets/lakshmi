@@ -71,7 +71,7 @@ class AssetsTest(unittest.TestCase):
     def test_good_ticker(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal'}
-        ticker.fast_info = {'last_price': 1.0}
+        ticker.fast_info = {'lastPrice': 1.0}
         MockTicker.return_value = ticker
 
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
@@ -86,7 +86,6 @@ class AssetsTest(unittest.TestCase):
         ticker = MagicMock()
         ticker.info = {'shortName': 'Bitcoin USD',
                        'name': 'Bitcoin'}
-        ticker.fast_info = {'last_price': 1.0}
         MockTicker.return_value = ticker
 
         btc = assets.TickerAsset('BTC-USD', 1.0, {'All': 1.0})
@@ -169,7 +168,7 @@ class AssetsTest(unittest.TestCase):
     def test_dict_ticker(self, MockTicker):
         ticker = MagicMock()
         ticker.info = {'longName': 'Vanguard Cash Reserves Federal'}
-        ticker.fast_info = {'last_price': 1.0}
+        ticker.fast_info = {'lastPrice': 1.0}
         MockTicker.return_value = ticker
 
         vmmxx = assets.TickerAsset('VMMXX', 100.0, {'All': 1.0})
