@@ -54,5 +54,5 @@ twine==4.0.2
 urllib3==1.26.14
 virtualenv==20.17.1
 webencodings==0.5.1
-yfinance==0.2.9
+yfinance==0.2.11
 zipp==3.11.0

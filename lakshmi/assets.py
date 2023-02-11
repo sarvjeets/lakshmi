@@ -535,7 +535,8 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: NotFoundError if the ticker is not found.
         """
-        price = self.yticker.fast_info.get('last_price', None)
+        price = self.yticker.fast_info.get('lastPrice', None) or \
+            self.yticker.fast_info.get('last_price', None)
         if price is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self._ticker}") '
