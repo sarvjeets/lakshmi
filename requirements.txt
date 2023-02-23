@@ -23,7 +23,7 @@ jaraco.classes==3.2.3
 jeepney==0.8.0
 keyring==23.13.1
 lxml==4.9.2
-markdown-it-py==2.1.0
+markdown-it-py==2.2.0
 mdurl==0.1.2
 more-itertools==9.0.0
 multitasking==0.0.11
