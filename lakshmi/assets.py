@@ -686,7 +686,7 @@ class _TreasuryBonds(Asset):
             }
 
             req = requests.post(
-                'http://www.treasurydirect.gov/BC/SBCPrice', data=data)
+                'https://www.treasurydirect.gov/BC/SBCPrice', data=data)
             req.raise_for_status()
 
             ret_vals = re.findall('\n<td>.*</td>', req.text)
