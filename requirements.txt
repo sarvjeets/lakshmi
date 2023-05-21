@@ -14,7 +14,7 @@ cryptography==40.0.1
 distlib==0.3.6
 docutils==0.19
 filelock==3.10.7
-frozendict==2.3.6
+frozendict==2.3.8
 html5lib==1.1
 identify==2.5.22
 idna==3.4
