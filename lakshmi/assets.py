@@ -8,6 +8,7 @@ import datetime
 import re
 from abc import ABC, abstractmethod
 
+import ibonds
 import requests
 import yfinance
 
@@ -658,8 +659,8 @@ class _TreasuryBonds(Asset):
             """
             self.series = series
             # Validate issue date and convert it into standard format.
-            self.issue_date = datetime.datetime.strptime(
-                issue_date, '%m/%Y').strftime('%m/%Y')
+            self.issue_date = datetime.datetime.strptime(issue_date, '%m/%Y')
+            self.issue_date_str = self.issue_date.strftime('%m/%Y')
             self.denom = denom
             self.redemption_date = datetime.datetime.now().strftime('%m/%Y')
 
@@ -667,7 +668,7 @@ class _TreasuryBonds(Asset):
             """Unique key used for caching return values."""
             return '{}_{}_{}'.format(
                 self.series,
-                self.issue_date.replace('/', '.'),
+                self.issue_date_str.replace('/', '.'),
                 self.redemption_date.replace('/', '.'))
 
         @cache(32)  # The value of a Bond doesn't change in a month.
@@ -681,7 +682,7 @@ class _TreasuryBonds(Asset):
                 'RedemptionDate': self.redemption_date,
                 'Series': self.series,
                 'Denomination': '1000',
-                'IssueDate': self.issue_date,
+                'IssueDate': self.issue_date_str,
                 'btnAdd.x': 'CALCULATE'
             }
 
@@ -714,7 +715,7 @@ class _TreasuryBonds(Asset):
             """
             rate, value = self._get_bond_info()
             value *= (self.denom / 1000.0)
-            return [self.issue_date, self.denom, rate, value]
+            return [self.issue_date_str, self.denom, rate, value]
 
     def __init__(self, series, class2ratio):
         """
@@ -732,7 +733,8 @@ class _TreasuryBonds(Asset):
         d['Bonds'] = []
         for bond in self._bonds:
             d['Bonds'].append(
-                {'Issue Date': bond.issue_date, 'Denomination': bond.denom})
+                {'Issue Date': bond.issue_date.strftime('%m/%Y'),
+                 'Denomination': bond.denom})
         d.update(super().to_dict())
         return d
 
@@ -785,7 +787,7 @@ class _TreasuryBonds(Asset):
     def list_bonds(self):
         """Returns all bonds as a table.
 
-        Returns: A lakshmi.table.Table contains all the bonds in this asset.
+        Returns: A lakshmi.table.Table containing all the bonds in this asset.
         The columns correspond to Issue Date, Denomination, Rate as
         percentage, and current market value.
         """
@@ -815,14 +817,74 @@ class _TreasuryBonds(Asset):
             prefetch_add(b)
 
 
+# We use ibonds module to fetch prices of an ibond. This is much faster than
+# using the Treasury Direct website.
 class IBonds(_TreasuryBonds):
     """Class representing a collection of I Bonds."""
+    class _InterestRates(Cacheable):
+        """Class representing cachable interest rates."""
+        def __init__(self):
+            self._interest_rates = ibonds.InterestRates()
+
+        def get(self):
+            """Returns interest rates, fetching new ones if necessary."""
+            if self._interest_rates.is_current():
+                return self._interest_rates
+            else:
+                self._interest_rates = self.get_interest_rates()
+                return self._interest_rates
+
+        def cache_key(self):
+            return ibonds.InterestRates.previous_rate_date(
+                datetime.date.today())
+
+        @cache(20)  # Cache for 20 days.
+        def get_interest_rates(self):
+            return ibonds.InterestRates.latest_rates_data()
+
     def __init__(self, class2ratio):
         """
         Args:
             class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
         """
         super().__init__('I', class2ratio)
+        self._interest_rates = IBonds._InterestRates()
+
+    # Override
+    def add_bond(self, issue_date, denom):
+        """Add a new I Bond to this asset.
+
+        Args:
+            issue_date: String representing the issue date (in MM/YYYY format)
+            denom: The denomination of this bond.
+        """
+        self._bonds.append(ibonds.IBond(issue_date, denom,
+                                        self._interest_rates.get()))
+
+    # Override
+    def list_bonds(self):
+        """Retuns all bonds as a table.
+
+        Returns: a lakshmi.table.Table object containing all the bonds in this
+        asset. The colums correspond to issue date, denomination, fixed rate
+        (as percentage), composite rate (as percentage) and the current market
+        value of all the bonds.
+        """
+        table = Table(
+            5,
+            headers=['Issue Date', 'Denom', 'Fixed rate', 'Rate', 'Value'],
+            coltypes=['str', 'dollars', 'str', 'str', 'dollars'])
+        for bond in self._bonds:
+            table.add_row([bond.issue_date.strftime('%m/%Y'),
+                           bond.denom,
+                           '{:.2f}%'.format(bond.fixed_rate()),
+                           '{:.2f}%'.format(bond.composite_rate()),
+                           bond.value()])
+        return table
+
+    # Override
+    def prefetch_add(self):
+        prefetch_add(self._interest_rates)
 
 
 class EEBonds(_TreasuryBonds):
