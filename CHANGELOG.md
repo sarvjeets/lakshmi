@@ -5,6 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [Unreleased]
+
+## [v2.10.0] - 2023-05-27
+### Fixed
+- lakshmi was stuck pulling prices for I/EE bonds. Treasury Direct seems to be
+blocking http. Use https instead of http for EE bonds (also see below).
+
+### Changed
+- For fetching I Bonds, lakshmi now uses the `ibonds` package instead of
+Treasury Direct website. The I Bond values are calculated locally instead of
+fetching them from internet, making updating the prices of I Bonds much
+faster. Also, we now return the fixed rate in addition to the composite rate
+when fetching information about I Bonds (e.g. when using `lak info asset`
+command or `lakshmi.assets.IBonds.list_bonds()` method).
+
 ## [v2.9.1] - 2023-02-10
 ### Fixed
 - 'Cannot retrieve ticker' errors.

@@ -243,44 +243,13 @@ class AssetsTest(unittest.TestCase):
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, fund.to_table().str_list())
 
-    @patch('datetime.datetime')
-    @patch('requests.post')
-    def test_i_bonds(self, mock_post, mock_date):
-        mock_res = MagicMock()
-        with open(self.data_dir / 'SBCPrice-I.html') as html_file:
-            mock_res.text = html_file.read()
-        mock_post.return_value = mock_res
-        mock_date.now.strftime.return_value = '04/2021'
-        # Bypass issue date validation.
-        mock_strptime = MagicMock()
-        mock_strptime.strftime.return_value = '03/2020'
-        mock_date.strptime.return_value = mock_strptime
-
-        ibonds = assets.IBonds({'All': 1.0})
-        ibonds.add_bond('3/2020', 10000)
-
-        mock_post.asset_called_once_with(
-            'http://www.treasurydirect.gov/BC/SBCPrice',
-            data={
-                'RedemptionDate': '04/2021',
-                'Series': 'I',
-                'Denomination': '1000',
-                'IssueDate': '03/2020',
-                'btnAdd.x': 'CALCULATE'})
-
-        self.assertEqual('I Bonds', ibonds.name())
-        self.assertEqual('I Bonds', ibonds.short_name())
-        self.assertAlmostEqual(10156.0, ibonds.value())
-        self.assertListEqual(
-            [['03/2020', '$10,000.00', '1.88%', '$10,156.00']],
-            ibonds.list_bonds().str_list())
-
     @patch('lakshmi.assets.IBonds.value')
     def test_dict_i_bonds(self, mock_value):
         mock_value.return_value = 11000
         ibonds = assets.IBonds({'B': 1.0})
         ibonds.add_bond('02/2020', 10000)
         ibonds.what_if(-100.0)
+
         ibonds = assets.from_dict(assets.to_dict(ibonds))
         self.assertEqual('I Bonds', ibonds.name())
         self.assertEqual({'B': 1.0}, ibonds.class2ratio)
