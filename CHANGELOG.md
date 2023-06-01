@@ -7,6 +7,12 @@ and this project adheres to
 
 
 ## [Unreleased]
+### Changed
+- If for some reason interest rate data is outdated (e.g. if user doesn't
+update ibonds module), IBonds class will no longer abort when printing
+interest rates for IBonds. Instead it will just output empty interest rates.
+IBonds value method will still abort if the missing interest rate are needed
+to calculate the current value of IBonds.
 
 ## [v2.10.0] - 2023-05-27
 ### Fixed

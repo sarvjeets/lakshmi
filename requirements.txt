@@ -16,7 +16,7 @@ docutils==0.20.1
 filelock==3.12.0
 frozendict==2.3.8
 html5lib==1.1
-ibonds==1.0.1
+ibonds==1.0.2
 identify==2.5.24
 idna==3.4
 importlib-metadata==6.6.0

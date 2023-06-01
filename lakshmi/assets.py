@@ -870,6 +870,9 @@ class IBonds(_TreasuryBonds):
         (as percentage), composite rate (as percentage) and the current market
         value of all the bonds.
         """
+        def _format_rate(r):
+            return '{:.2f}%'.format(r) if r is not None else ''
+
         table = Table(
             5,
             headers=['Issue Date', 'Denom', 'Fixed rate', 'Rate', 'Value'],
@@ -877,9 +880,9 @@ class IBonds(_TreasuryBonds):
         for bond in self._bonds:
             table.add_row([bond.issue_date.strftime('%m/%Y'),
                            bond.denom,
-                           '{:.2f}%'.format(bond.fixed_rate()),
-                           '{:.2f}%'.format(bond.composite_rate()),
-                           bond.value()])
+                           _format_rate(bond.fixed_rate()),
+                           _format_rate(bond.composite_rate(_today())),
+                           bond.value(_today())])
         return table
 
     # Override
