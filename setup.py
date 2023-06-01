@@ -32,7 +32,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'click~=8.0',
-        'ibonds~=1.0',
+        'ibonds>=1.0.2,<2.0',
         'numpy~=1.22',
         'pyxirr~=0.6',
         'PyYAML>=5.4,<7.0',
