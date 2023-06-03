@@ -263,7 +263,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('I Bonds', ibond_asset.name())
         self.assertEqual('I Bonds', ibond_asset.short_name())
 
-        mock_today.return_value = datetime.date(2020, 11, 1)
+        mock_today.return_value = datetime.date(2020, 11, 2)
         self.assertListEqual(
             [['11/2020', '$10,000.00', '0.00%', '1.68%', '$10,000.00']],
             ibond_asset.list_bonds().str_list())
