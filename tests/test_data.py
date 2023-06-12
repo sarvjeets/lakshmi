@@ -5,12 +5,13 @@ from pathlib import Path
 import yaml
 
 import lakshmi
+from lakshmi import utils
 
 
 class DataTest(unittest.TestCase):
     def parse_dict(self, filename, function):
         file_path = (Path(__file__).parents[1].absolute() / filename)
-        d = yaml.load(file_path.read_text(), Loader=yaml.SafeLoader)
+        d = yaml.load(file_path.read_text(), Loader=utils.get_loader())
         return function(d)
 
     def test_account(self):
