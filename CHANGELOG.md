@@ -13,6 +13,8 @@ update ibonds module), IBonds class will no longer abort when printing
 interest rates for IBonds. Instead it will just output empty interest rates.
 IBonds value method will still abort if the missing interest rate are needed
 to calculate the current value of IBonds.
+- `lak edit` commands now accept comma-separated floats (e.g. when entering
+shares or dollar values). This makes it easy to paste values from websites.
 
 ## [v2.10.0] - 2023-05-27
 ### Fixed
