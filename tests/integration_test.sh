@@ -12,7 +12,7 @@ testcmd () {
     NC='\033[0m'
 
     printf "$1"
-    if $1 > /dev/null ; then
+    if eval $1 > /dev/null ; then
         printf "%$((COLUMNS - ${#1}))b\n" "[  ${GREEN}OK${NC}  ]"
     else
         printf "%$((COLUMNS - ${#1}))b\n" "[ ${RED}FAIL${NC} ]"
@@ -73,6 +73,7 @@ testcmd "lak list checkpoints"
 testcmd "lak list performance"
 testcmd "lak info account -t account"
 testcmd "lak info asset -a ITOT"
+testcmd "lak info asset -a I\ Bonds"
 testcmd "lak info asset -a EE"
 testcmd "lak info performance"
 testcmd "lak whatif account -t account 10"

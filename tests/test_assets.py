@@ -245,7 +245,7 @@ class AssetsTest(unittest.TestCase):
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, fund.to_table().str_list())
 
-    @patch('lakshmi.assets._today')
+    @patch('lakshmi.assets._today_date')
     @patch('lakshmi.assets.IBonds._InterestRates.get')
     def test_i_bonds(self, mock_get, mock_today):
         INTEREST_RATE_DATA = """

@@ -817,6 +817,11 @@ class _TreasuryBonds(Asset):
             prefetch_add(b)
 
 
+# Used so we can mock date.today() for testing.
+def _today_date():
+    return datetime.date.today()
+
+
 # We use ibonds module to fetch prices of an ibond. This is much faster than
 # using the Treasury Direct website.
 class IBonds(_TreasuryBonds):
@@ -881,8 +886,8 @@ class IBonds(_TreasuryBonds):
             table.add_row([bond.issue_date.strftime('%m/%Y'),
                            bond.denom,
                            _format_rate(bond.fixed_rate()),
-                           _format_rate(bond.composite_rate(_today())),
-                           bond.value(_today())])
+                           _format_rate(bond.composite_rate(_today_date())),
+                           bond.value(_today_date())])
         return table
 
     # Override
