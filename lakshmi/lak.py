@@ -16,6 +16,7 @@ import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
 import lakshmi.performance
+import lakshmi.utils
 from lakshmi import Portfolio
 from lakshmi.table import Table
 
@@ -597,7 +598,8 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         try:
             parse_str = (edit_str.split(help_msg, 1)[0].rstrip('\n')
                          if edit_dict else edit_str)
-            return parse_fn(yaml.load(parse_str, Loader=yaml.SafeLoader))
+            return parse_fn(
+                yaml.load(parse_str, Loader=lakshmi.utils.get_loader()))
         except Exception as e:
             click.echo('Error parsing file: ' + repr(e))
             if not click.confirm('Do you want to edit again?'):
