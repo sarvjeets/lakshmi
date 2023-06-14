@@ -436,7 +436,8 @@ def checkpoints(begin, end):
 
 @list.command()
 def performance():
-    """Prints summary stats about portfolio's performance."""
+    """Prints summary stats about portfolio's performance ending on the last
+    day for which a checkpoint exists."""
     global lakctx
     lakctx.optional_separator()
     perf = lakctx.get_performance()
@@ -540,11 +541,11 @@ def asset(asset, account):
 @click.option('--begin', '-b', metavar='DATE',
               help='Begining date from which to start computing performance '
               'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'earliest possible date.')
+              'earliest date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
               help='Ending date at which to stop computing performance '
               'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'latest possible date.')
+              'latest date for which a checkpoint exists.')
 def performance(begin, end):
     """Print detailed stats about portfolio's performance."""
     global lakctx
