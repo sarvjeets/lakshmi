@@ -7,8 +7,10 @@ and this project adheres to
 
 
 ## [Unreleased]
+
+## [v2.11.0] - 2023-06-27
 ### Fixed
-- Connection issues with Vanguard website.
+- Connection issues with the Vanguard website.
 
 ### Changed
 - If for some reason interest rate data is outdated (e.g. if user doesn't
