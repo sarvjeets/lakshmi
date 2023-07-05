@@ -7,6 +7,9 @@ and this project adheres to
 
 
 ## [Unreleased]
+### Fixed
+- Connection issues with Vanguard website.
+
 ### Changed
 - If for some reason interest rate data is outdated (e.g. if user doesn't
 update ibonds module), IBonds class will no longer abort when printing

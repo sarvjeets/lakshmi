@@ -185,7 +185,7 @@ class AssetsTest(unittest.TestCase):
         self.assertAlmostEqual(90.0, vmmxx.adjusted_value())
         self.assertEqual(2, len(vmmxx.get_lots()))
 
-    @patch('requests.get')
+    @patch('requests.Session.get')
     def test_vanguard_funds_name(self, mock_get):
         mock_res = MagicMock()
 
@@ -203,7 +203,7 @@ class AssetsTest(unittest.TestCase):
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
 
-    @patch('requests.get')
+    @patch('requests.Session.get')
     def test_vanguard_funds_value(self, mock_get):
         mock_res = MagicMock()
 
