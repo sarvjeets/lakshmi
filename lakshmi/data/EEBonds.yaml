@@ -11,6 +11,6 @@ Asset Mapping:
 # List of EE Bonds with the purchase month and denomination.
 Bonds:
 - Issue Date: 11/2012
-  Denomination: 10000
+  Denomination: 10,000
 - Issue Date: 01/2013
-  Denomination: 10000
+  Denomination: 10,000

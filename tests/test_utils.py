@@ -1,6 +1,8 @@
 """Tests for lakshmi.utils module."""
 import unittest
 
+import yaml
+
 from lakshmi import utils
 
 
@@ -25,3 +27,11 @@ class UtilsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             utils.validate_date('2021/02/29')  # 2021 is not leap year.
+
+    def test_resolver(self):
+        data = 'a: 100.22\nb: 122,121,000.22\nc: -121,122.12\nd: 1,000'
+        loaded = yaml.load(data, Loader=utils.get_loader())
+        self.assertEqual(100.22, loaded['a'])
+        self.assertEqual(122121000.22, loaded['b'])
+        self.assertEqual(-121122.12, loaded['c'])
+        self.assertEqual(1000, loaded['d'])

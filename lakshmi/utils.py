@@ -1,6 +1,9 @@
 """Common utils for Lakshmi."""
 
+import re
 from datetime import datetime
+
+import yaml
 
 
 def format_money(x):
@@ -41,3 +44,17 @@ def validate_date(date_text):
         ValueError if date is not in YYYY/MM/DD format.
     """
     return datetime.strptime(date_text, '%Y/%m/%d').strftime('%Y/%m/%d')
+
+
+def get_loader():
+    """Returns a SafeLoader that can parse comma-separated float values."""
+    def parse_comma_float(loader, node):
+        value = loader.construct_scalar(node)
+        return float(value.replace(',', ''))
+
+    loader = yaml.SafeLoader
+    loader.add_constructor(u'comma_float', parse_comma_float)
+    loader.add_implicit_resolver(u'comma_float',
+                                 re.compile(r'^-?[\d,]+\.?\d+$'),
+                                 None)
+    return loader

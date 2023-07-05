@@ -5,7 +5,7 @@
 Ticker: ITOT
 
 # The number of shares owned.
-Shares: 123
+Shares: 1,234.5
 
 # How this asset maps to the asset classes defined in the portfolio.
 # This is used to generate asset allocation (e.g. when using
@@ -16,5 +16,5 @@ Asset Mapping:
 # Optionally the tax lot information for the asset.
 Tax Lots:
 - Date: 2020/03/23
-  Quantity: 123
+  Quantity: 1,234.5
   Unit Cost: 50.39

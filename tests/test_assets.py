@@ -5,6 +5,8 @@ import pathlib
 import unittest
 from unittest.mock import MagicMock, patch
 
+import ibonds
+
 import lakshmi.assets as assets
 import lakshmi.cache
 
@@ -183,7 +185,7 @@ class AssetsTest(unittest.TestCase):
         self.assertAlmostEqual(90.0, vmmxx.adjusted_value())
         self.assertEqual(2, len(vmmxx.get_lots()))
 
-    @patch('requests.get')
+    @patch('requests.Session.get')
     def test_vanguard_funds_name(self, mock_get):
         mock_res = MagicMock()
 
@@ -201,7 +203,7 @@ class AssetsTest(unittest.TestCase):
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
 
-    @patch('requests.get')
+    @patch('requests.Session.get')
     def test_vanguard_funds_value(self, mock_get):
         mock_res = MagicMock()
 
@@ -242,6 +244,35 @@ class AssetsTest(unittest.TestCase):
                     ['Value:', '$1,000.00'],
                     ['Price:', '$10.00']]
         self.assertListEqual(expected, fund.to_table().str_list())
+
+    @patch('lakshmi.assets._today_date')
+    @patch('lakshmi.assets.IBonds._InterestRates.get')
+    def test_i_bonds(self, mock_get, mock_today):
+        INTEREST_RATE_DATA = """
+        2020-11-01:
+        - 0.00
+        - 0.84
+        2021-05-01:
+        - 0.00
+        - 1.77
+        """
+        mock_get.return_value = ibonds.InterestRates(INTEREST_RATE_DATA)
+        ibond_asset = assets.IBonds({'All': 1.0})
+        ibond_asset.add_bond('11/2020', 10000)
+
+        self.assertEqual('I Bonds', ibond_asset.name())
+        self.assertEqual('I Bonds', ibond_asset.short_name())
+
+        mock_today.return_value = datetime.date(2020, 11, 2)
+        self.assertListEqual(
+            [['11/2020', '$10,000.00', '0.00%', '1.68%', '$10,000.00']],
+            ibond_asset.list_bonds().str_list())
+
+        # Test the case where the interest rate data is not up to date.
+        mock_today.return_value = datetime.date(2021, 11, 1)
+        self.assertListEqual(
+            [['11/2020', '$10,000.00', '0.00%', '', '$10,172.00']],
+            ibond_asset.list_bonds().str_list())
 
     @patch('lakshmi.assets.IBonds.value')
     def test_dict_i_bonds(self, mock_value):

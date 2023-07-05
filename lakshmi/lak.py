@@ -16,6 +16,7 @@ import lakshmi.analyze
 import lakshmi.assets
 import lakshmi.cache
 import lakshmi.performance
+import lakshmi.utils
 from lakshmi import Portfolio
 from lakshmi.table import Table
 
@@ -435,7 +436,8 @@ def checkpoints(begin, end):
 
 @list.command()
 def performance():
-    """Prints summary stats about portfolio's performance."""
+    """Prints summary stats about portfolio's performance ending on the last
+    day for which a checkpoint exists."""
     global lakctx
     lakctx.optional_separator()
     perf = lakctx.get_performance()
@@ -539,11 +541,11 @@ def asset(asset, account):
 @click.option('--begin', '-b', metavar='DATE',
               help='Begining date from which to start computing performance '
               'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'earliest possible date.')
+              'earliest date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
               help='Ending date at which to stop computing performance '
               'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'latest possible date.')
+              'latest date for which a checkpoint exists.')
 def performance(begin, end):
     """Print detailed stats about portfolio's performance."""
     global lakctx
@@ -597,7 +599,8 @@ def edit_and_parse(edit_dict, parse_fn, filename):
         try:
             parse_str = (edit_str.split(help_msg, 1)[0].rstrip('\n')
                          if edit_dict else edit_str)
-            return parse_fn(yaml.load(parse_str, Loader=yaml.SafeLoader))
+            return parse_fn(
+                yaml.load(parse_str, Loader=lakshmi.utils.get_loader()))
         except Exception as e:
             click.echo('Error parsing file: ' + repr(e))
             if not click.confirm('Do you want to edit again?'):

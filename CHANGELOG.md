@@ -8,6 +8,19 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v2.11.0] - 2023-06-27
+### Fixed
+- Connection issues with the Vanguard website.
+
+### Changed
+- If for some reason interest rate data is outdated (e.g. if user doesn't
+update ibonds module), IBonds class will no longer abort when printing
+interest rates for IBonds. Instead it will just output empty interest rates.
+IBonds value method will still abort if the missing interest rate are needed
+to calculate the current value of IBonds.
+- `lak edit` commands now accept comma-separated floats (e.g. when entering
+shares or dollar values). This makes it easy to paste values from websites.
+
 ## [v2.10.0] - 2023-05-27
 ### Fixed
 - lakshmi was stuck pulling prices for I/EE bonds. Treasury Direct seems to be

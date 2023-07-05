@@ -551,6 +551,36 @@ class TickerAsset(TradedAsset, Cacheable):
 class VanguardFund(TradedAsset, Cacheable):
     """An asset class representing Vanguard trust fund represented by a
     numeric ID."""
+    # *************************************************************************
+    # This piece of code is copied from
+    # https://lukasa.co.uk/2017/02/Configuring_TLS_With_Requests/
+    # The name and price methods cannot connect to the Vanguard website
+    # without enabling previous (insecure) ciphers.
+    # This is the 2.11 Requests cipher string, containing 3DES.
+    _CIPHERS = ('ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:'
+                'DH+AES:ECDH+HIGH:DH+HIGH:ECDH+3DES:DH+3DES:RSA+AESGCM:'
+                'RSA+AES:RSA+HIGH:RSA+3DES:!aNULL:!eNULL:!MD5')
+
+    class _DESAdapter(requests.adapters.HTTPAdapter):
+        """A TransportAdapter that re-enables 3DES support in Requests."""
+        def init_poolmanager(self, *args, **kwargs):
+            context = (
+                requests.packages.urllib3.util.ssl_.create_urllib3_context(
+                    ciphers=VanguardFund._CIPHERS))
+            kwargs['ssl_context'] = context
+            return super(VanguardFund._DESAdapter, self).init_poolmanager(
+                *args, **kwargs)
+
+        def proxy_manager_for(self, *args, **kwargs):
+            context = (
+                requests.packages.urllib3.util.ssl_.create_urllib3_context(
+                    ciphers=VanguardFund._CIPHERS))
+            kwargs['ssl_context'] = context
+            return super(VanguardFund._DESAdapter, self).proxy_manager_for(
+                *args, **kwargs)
+    # End of copied code. The rest is in the Session setup part of name and
+    # price methods.
+    # *************************************************************************
 
     def __init__(self, fund_id, shares, class2ratio):
         """
@@ -611,7 +641,9 @@ class VanguardFund(TradedAsset, Cacheable):
 
         Raises: AssertionError if the name cannot be fatched.
         """
-        req = requests.get(
+        s = requests.Session()
+        s.mount('https://api.vanguard.com', VanguardFund._DESAdapter())
+        req = s.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
             '/profile.json',
             headers={'Referer': 'https://vanguard.com/'})
@@ -632,7 +664,9 @@ class VanguardFund(TradedAsset, Cacheable):
 
         Raises: AssertionError in case the price cannot be fetched.
         """
-        req = requests.get(
+        s = requests.Session()
+        s.mount('https://api.vanguard.com', VanguardFund._DESAdapter())
+        req = s.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
             '/price.json',
             headers={'Referer': 'https://vanguard.com/'})
@@ -817,6 +851,11 @@ class _TreasuryBonds(Asset):
             prefetch_add(b)
 
 
+# Used so we can mock date.today() for testing.
+def _today_date():
+    return datetime.date.today()
+
+
 # We use ibonds module to fetch prices of an ibond. This is much faster than
 # using the Treasury Direct website.
 class IBonds(_TreasuryBonds):
@@ -870,6 +909,9 @@ class IBonds(_TreasuryBonds):
         (as percentage), composite rate (as percentage) and the current market
         value of all the bonds.
         """
+        def _format_rate(r):
+            return '{:.2f}%'.format(r) if r is not None else ''
+
         table = Table(
             5,
             headers=['Issue Date', 'Denom', 'Fixed rate', 'Rate', 'Value'],
@@ -877,9 +919,9 @@ class IBonds(_TreasuryBonds):
         for bond in self._bonds:
             table.add_row([bond.issue_date.strftime('%m/%Y'),
                            bond.denom,
-                           '{:.2f}%'.format(bond.fixed_rate()),
-                           '{:.2f}%'.format(bond.composite_rate()),
-                           bond.value()])
+                           _format_rate(bond.fixed_rate()),
+                           _format_rate(bond.composite_rate(_today_date())),
+                           bond.value(_today_date())])
         return table
 
     # Override

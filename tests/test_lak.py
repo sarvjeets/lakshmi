@@ -318,6 +318,19 @@ class LakTest(unittest.TestCase):
 
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
+    def test_edit_and_parse_with_comma_floats(self, mock_read_text, mock_edit):
+        mock_read_text.return_value = 'a: b'
+        mock_edit.return_value = 'c: 123,456.78\n\n' + lak._HELP_MSG_PREFIX
+
+        actual = lak.edit_and_parse({'e': 'f'}, lambda x: x, 'test_file')
+
+        self.assertEqual({'c': 123456.78}, actual)
+        mock_read_text.assert_called_once()
+        mock_edit.assert_called_with(
+            'e: f\n' + lak._HELP_MSG_PREFIX + '# a: b')
+
+    @patch('click.edit')
+    @patch('pathlib.Path.read_text')
     def test_edit_and_parse_aborted(self, mock_read_text, mock_edit):
         mock_read_text.return_value = 'a: b'
         mock_edit.return_value = None

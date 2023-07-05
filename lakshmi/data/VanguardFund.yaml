@@ -8,7 +8,7 @@
 Fund Id: 7555
 
 # The total number of shared
-Shares: 212
+Shares: 2,121.11
 
 # How this asset maps to the asset classes defined in the portfolio.
 # This is used to generate asset allocation (e.g. when using
@@ -19,5 +19,5 @@ Asset Mapping:
 # Optionally the tax lot information for the asset.
 Tax Lots:
 - Date: 2021/04/28
-  Quantity: 212
+  Quantity: 2,121.11
   Unit Cost: 110
