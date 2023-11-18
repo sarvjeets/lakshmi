@@ -7,6 +7,10 @@ and this project adheres to
 
 
 ## [Unreleased]
+### Fixed
+- yfinance threw error while fetching names of tickers from yahoo finance.
+The latest version fixes that -- lakshmi now explicitly depends on the latest
+version.
 
 ## [v2.11.0] - 2023-06-27
 ### Fixed
