@@ -159,7 +159,7 @@ Subject: Portfolio Update
 </head>
 <body>
 
-<h2>tl:dr;</h2>
+<h2>tl;dr</h2>
 <pre>
 $(lak analyze tlh -p 10 -d 20000 rebalance)
 </pre>
