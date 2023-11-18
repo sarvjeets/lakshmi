@@ -512,6 +512,11 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: NonFoundError if the ticker is not found.
         """
+        if self.yticker.info is None:
+            raise NotFoundError(
+                f'Cannot retrieve ticker ("{self._ticker}") '
+                'from Yahoo Finance')
+
         asset_name = self.yticker.info.get('longName') or \
             self.yticker.info.get('shortName') or \
             self.yticker.info.get('name')
@@ -536,8 +541,14 @@ class TickerAsset(TradedAsset, Cacheable):
 
         Raises: NotFoundError if the ticker is not found.
         """
+        if self.yticker.fast_info is None:
+            raise NotFoundError(
+                f'Cannot retrieve ticker ("{self._ticker}") '
+                'from Yahoo Finance')
+
         price = self.yticker.fast_info.get('lastPrice', None) or \
             self.yticker.fast_info.get('last_price', None)
+
         if price is None:
             raise NotFoundError(
                 f'Cannot retrieve ticker ("{self._ticker}") '
