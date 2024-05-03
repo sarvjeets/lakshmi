@@ -38,7 +38,7 @@ setup(
         'PyYAML>=5.4,<7.0',
         'requests~=2.25',
         'tabulate~=0.8',
-        'yfinance>=0.2.32,<0.3',
+        'yfinance>=0.2.38,<0.3',
     ],
     entry_points={
         'console_scripts': [
