@@ -7,8 +7,12 @@ and this project adheres to
 
 
 ## [Unreleased]
+
+## [v2.12.1] - 2024-05-02
 ### Fixed
-- Error when ibond interest rates were fetched.
+- AttributeError when ibond interest rates are fetched.
+- Add dependency to latest version of yfinance (removes some warnings that
+older version is throwing).
 
 ## [v2.12.0] - 2023-11-18
 ### Fixed
