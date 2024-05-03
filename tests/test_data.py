@@ -1,7 +1,9 @@
 """Tests for lakshmi/data directory. Simply checks if the files parses."""
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+import ibonds
 import yaml
 
 import lakshmi
@@ -26,7 +28,17 @@ class DataTest(unittest.TestCase):
         self.assertIsNotNone(self.parse_dict('lakshmi/data/EEBonds.yaml',
                                              lakshmi.assets.EEBonds.from_dict))
 
-    def test_i_bonds(self):
+    @patch('lakshmi.assets.IBonds._InterestRates.get')
+    def test_i_bonds(self, mock_get):
+        INTEREST_RATE_DATA = """
+        2020-11-01:
+        - 0.00
+        - 0.84
+        2021-05-01:
+        - 0.00
+        - 1.77
+        """
+        mock_get.return_value = ibonds.InterestRates(INTEREST_RATE_DATA)
         self.assertIsNotNone(self.parse_dict('lakshmi/data/IBonds.yaml',
                                              lakshmi.assets.IBonds.from_dict))
 

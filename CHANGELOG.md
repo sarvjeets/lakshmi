@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v2.12.1] - 2024-05-02
+### Fixed
+- AttributeError when ibond interest rates are fetched.
+- Add dependency to latest version of yfinance (removes some warnings that
+older version is throwing).
+
 ## [v2.12.0] - 2023-11-18
 ### Fixed
 - yfinance threw error while fetching names of tickers from yahoo finance.
