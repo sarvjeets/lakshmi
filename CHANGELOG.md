@@ -7,6 +7,8 @@ and this project adheres to
 
 
 ## [Unreleased]
+### Fixed
+- Error when ibond interest rates were fetched.
 
 ## [v2.12.0] - 2023-11-18
 ### Fixed

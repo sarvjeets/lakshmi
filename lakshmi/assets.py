@@ -881,7 +881,8 @@ class IBonds(_TreasuryBonds):
             if self._interest_rates.is_current():
                 return self._interest_rates
             else:
-                self._interest_rates = self.get_interest_rates()
+                self._interest_rates = ibonds.InterestRates(
+                    self.get_interest_rates())
                 return self._interest_rates
 
         def cache_key(self):
