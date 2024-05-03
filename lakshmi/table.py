@@ -20,8 +20,8 @@ class Table():
         'str': lambda x: x,
         'dollars': lambda x: utils.format_money(x),
         'delta_dollars': lambda x: utils.format_money_delta(x),
-        'percentage': lambda x: f'{round(100*x)}%',
-        'percentage_1': lambda x: f'{round(100*x,1)}%',
+        'percentage': lambda x: f'{round(100 * x)}%',
+        'percentage_1': lambda x: f'{round(100 * x, 1)}%',
         'float': lambda x: str(float(x)),
     }
 
