@@ -3,23 +3,13 @@
 These classes are not meant to change the portfolio. They are used for
 just analyzing the portfolio and output the results (if any).
 """
-
-from abc import ABC, abstractmethod
-
 import numpy as np
 
 from lakshmi.table import Table
 from lakshmi.utils import format_money
 
 
-# TODO(sarvjeets): This is not needed/used anywhere. Consider removing it.
-class Analyzer(ABC):
-    @abstractmethod
-    def analyze(self, portfolio):
-        pass
-
-
-class TLH(Analyzer):
+class TLH:
     """Tax loss harvesting opportunity analyzer.
 
     This triggers a message with details of tax lots that could be sold to
@@ -97,7 +87,7 @@ class TLH(Analyzer):
         return ret_val
 
 
-class BandRebalance(Analyzer):
+class BandRebalance:
     """Triggers if portfolio asset class targets are outside the bands
     specified. This considers an asset class outside bound if the absolute
     difference in percentage allocation is more than max_abs_percent different
@@ -480,7 +470,7 @@ class _Solver:
         return x
 
 
-class Allocate(Analyzer):
+class Allocate:
     """Allocates any unallocated cash in the account to assets.
 
     If an account has any unallocated cash (aka what if) then this class
