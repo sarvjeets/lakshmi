@@ -453,12 +453,25 @@ def checkpoints(begin, end):
 
 @list.command()
 def performance():
-    """Prints summary stats about portfolio's performance ending on the last
-    day for which a checkpoint exists."""
+    """Prints summary stats about portfolio's performance to date."""
     global lakctx
     lakctx.optional_separator()
     perf = lakctx.get_performance()
+
+    # Check if we have a checkpoint for today.
+    today_str = _today()
+    has_today = perf.get_timeline().has_checkpoint(today_str)
+
+    if not has_today:
+        # Insert a checkpoint for today.
+        perf.get_timeline().insert_checkpoint(_get_todays_checkpoint(
+            lakctx.get_portfolio()))
+
     click.echo(perf.summary_table().string(lakctx.tablefmt))
+
+    if not has_today:
+        # Clean up today's checkpoint.
+        perf.get_timeline().delete_checkpoint(today_str)
 
 
 @lak.group(chain=True,
@@ -561,13 +574,28 @@ def asset(asset, account):
               'earliest date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
               help='Ending date at which to stop computing performance '
-              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'latest date for which a checkpoint exists.')
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to '
+              'today.')
 def performance(begin, end):
     """Print detailed stats about portfolio's performance."""
     global lakctx
     lakctx.optional_separator()
-    click.echo(lakctx.get_performance().get_info(begin, end))
+
+    perf = lakctx.get_performance()
+    # Check if we have a checkpoint for today.
+    today_str = _today()
+    has_today = perf.get_timeline().has_checkpoint(today_str)
+
+    if not has_today:
+        # Insert a checkpoint for today.
+        perf.get_timeline().insert_checkpoint(_get_todays_checkpoint(
+            lakctx.get_portfolio()))
+
+    click.echo(perf.get_info(begin, end))
+
+    if not has_today:
+        # Clean up today's checkpoint
+        perf.get_timeline().delete_checkpoint(today_str)
 
 
 @lak.group()
