@@ -214,6 +214,23 @@ class Spinner:
             click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
 
 
+# --- Begin private helper functions. ---
+
+# Used so we can mock today() for testing.
+def _today():
+    return date.today().strftime('%Y/%m/%d')
+
+
+def _get_todays_checkpoint(portfolio):
+    """Returns a checkpoint for today with portfolio's total value."""
+    with Spinner():
+        portfolio.prefetch()
+        value = portfolio.total_value(include_whatifs=False)
+    return lakshmi.performance.Checkpoint(_today(), value)
+
+# --- End private helper functions. ---
+
+
 @click.group()
 @click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
@@ -751,11 +768,6 @@ def asset(asset_type, account):
     lakctx.save_portfolio()
 
 
-# Used so we can mock today() for testing.
-def _today():
-    return date.today().strftime('%Y/%m/%d')
-
-
 @add.command()
 @click.option('--edit', '-e', is_flag=True,
               help='If set, edit the checkpoint before saving it.')
@@ -764,18 +776,12 @@ def checkpoint(edit):
     for today with the current portofolio value (and no cash-flows). To add
     cashflows to this checkpoint, please use the --edit flag."""
     global lakctx
-    portfolio = lakctx.get_portfolio()
-    with Spinner():
-        portfolio.prefetch()
-        value = portfolio.total_value(include_whatifs=False)
-
-    date_str = _today()
-    checkpoint = lakshmi.performance.Checkpoint(date_str, value)
+    checkpoint = _get_todays_checkpoint(lakctx.get_portfolio())
     if edit:
         checkpoint = edit_and_parse(
             checkpoint.to_dict(show_empty_cashflow=True, show_date=False),
             lambda x: lakshmi.performance.Checkpoint.from_dict(
-                x, date=date_str),
+                x, date=checkpoint.get_date()),
             'Checkpoint.yaml')
     try:
         perf = lakctx.get_performance()
