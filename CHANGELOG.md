@@ -11,6 +11,8 @@ and this project adheres to
 - `lak list performance` and `lak info performance` commands will print
 the performance stats till today as opposed to the last saved checkpoint.
 - Deleted unnecessary lakshmi.analyze.Analyzer interface.
+- Rename lakshmi.Portfolio.assets to lakshmi.Portfolio.list_assets for
+consistency.
 
 ## [v2.12.1] - 2024-05-02
 ### Fixed
