@@ -707,8 +707,7 @@ class Portfolio:
                               + ([value / total] if total else []))
             return table
 
-    # TODO: Renmame this to list_assets for consistency.
-    def assets(self, short_name=False, quantity=False, long_name=True):
+    def list_assets(self, short_name=False, quantity=False, long_name=True):
         """Returns all the assets.
 
         Args:

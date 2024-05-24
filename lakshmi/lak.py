@@ -359,7 +359,7 @@ def assets(long_name, short_name, quantity):
     portfolio = lakctx.get_portfolio()
     with Spinner():
         portfolio.prefetch()
-        output = portfolio.assets(
+        output = portfolio.list_assets(
             long_name=long_name,
             short_name=short_name,
             quantity=quantity).string(lakctx.tablefmt)

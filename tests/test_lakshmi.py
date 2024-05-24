@@ -16,7 +16,7 @@ class LakshmiTest(unittest.TestCase):
     def test_empty_portfolio(self):
         portfolio = Portfolio(AssetClass('E'))
         self.assertAlmostEqual(0, portfolio.total_value())
-        self.assertListEqual([], portfolio.assets().list())
+        self.assertListEqual([], portfolio.list_assets().list())
         self.assertListEqual([], portfolio.asset_location().list())
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
         self.assertListEqual([], portfolio.asset_allocation([]).list())
@@ -228,7 +228,7 @@ class LakshmiTest(unittest.TestCase):
 
         self.assertEqual(1, len(portfolio.accounts()))
         self.assertListEqual([['401(k)', 'Test Asset', '$100.00']],
-                             portfolio.assets().str_list())
+                             portfolio.list_assets().str_list())
         self.assertAlmostEqual(100.0, portfolio.total_value())
         self.assertListEqual([['Equity', 'Pre-tax', '100.0%', '$100.00']],
                              portfolio.asset_location().str_list())
@@ -265,7 +265,7 @@ class LakshmiTest(unittest.TestCase):
                             {'Equity': 0.6, 'Fixed Income': 0.4})))
 
         self.assertListEqual([['Vanguard', 'Test Asset', '$100.00']],
-                             portfolio.assets().str_list())
+                             portfolio.list_assets().str_list())
         self.assertAlmostEqual(100.0, portfolio.total_value())
         self.assertListEqual(
             [['Equity', 'Taxable', '100.0%', '$60.00'],
@@ -331,24 +331,24 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual(
             [['Schwab', 'Vanguard Cash Reserves Federal', '$420.00'],
              ['Schwab', 'Cash', '$840.00']],
-            portfolio.assets().str_list())
+            portfolio.list_assets().str_list())
         self.assertListEqual(
             [['Schwab', 'VMMXX', 'Vanguard Cash Reserves Federal', '$420.00'],
              ['Schwab', 'Cash', 'Cash', '$840.00']],
-            portfolio.assets(short_name=True).str_list())
+            portfolio.list_assets(short_name=True).str_list())
         self.assertListEqual(
             [['Schwab', 'VMMXX', '420.0', 'Vanguard Cash Reserves Federal',
               '$420.00'],
              ['Schwab', 'Cash', '', 'Cash', '$840.00']],
-            portfolio.assets(short_name=True, quantity=True).str_list())
+            portfolio.list_assets(short_name=True, quantity=True).str_list())
         self.assertListEqual(
             [['Schwab', '420.0', 'Vanguard Cash Reserves Federal', '$420.00'],
              ['Schwab', '', 'Cash', '$840.00']],
-            portfolio.assets(quantity=True).str_list())
+            portfolio.list_assets(quantity=True).str_list())
         self.assertListEqual(
             [['Schwab', 'VMMXX', '$420.00'],
              ['Schwab', 'Cash', '$840.00']],
-            portfolio.assets(short_name=True, long_name=False).str_list())
+            portfolio.list_assets(short_name=True, long_name=False).str_list())
 
     def test_asset_location(self):
         portfolio = Portfolio(
@@ -467,7 +467,7 @@ class LakshmiTest(unittest.TestCase):
              ['Account 1', 'Asset 2', '$200.00'],
              ['Account 2', 'Asset 1', '$300.00'],
              ['Account 2', 'Asset 2', '$400.00']],
-            portfolio.assets().str_list())
+            portfolio.list_assets().str_list())
 
     def test_get_account_name_by_substr(self):
         portfolio = Portfolio(AssetClass('All'))
@@ -565,7 +565,7 @@ class LakshmiTest(unittest.TestCase):
         self.assertListEqual(
             [['Account 1', 'Asset 1', '$120.00'],
              ['Account 1', 'Asset 2', '$80.00']],
-            portfolio.assets().str_list())
+            portfolio.list_assets().str_list())
 
         self.assertListEqual(
             [['All:'],

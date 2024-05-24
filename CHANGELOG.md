@@ -17,6 +17,8 @@ the performance stats till today as opposed to the last saved checkpoint.
 - AttributeError when ibond interest rates are fetched.
 - Add dependency to latest version of yfinance (removes some warnings that
 older version is throwing).
+- Renamed lakshmi.Portfolio.assets to lakshmi.Portfolio.list_assets for
+consistency.
 
 ## [v2.12.0] - 2023-11-18
 ### Fixed
