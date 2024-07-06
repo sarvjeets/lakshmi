@@ -201,7 +201,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual('7555', fund.short_name())
         mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/profile.json',
-            headers={'Referer': 'https://vanguard.com/'})
+            headers={'Referer': 'https://vanguard.com/'}, verify=False)
 
     @patch('requests.Session.get')
     def test_vanguard_funds_value(self, mock_get):
@@ -215,7 +215,7 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual(1166.6, fund.value())
         mock_get.assert_called_once_with(
             'https://api.vanguard.com/rs/ire/01/pe/fund/7555/price.json',
-            headers={'Referer': 'https://vanguard.com/'})
+            headers={'Referer': 'https://vanguard.com/'}, verify=False)
         fund.set_lots([assets.TaxLot('2012/12/30', 10, 1.0)])
 
     @patch('lakshmi.assets.VanguardFund.value')

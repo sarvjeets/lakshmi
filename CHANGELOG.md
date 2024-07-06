@@ -13,6 +13,9 @@ the performance stats till today as opposed to the last saved checkpoint.
 - Deleted unnecessary lakshmi.analyze.Analyzer interface.
 - Rename lakshmi.Portfolio.assets to lakshmi.Portfolio.list_assets for
 consistency.
+### Fixed
+- Vanguard's website SSL certificate was throwing errors. Disable SSL checks
+until I figure out a better solution.
 
 ## [v2.12.1] - 2024-05-02
 ### Fixed
