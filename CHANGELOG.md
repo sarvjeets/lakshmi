@@ -8,11 +8,24 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v3.0.0] - 2024-07-05
+### Changed
+- `lak list performance` and `lak info performance` commands will print
+the performance stats till today as opposed to the last saved checkpoint.
+- Deleted unnecessary lakshmi.analyze.Analyzer interface.
+- Rename lakshmi.Portfolio.assets to lakshmi.Portfolio.list_assets for
+consistency.
+### Fixed
+- Vanguard's website SSL certificate was throwing errors. Disable SSL checks
+until I figure out a better solution.
+
 ## [v2.12.1] - 2024-05-02
 ### Fixed
 - AttributeError when ibond interest rates are fetched.
 - Add dependency to latest version of yfinance (removes some warnings that
 older version is throwing).
+- Renamed lakshmi.Portfolio.assets to lakshmi.Portfolio.list_assets for
+consistency.
 
 ## [v2.12.0] - 2023-11-18
 ### Fixed

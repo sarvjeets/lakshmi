@@ -1235,8 +1235,7 @@ Options:
                     stats (Format: YYYY/MM/DD). If not provided, defaults to
                     the earliest possible date.
   -e, --end DATE    Ending date at which to stop computing performance stats
-                    (Format: YYYY/MM/DD). If not provided, defaults to the
-                    latest possible date.
+                    (Format: YYYY/MM/DD). If not provided, defaults to today.
   --help            Show this message and exit.
 
 # If there is no checkpoint for the date specified, the value of the portfolio

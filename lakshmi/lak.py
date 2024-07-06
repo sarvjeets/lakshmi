@@ -214,6 +214,23 @@ class Spinner:
             click.echo('\b' * len(Spinner.SPINNER[0]), nl=False)
 
 
+# --- Begin private helper functions. ---
+
+# Used so we can mock today() for testing.
+def _today():
+    return date.today().strftime('%Y/%m/%d')
+
+
+def _get_todays_checkpoint(portfolio):
+    """Returns a checkpoint for today with portfolio's total value."""
+    with Spinner():
+        portfolio.prefetch()
+        value = portfolio.total_value(include_whatifs=False)
+    return lakshmi.performance.Checkpoint(_today(), value)
+
+# --- End private helper functions. ---
+
+
 @click.group()
 @click.version_option()
 @click.option('--refresh', '-r', is_flag=True,
@@ -342,7 +359,7 @@ def assets(long_name, short_name, quantity):
     portfolio = lakctx.get_portfolio()
     with Spinner():
         portfolio.prefetch()
-        output = portfolio.assets(
+        output = portfolio.list_assets(
             long_name=long_name,
             short_name=short_name,
             quantity=quantity).string(lakctx.tablefmt)
@@ -436,12 +453,25 @@ def checkpoints(begin, end):
 
 @list.command()
 def performance():
-    """Prints summary stats about portfolio's performance ending on the last
-    day for which a checkpoint exists."""
+    """Prints summary stats about portfolio's performance to date."""
     global lakctx
     lakctx.optional_separator()
     perf = lakctx.get_performance()
+
+    # Check if we have a checkpoint for today.
+    today_str = _today()
+    has_today = perf.get_timeline().has_checkpoint(today_str)
+
+    if not has_today:
+        # Insert a checkpoint for today.
+        perf.get_timeline().insert_checkpoint(_get_todays_checkpoint(
+            lakctx.get_portfolio()))
+
     click.echo(perf.summary_table().string(lakctx.tablefmt))
+
+    if not has_today:
+        # Clean up today's checkpoint.
+        perf.get_timeline().delete_checkpoint(today_str)
 
 
 @lak.group(chain=True,
@@ -544,13 +574,28 @@ def asset(asset, account):
               'earliest date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
               help='Ending date at which to stop computing performance '
-              'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
-              'latest date for which a checkpoint exists.')
+              'stats (Format: YYYY/MM/DD). If not provided, defaults to '
+              'today.')
 def performance(begin, end):
     """Print detailed stats about portfolio's performance."""
     global lakctx
     lakctx.optional_separator()
-    click.echo(lakctx.get_performance().get_info(begin, end))
+
+    perf = lakctx.get_performance()
+    # Check if we have a checkpoint for today.
+    today_str = _today()
+    has_today = perf.get_timeline().has_checkpoint(today_str)
+
+    if not has_today:
+        # Insert a checkpoint for today.
+        perf.get_timeline().insert_checkpoint(_get_todays_checkpoint(
+            lakctx.get_portfolio()))
+
+    click.echo(perf.get_info(begin, end))
+
+    if not has_today:
+        # Clean up today's checkpoint
+        perf.get_timeline().delete_checkpoint(today_str)
 
 
 @lak.group()
@@ -751,11 +796,6 @@ def asset(asset_type, account):
     lakctx.save_portfolio()
 
 
-# Used so we can mock today() for testing.
-def _today():
-    return date.today().strftime('%Y/%m/%d')
-
-
 @add.command()
 @click.option('--edit', '-e', is_flag=True,
               help='If set, edit the checkpoint before saving it.')
@@ -764,18 +804,12 @@ def checkpoint(edit):
     for today with the current portofolio value (and no cash-flows). To add
     cashflows to this checkpoint, please use the --edit flag."""
     global lakctx
-    portfolio = lakctx.get_portfolio()
-    with Spinner():
-        portfolio.prefetch()
-        value = portfolio.total_value(include_whatifs=False)
-
-    date_str = _today()
-    checkpoint = lakshmi.performance.Checkpoint(date_str, value)
+    checkpoint = _get_todays_checkpoint(lakctx.get_portfolio())
     if edit:
         checkpoint = edit_and_parse(
             checkpoint.to_dict(show_empty_cashflow=True, show_date=False),
             lambda x: lakshmi.performance.Checkpoint.from_dict(
-                x, date=date_str),
+                x, date=checkpoint.get_date()),
             'Checkpoint.yaml')
     try:
         perf = lakctx.get_performance()

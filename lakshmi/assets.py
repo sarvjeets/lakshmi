@@ -578,6 +578,8 @@ class VanguardFund(TradedAsset, Cacheable):
             context = (
                 requests.packages.urllib3.util.ssl_.create_urllib3_context(
                     ciphers=VanguardFund._CIPHERS))
+            context.check_hostname = False
+            requests.packages.urllib3.disable_warnings()
             kwargs['ssl_context'] = context
             return super(VanguardFund._DESAdapter, self).init_poolmanager(
                 *args, **kwargs)
@@ -586,6 +588,8 @@ class VanguardFund(TradedAsset, Cacheable):
             context = (
                 requests.packages.urllib3.util.ssl_.create_urllib3_context(
                     ciphers=VanguardFund._CIPHERS))
+            context.check_hostname = False
+            requests.packages.urllib3.disable_warnings()
             kwargs['ssl_context'] = context
             return super(VanguardFund._DESAdapter, self).proxy_manager_for(
                 *args, **kwargs)
@@ -657,7 +661,8 @@ class VanguardFund(TradedAsset, Cacheable):
         req = s.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
             '/profile.json',
-            headers={'Referer': 'https://vanguard.com/'})
+            headers={'Referer': 'https://vanguard.com/'},
+            verify=False)
         req.raise_for_status()  # Raise if error
         return req.json()['fundProfile']['longName']
 
@@ -680,7 +685,8 @@ class VanguardFund(TradedAsset, Cacheable):
         req = s.get(
             f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
             '/price.json',
-            headers={'Referer': 'https://vanguard.com/'})
+            headers={'Referer': 'https://vanguard.com/'},
+            verify=False)
         req.raise_for_status()  # Raise if error
         return float(req.json()['currentPrice']
                      ['dailyPrice']['regular']['price'])

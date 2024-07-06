@@ -33,7 +33,7 @@ setup(
     install_requires=[
         'click~=8.0',
         'ibonds>=1.0.2,<2.0',
-        'numpy~=1.22',
+        'numpy>=1.22,<3.0',
         'pyxirr~=0.6',
         'PyYAML>=5.4,<7.0',
         'requests~=2.25',

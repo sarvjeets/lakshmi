@@ -197,11 +197,22 @@ class LakTest(unittest.TestCase):
         self.assertRegex(result.output, r'2021/01/02 +\$105.01',)
         self.assertFalse(lak.lakctx.saved_performance)
 
-    def test_list_performance(self):
+    @patch('lakshmi.lak._get_todays_checkpoint')
+    @patch('lakshmi.lak._today')
+    def test_list_performance(self, mock_today, mock_today_checkpoint):
+        mock_today.return_value = '2021/01/10'
+        mock_today_checkpoint.return_value = Checkpoint('2021/01/10', 200)
         result = run_lak('list performance')
+
+        mock_today.assert_called_once()
+        mock_today_checkpoint.assert_called_once()
         self.assertEqual(0, result.exit_code)
-        self.assertRegex(result.output, r'Overall +\$10.00',)
+        # Check if $10 inflow is there and +$100.00 portfolio change is also
+        # in the output (because of today's checkpoint).
+        self.assertRegex(result.output, r'Overall +\$10.00.+\+\$100.00',)
         self.assertFalse(lak.lakctx.saved_performance)
+        self.assertFalse(lak.lakctx.performance.get_timeline().has_checkpoint(
+            '2021/01/10'))
 
     def test_list_what_ifs_empty(self):
         result = run_lak('list whatifs')
@@ -285,11 +296,22 @@ class LakTest(unittest.TestCase):
         self.assertRegex(result.output, r'Name: +Test Asset\n')
         self.assertFalse(lak.lakctx.saved_portfolio)
 
-    def test_info_performance(self):
+    @patch('lakshmi.lak._get_todays_checkpoint')
+    @patch('lakshmi.lak._today')
+    def test_info_performance(self, mock_today, mock_today_checkpoint):
+        mock_today.return_value = '2021/01/10'
+        mock_today_checkpoint.return_value = Checkpoint('2021/01/10', 200)
         result = run_lak('info performance --begin 2021/1/1')
+
+        mock_today.assert_called_once()
+        mock_today_checkpoint.assert_called_once()
         self.assertEqual(0, result.exit_code)
-        self.assertRegex(result.output, r'Start date +2021/01/01\n')
+        self.assertRegex(
+            result.output,
+            r'Start date +2021/01/01\nEnd date +2021/01/10\n')
         self.assertFalse(lak.lakctx.saved_portfolio)
+        self.assertFalse(lak.lakctx.performance.get_timeline().has_checkpoint(
+            '2021/01/10'))
 
     @patch('click.edit')
     @patch('pathlib.Path.read_text')
