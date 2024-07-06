@@ -7,6 +7,8 @@ and this project adheres to
 
 
 ## [Unreleased]
+
+## [v3.0.0] - 2024-07-05
 ### Changed
 - `lak list performance` and `lak info performance` commands will print
 the performance stats till today as opposed to the last saved checkpoint.
