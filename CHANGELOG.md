@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v3.0.1] - 2024-10-25
+### Fixed
+- Fixed crash when a portfolio consists of only ManualAssets.
+
+
 ## [v3.0.0] - 2024-07-05
 ### Changed
 - `lak list performance` and `lak info performance` commands will print
