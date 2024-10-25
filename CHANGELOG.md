@@ -7,6 +7,8 @@ and this project adheres to
 
 
 ## [Unreleased]
+
+## [v3.0.1] - 2024-10-25
 ### Fixed
 - Fixed crash when a portfolio consists of only ManualAssets.
 
