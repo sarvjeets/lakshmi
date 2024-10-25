@@ -302,6 +302,5 @@ def prefetch_add(class_obj):
 def prefetch():
     """Fetch all cached methods of objects added earlier via the prefetch_add()
     call in parallel threads."""
-    assert _prefetch_obj is not None, (
-        'prefetch_add must be called before calling prefetch')
-    _prefetch_obj.fetch()
+    if _prefetch_obj is not None:
+        _prefetch_obj.fetch()

@@ -27,6 +27,7 @@ class Cached(cache.Cacheable):
 class CacheTest(unittest.TestCase):
     def setUp(self):
         # Reset cache dir setting.
+        cache._prefetch_obj = None
         cache._ctx.pop(cache._CACHE_STR, None)
         cache.set_force_refresh(False)
         cache.set_cache_miss_func(None)
@@ -305,6 +306,10 @@ class CacheTest(unittest.TestCase):
         self.assertEqual(2, exists.call_count)
         self.assertEqual(2, write_bytes.call_count)
         read_bytes.assert_not_called()
+
+    def test_prefetch_add_not_called(self):
+        # Do not fail if there are no functions to be prefetched.
+        cache.prefetch()
 
 
 if __name__ == '__main__':
