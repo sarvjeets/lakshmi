@@ -768,7 +768,7 @@ class LakshmiTest(unittest.TestCase):
             portfolio.list_lots(include_account=True).str_list())
 
         # We just check that term is included in the row instead of exact
-        # calculatin of term
+        # calculation of the term.
         self.assertListEqual(
             [6, 6, 6],
             list(map(len, portfolio.list_lots(include_term=True).list())))
