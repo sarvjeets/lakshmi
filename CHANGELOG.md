@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v3.0.3] - 2026-05-07
+### Fixed
+- yfinance warnings.
+
 ## [v3.0.2] - 2025-05-01
 ### Fixed
 - YFRateLimitError when fetching price data for tickers.
