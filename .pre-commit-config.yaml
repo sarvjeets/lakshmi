@@ -2,7 +2,7 @@ default_language_version:
   python: python3
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-yaml
   - id: end-of-file-fixer
@@ -13,12 +13,12 @@ repos:
   hooks:
   - id: seed-isort-config
 - repo: https://github.com/PyCQA/isort
-  rev: 6.0.1
+  rev: 9.0.0a3
   hooks:
   - id: isort
 # flake8
 - repo: https://github.com/pycqa/flake8
-  rev: 7.2.0
+  rev: 7.3.0
   hooks:
     - id: flake8
       args: # arguments to configure flake8

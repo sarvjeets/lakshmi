@@ -23,7 +23,6 @@ setup(
     platforms='any',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
     ],
@@ -39,7 +38,7 @@ setup(
         'PyYAML>=5.4,<7.0',
         'requests~=2.25',
         'tabulate~=0.8',
-        'yfinance>=0.2.38,<0.3',
+        'yfinance>=0.2.38,<2.0',
     ],
     entry_points={
         'console_scripts': [
