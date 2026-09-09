@@ -414,14 +414,17 @@ def whatifs(long_name, short_name, quantity):
               '(more than a year) respectively. This information is useful '
               'for tax-planning purposes when selling the lots. Please see '
               'https://www.bogleheads.org/wiki/Tax_loss_harvesting'
-              '#Fine_points_about_tax_loss_harvesting for more informatoin.')
-def lots(show_account, show_term):
+              '#Fine_points_about_tax_loss_harvesting for more information.')
+@click.option('--show-quantity', '-q', is_flag=True,
+              help='Print the quantity (number) of shares for each lot.')
+def lots(show_account, show_term, show_quantity):
     """Prints tax lot information for all the assets."""
     lakctx.optional_separator()
     with Spinner():
         output = lakctx.get_portfolio().list_lots(
-            include_account=show_account, include_term=show_term).string(
-                lakctx.tablefmt)
+            include_account=show_account,
+            include_term=show_term,
+            include_quantity=show_quantity).string(lakctx.tablefmt)
     if output:
         click.echo(output)
 
