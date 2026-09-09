@@ -777,6 +777,32 @@ class LakshmiTest(unittest.TestCase):
             list(map(len, portfolio.list_lots(
                 include_account=True, include_term=True).list())))
 
+    @patch('lakshmi.assets.TickerAsset.name')
+    @patch('lakshmi.assets.TickerAsset.price')
+    def test_list_lots_with_quantity(self, mock_price, mock_name):
+        mock_price.return_value = 200.0
+        mock_name.return_value = 'Unused'
+
+        vti = TickerAsset('VTI', 100.0, {'All': 1.0})
+        vti.set_lots([TaxLot('2020/01/01', 50, 100.0),
+                      TaxLot('2021/01/01', 50, 300.0)])
+        vxus = TickerAsset('VXUS', 50.0, {'All': 1.0})
+        vxus.set_lots([TaxLot('2019/01/01', 50, 150.0)])
+        portfolio = Portfolio(AssetClass('All')).add_account(
+            Account('Schwab', 'Taxable')
+            .add_asset(vti)
+            .add_asset(ManualAsset('Cash', 840.0, {'All': 1.0}))
+            .add_asset(vxus))
+        # Order of lots: ShortName, Date, Quantity, Cost, Gain, Gain%
+        self.assertListEqual(
+            [['VTI', '2020/01/01', '50.0', '$5,000.00', '+$5,000.00',
+              '100.0%'],
+             ['VTI', '2021/01/01', '50.0', '$15,000.00', '-$5,000.00',
+              '-33.3%'],
+             ['VXUS', '2019/01/01', '50.0', '$7,500.00', '+$2,500.00',
+              '33.3%']],
+            portfolio.list_lots(include_quantity=True).str_list())
+
 
 if __name__ == '__main__':
     unittest.main()
