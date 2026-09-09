@@ -744,7 +744,8 @@ class Portfolio:
                 table.add_row(row)
         return table
 
-    def list_lots(self, include_account=False, include_term=False):
+    def list_lots(self, include_account=False, include_term=False,
+                  include_quantity=False):
         """Returns all the tax lots in the portfolio.
 
         Args:
@@ -754,21 +755,29 @@ class Portfolio:
             how long a partficular lot has been held. For more information on
             this column, please see assets.TradedAsset.list_lots function's
             docstring.
+            include_quantity: If set, the returned table has a column
+            indicating the quantity (number of shares) of a lot as well.
 
         Returns: A table.Table object representing tax lots
         for assets that support it. The columns of the returned table are
-        short name (of asset), date of lot, cost basis of lot, gain (+ve or
-        -ve) and percentage gain.
+        Account (optional), short name (of asset), date of lot, quanity
+        (optional), cost basis of lot, gain (+ve or-ve), percentage gain and
+        term (optional).
         """
         headers = ((['Account'] if include_account else [])
-                   + ['Short Name', 'Date', 'Cost', 'Gain', 'Gain%']
+                   + ['Short Name', 'Date']
+                   + (['Quantity'] if include_quantity else [])
+                   + ['Cost', 'Gain', 'Gain%']
                    + (['Term'] if include_term else []))
         coltypes = (
             (['str'] if include_account else [])
-            + ['str', 'str', 'dollars', 'delta_dollars', 'percentage_1']
+            + ['str', 'str']
+            + (['float'] if include_quantity else [])
+            + ['dollars', 'delta_dollars', 'percentage_1']
             + (['str'] if include_term else []))
 
-        table = Table(5 + int(include_account) + int(include_term),
+        table = Table(5 + int(include_account) + int(include_term)
+                      + int(include_quantity),
                       headers=headers, coltypes=coltypes)
 
         for account in self.accounts():
@@ -778,9 +787,10 @@ class Portfolio:
                         [account.name()] if include_account else [])
                     lots = asset.list_lots(include_term=include_term)
                     for lot in lots.list():
+                        temp_lot = lot if include_quantity else (lot[:1]
+                                                                 + lot[2:])
                         table.add_row(
-                            account_entry
-                            + [asset.short_name()] + lot[:1] + lot[2:])
+                            account_entry + [asset.short_name()] + temp_lot)
         return table
 
     def asset_location(self):

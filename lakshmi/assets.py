@@ -376,7 +376,7 @@ class TradedAsset(Asset):
             for more information.
 
         Returns: lakshmi.table.Table object containing Date, Quantity,
-        Cost, Gain and Gain% fields for all the lots.
+        Cost, Gain and Gain% (and optionally term) fields for all the lots.
         """
         # Internal function to compute term.
         def term(from_date):

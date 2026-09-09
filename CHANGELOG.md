@@ -7,6 +7,8 @@ and this project adheres to
 
 
 ## [Unreleased]
+### Added
+- Ability to optionally print number of shares in the `lak list lots` command.
 
 ## [v3.0.3] - 2026-05-07
 ### Fixed
