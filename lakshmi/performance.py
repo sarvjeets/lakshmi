@@ -1,5 +1,5 @@
 """This module contains all classes and functions related to checkpointing
-and computing portfolio's performance."""
+And computing portfolio's performance."""
 
 import bisect
 from dataclasses import dataclass
@@ -341,12 +341,14 @@ class Performance:
                      timedelta(days=30) * 6,
                      timedelta(days=365),
                      timedelta(days=365) * 3,
+                     timedelta(days=365) * 5,
                      timedelta(days=365) * 10]
     _TIME_PERIODS_NAMES = ['1 Month',
                            '3 Months',
                            '6 Months',
                            '1 Year',
                            '3 Years',
+                           '5 Years',
                            '10 Years']
 
     def __init__(self, timeline):

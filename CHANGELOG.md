@@ -9,6 +9,7 @@ and this project adheres to
 ## [Unreleased]
 ### Added
 - Ability to optionally print number of shares in the `lak list lots` command.
+- A 5 year view of performance in `lak list performance` command.
 
 ## [v3.0.3] - 2026-05-07
 ### Fixed
