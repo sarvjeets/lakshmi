@@ -13,12 +13,12 @@ repos:
   hooks:
   - id: seed-isort-config
 - repo: https://github.com/PyCQA/isort
-  rev: 9.0.1
+  rev: 9.0.2
   hooks:
   - id: isort
 # flake8
 - repo: https://github.com/pycqa/flake8
-  rev: 7.3.0
+  rev: 7.4.1
   hooks:
     - id: flake8
       args: # arguments to configure flake8
