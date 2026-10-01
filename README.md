@@ -78,7 +78,7 @@ yay -S python-lakshmi
 ## Command-line interface
 
 For detailed help on the CLI, please see [lak user guide](https://sarvjeets.github.io/lakshmi/docs/lak.html).
-For tips and tricks, please refer to [Lakshmi Recipes](https://sarvjeets.github.io/lakshmi/docs/recipes.md).
+For tips and tricks, please refer to [Lakshmi Recipes](https://sarvjeets.github.io/lakshmi/docs/recipes.html).
 
 The simplest way to use this project is via the `lak` command. To access the
 up to date help, run:
@@ -128,7 +128,7 @@ allocation:
 $ lak init
 ```
 
-Accounts (His/Her 401(k), Roth IRAs, Taxable, etc.) can be added via
+Accounts (401Ks, Roth IRAs, Taxable, etc.) can be added via
 the `lak add account` command:
 
 ```
@@ -260,8 +260,8 @@ tremendously in my investing journey:
 [LadyGeek](https://www.bogleheads.org/blog/2018/12/04/interview-with-ladygeek-bogleheads-site-administrator/).
 
 This project would not have been possible without my wife
-[Niharika](http://niharika.org), who helped me come up with the initial idea
-and encouraged me to start working on this project.
+[Niharika](https://www.niharika.org), who helped me come up with the initial
+idea and encouraged me to start working on this project.
 
 
 ## The not-so-fine print
