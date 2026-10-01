@@ -56,11 +56,23 @@ if there are losses that can be
 
 ## Installation
 
-This project can be installed via [pip](https://pip.pypa.io/en/stable/).
-To install the library and the lak command line tool, run:
+This project can be installed via [PyPI](https://pypi.org/project/lakshmi/).
+You can use either [pip](https://pip.pypa.io/en/stable/) or
+[pipx](https://pipx.pypa.io/stable/) to install it:
 
 ```
+# Install via pip
 pip install lakshmi
+# Or, pipx
+pipx install lakshmi
+```
+
+Or, on Arch Linux, you can install it from
+[AUR](https://aur.archlinux.org/packages/python-lakshmi) via
+[AUR helpers](https://wiki.archlinux.org/title/AUR_helpers)
+or [directly](https://wiki.archlinux.org/title/Arch_User_Repository)
+```
+yay -S python-lakshmi
 ```
 
 ## Command-line interface
