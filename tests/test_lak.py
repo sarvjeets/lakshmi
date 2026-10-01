@@ -11,7 +11,7 @@ from lakshmi.assets import ManualAsset
 from lakshmi.performance import Checkpoint, Performance, Timeline
 
 
-class TestLakContext(lak.LakContext):
+class MockLakContext(lak.LakContext):
     """A testing version of LakContext that doesn't load or save
     portfolio."""
 
@@ -65,7 +65,7 @@ def run_lak(args):
 
 class LakTest(unittest.TestCase):
     def setUp(self):
-        lak.lakctx = TestLakContext()
+        lak.lakctx = MockLakContext()
 
     @patch('lakshmi.lak.LakContext._return_config')
     @patch('lakshmi.cache')
