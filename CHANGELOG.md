@@ -14,6 +14,9 @@ and this project adheres to
 ### Changed
 - Migrated packaging from setup.py + requirements.txt to pyproject.toml + uv
 
+## Fixed
+- A tons of typos in documentation with Claude's help.
+
 ## [v3.0.3] - 2026-05-07
 ### Fixed
 - yfinance warnings.
