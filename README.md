@@ -24,12 +24,15 @@ account syncing required.
 * **🎯 True Asset Location:** Manage your total allocation seamlessly across
 Taxable, Tax-Deferred (401k, Traditional IRA), and Tax-Exempt (Roth IRA)
 accounts.
-* **⚖️ Actionable Rebalancing & What-Ifs:** Doesn't just show values — calculates
+* **⚖️  Actionable Rebalancing & What-Ifs:** Doesn't just show values — calculates
 exactly how to allocate new contributions (or withdrawals) to restore your
 target allocation.
-* **💡 Advanced Tax Awareness:** Integrated tax-lot tracking, tax-loss
+* **💡 Tax Awareness:** Integrated tax-lot tracking, tax-loss
 harvesting alerts, and native support for unique fixed-income assets like
 Treasury I/EE Bonds and Vanguard non-ticker funds.
+* **📈 Accurate Performance & IRR Tracking:** Tracks true Internal Rate of
+Return (IRR) and cash flows across your portfolio, accurately accounting for
+dollar-weighted contributions, withdrawals, and dividends.
 
 ## Background
 This project is inspired by
