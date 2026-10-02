@@ -23,7 +23,7 @@ def format_money_delta(x):
     For example, if x=-23.249m the output is '-$23.25'.
 
     Args:
-        x: Float (postive or negative) representating dollars.
+        x: Float (positive or negative) representing dollars.
     """
     return '{}${:,.2f}'.format('-' if x < 0 else '+', abs(x))
 

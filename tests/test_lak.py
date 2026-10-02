@@ -131,7 +131,7 @@ class LakTest(unittest.TestCase):
     def test_list_with_chaining(self):
         result = run_lak('list al total')
         self.assertEqual(0, result.exit_code)
-        # Test that the separater was printed.
+        # Test that the separator was printed.
         self.assertIn('\n\n', result.output)
         self.assertFalse(lak.lakctx.saved_portfolio)
 

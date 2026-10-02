@@ -35,7 +35,7 @@ class CacheTest(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('lakshmi.cache.get_file_age')
     def test_disabled_cache(self, get_file_age, exists):
-        cache.set_cache_dir(None)  # Disble caching.
+        cache.set_cache_dir(None)  # Disable caching.
         c = Cached('key1', 1)
         self.assertEqual(1, c.get_value())
         c.value = 2
@@ -44,7 +44,7 @@ class CacheTest(unittest.TestCase):
         exists.assert_not_called()
 
     def test_disabled_cache_with_func(self):
-        cache.set_cache_dir(None)  # Disble caching.
+        cache.set_cache_dir(None)  # Disable caching.
         mocked_obj = Mock()
         cache.set_cache_miss_func(mocked_obj.func)
 

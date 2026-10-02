@@ -136,7 +136,7 @@ class LakContext:
         self.portfolio.save(self.portfolio_filename)
 
     def init_performance(self, checkpoint):
-        """Intitializes performance object with single checkpoint."""
+        """Initializes performance object with single checkpoint."""
         assert not self.performance
         self.performance = lakshmi.performance.Performance(
             lakshmi.performance.Timeline([checkpoint]))
@@ -596,7 +596,7 @@ _HELP_MSG_PREFIX = ('\n\n# # Lines starting with "#" are ignored and an '
 
 
 def edit_and_parse(edit_dict, parse_fn, filename):
-    """Helper funtion to edit parts of portfolio.
+    """Helper function to edit parts of portfolio.
 
     This function is used to add/edit parts of the portfolio. It converts
     a dictionary representation of the object into a YAML file that the
@@ -605,11 +605,11 @@ def edit_and_parse(edit_dict, parse_fn, filename):
 
     Arguments:
         edit_dict: Dictionary representing an object that is being
-        editted. This is usually the output of to_dict() of an object.
+        edited. This is usually the output of to_dict() of an object.
         parse_fn: The function used to parse the resulting dict generated
         by parsing the yaml file.
         filename: The file containing a template YAML file for the object
-        being editted (inside lakshmi/data directory). If edit_dict is
+        being edited (inside lakshmi/data directory). If edit_dict is
         empty, this file is presented to the user so that the user can make
         changes inline. If edit_dict is set, this file is added as a
         comment at the end of the edit_dict representation as a helpful
@@ -807,7 +807,7 @@ def delete():
 
 
 # A generic prompt to use for all delete commands.
-_PROMPT_STR = 'This operation is not reversable. Are you sure?'
+_PROMPT_STR = 'This operation is not reversible. Are you sure?'
 
 
 @delete.command()

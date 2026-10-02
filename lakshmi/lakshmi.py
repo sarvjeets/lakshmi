@@ -100,7 +100,7 @@ class Account:
         return self
 
     def assets(self):
-        """Retuns all assets in this account."""
+        """Returns all assets in this account."""
         return self._assets.values()
 
     def set_assets(self, assets):
@@ -286,7 +286,7 @@ class AssetClass:
         Returns: (Found asset class object, absolute ratio (float)) or None
         if the asset_class_name is not found in this asset class tree.
 
-        Raises: AssertionError if validate is not callled before calling this
+        Raises: AssertionError if validate is not called before calling this
         method.
         """
         self._check()
@@ -308,7 +308,7 @@ class AssetClass:
 
         Returns: A list of leaf asset class names.
 
-        Raises: AssertionError if validate is not callled before calling this
+        Raises: AssertionError if validate is not called before calling this
         method.
         """
         self._check()
@@ -319,7 +319,7 @@ class AssetClass:
 
         validate() must be called before calling this method.
         Given a money allocation, this class return the amount of money mapped
-        to this asset class or its childen.
+        to this asset class or its children.
 
         Ars:
           money_allocation: A map of leaf_class_names (string) -> money
@@ -327,7 +327,7 @@ class AssetClass:
 
         Returns: Total amount of money mapped to this asset class.
 
-        Raises: AssertionError if validate is not callled before calling this
+        Raises: AssertionError if validate is not called before calling this
         method.
         """
         self._check()
@@ -336,7 +336,7 @@ class AssetClass:
 
     class Allocation:
         """This class is a convenience class to represent the return value of
-        return_allocation method. This class represents a partcular node of
+        return_allocation method. This class represents a particular node of
         AssetClass + its direct children and also the money allocated to the
         asset class and its direct children. It is meant to be used as a
         data-only class.
@@ -381,7 +381,7 @@ class AssetClass:
             Args:
                 name: Name of the child asset class.
                 actual: The actual amount of money allocated to this child.
-                desired: The desired alloction of money for this child.
+                desired: The desired allocation of money for this child.
             """
             self.children.append(
                 self.Children(name, actual, desired, actual * self.value,
@@ -496,7 +496,7 @@ class Portfolio:
         return self
 
     def remove_account(self, account_name):
-        """Delete account specifed by account_name."""
+        """Delete account specified by account_name."""
         del self._accounts[account_name]
 
     def accounts(self):
@@ -760,7 +760,7 @@ class Portfolio:
 
         Returns: A table.Table object representing tax lots
         for assets that support it. The columns of the returned table are
-        Account (optional), short name (of asset), date of lot, quanity
+        Account (optional), short name (of asset), date of lot, quantity
         (optional), cost basis of lot, gain (+ve or-ve), percentage gain and
         term (optional).
         """
@@ -932,7 +932,7 @@ class Portfolio:
         """Returns asset allocation in long horizontal format.
 
         This method is similar to asset_allocaton_tree method in terms of
-        informaiton returned, but this method returns the asset allocation
+        information returned, but this method returns the asset allocation
         in horizontal format.
 
         Returns: A table.Table object representing the portfolio's asset
@@ -947,7 +947,7 @@ class Portfolio:
         value of assets mapped to the leaf node, respectively.
         """
         def find_index(class_name, ret_list):
-            # We assume ret_list has atleast one entry.
+            # We assume ret_list has at least one entry.
             names_list = [row[-3] for row in ret_list]
             return names_list.index(class_name)
 
@@ -964,7 +964,7 @@ class Portfolio:
                                      child.desired_allocation])
             else:  # Parent is already in ret_list
                 index = find_index(alloc.name, ret_list)
-                # We know that here is atleast one child.
+                # We know that here is at least one child.
                 for i in range(len(alloc.children) - 1):
                     # Make room for rest of the children by inserting empty
                     # extra rows of the same size as the parent's row
