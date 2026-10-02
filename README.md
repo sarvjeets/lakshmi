@@ -1,11 +1,35 @@
 # Lakshmi
 
+[![PyPI version](https://badge.fury.io/py/lakshmi.svg)](https://badge.fury.io/py/lakshmi)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sarvjeets/lakshmi/develop.svg)](https://results.pre-commit.ci/latest/github/sarvjeets/lakshmi/develop)
 [![Downloads](https://pepy.tech/badge/lakshmi)](https://pepy.tech/project/lakshmi)
 [![Downloads](https://pepy.tech/badge/lakshmi/month)](https://pepy.tech/project/lakshmi)
 
 ![Screenshot of lak in action](https://sarvjeets.github.io/lakshmi/docs/lak.png)
 (Screenshot of the `lak` command in action)
+
+Lakshmi is an open-source Python library and CLI tool for index-investing
+portfolio management.
+
+## Why Lakshmi?
+
+Most modern portfolio trackers require sharing sensitive credentials with
+third-party servers, struggle with tax-location strategies, or push active
+trading features. Lakshmi takes a different approach:
+
+* **🔒 Privacy & Local-First:** Your financial data stays entirely on your
+local machine in plain-text/YAML formats. No third-party data tracking or
+account syncing required.
+* **🎯 True Asset Location:** Manage your total allocation seamlessly across
+Taxable, Tax-Deferred (401k, Traditional IRA), and Tax-Exempt (Roth IRA)
+accounts.
+* **⚖️ Actionable Rebalancing & What-Ifs:** Doesn't just show values — calculates
+exactly how to allocate new contributions (or withdrawals) to restore your
+target allocation.
+* **💡 Advanced Tax Awareness:** Integrated tax-lot tracking, tax-loss
+harvesting alerts, and native support for unique fixed-income assets like
+Treasury I/EE Bonds and Vanguard non-ticker funds.
 
 ## Background
 This project is inspired by
