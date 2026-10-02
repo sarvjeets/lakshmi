@@ -64,7 +64,7 @@ file once and source that into shell of your choice.
 For Bash:
 
 ```shell
-_LAK_COMPLETE=bash_source lak > ~/.config/.lak-complete.bash
+_LAK_COMPLETE=bash_source lak > ~/.config/lak-complete.bash
 
 # Source the file in ~/.bashrc.
 . ~/.config/lak-complete.bash
@@ -73,7 +73,7 @@ _LAK_COMPLETE=bash_source lak > ~/.config/.lak-complete.bash
 For Zsh:
 
 ```shell
-_LAK_COMPLETE=zsh_souce lak > ~/.config/.lak-complete.zsh
+_LAK_COMPLETE=zsh_source lak > ~/.config/lak-complete.zsh
 
 # Source the file in ~/.zshrc.
 . ~/.config/lak-complete.zsh
@@ -90,25 +90,25 @@ _LAK_COMPLETE=fish_source lak > ~/.config/fish/completions/lak.fish
 
 Many times users will find themselves managing multiple independent portfolios.
 The recommended way for doing this is to create multiple `lak` config files,
-each pointing to a difference portfolio file (and optionally a perfomance
+each pointing to a different portfolio file (and optionally a performance
 file if checkpointing is used). For example:
 
 ```
-# ~/.config/lak/lakrc1
+# ~/.config/lak/.lakrc1
 portfolio: '~/.config/lak/portfolio1.yaml'
 performance: ~/.config/lak/.performance1.yaml
 cache: '~/.cache/lakshmicache' # This can be shared.
 ```
 
 ```
-# ~/.config/lak/lakrc2
+# ~/.config/lak/.lakrc2
 portfolio: '~/.config/lak/portfolio2.yaml'
 performance: ~/.config/lak/.performance2.yaml
 cache: '~/.cache/lakshmicache' # This can be shared.
 ```
 
 ```
-# ~/.config/lak/lakrc3
+# ~/.config/lak/.lakrc3
 portfolio: '~/.config/lak/portfolio3.yaml'
 performance: ~/.config/lak/.performance3.yaml
 cache: '~/.cache/lakshmicache' # This can be shared.
@@ -191,13 +191,14 @@ $(lak list -f html performance)
 EMAIL_END
 ```
 
-A scheduling program like [cron](ttps://wiki.archlinux.org/title/cron) can be
+A scheduling program like [cron](https://wiki.archlinux.org/title/cron) can be
 used to run this script periodically. For example, to send this email monthly
 on the 5th day at 5am:
 ```
 # Entry for lak in crontab:
 00 05 5 * * portfolio_email.sh
 ```
+
 ## How to reorder list of accounts or assets
 There is currently no automated way to re-order list of accounts or assets
 appearing in `lak list accounts` or `lak list assets`. But the
