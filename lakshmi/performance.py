@@ -160,11 +160,11 @@ class Timeline:
         return table
 
     def has_checkpoint(self, date):
-        """Retuns true iff there is a checkpoint for date."""
+        """Returns true iff there is a checkpoint for date."""
         return utils.validate_date(date) in self._checkpoints
 
     def begin(self):
-        """Returns the beginnning date of this timeline."""
+        """Returns the beginning date of this timeline."""
         return self._dates[0]
 
     def end(self):
@@ -411,7 +411,7 @@ class Performance:
         if self._timeline.begin() == self._timeline.end():
             return table
 
-        # Add rows for atmost 3 periods.
+        # Add rows for at most 3 periods.
         periods, period_names = self._get_periods()
         for period, period_name in zip(periods, period_names):
             begin_date_str = (
@@ -441,11 +441,11 @@ class Performance:
 
         Returns: A formatted string suitable for pretty-printing.
         """
-        # Make dates strings cannonical.
+        # Make dates strings canonical.
         begin = utils.validate_date(begin) if begin else self._timeline.begin()
         end = utils.validate_date(end) if end else self._timeline.end()
         if begin == end:
-            # Not enought checkpoints to compute performance.
+            # Not enough checkpoints to compute performance.
             return ''
 
         data = self._timeline.get_performance_data(begin, end)

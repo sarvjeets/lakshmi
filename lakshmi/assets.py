@@ -27,7 +27,7 @@ def to_dict(asset):
     lakshmi.assets.from_dict is an inverse of this function.
 
     Args:
-        asset: An object of a class implementating lakshmi.assets.Asset
+        asset: An object of a class implementing lakshmi.assets.Asset
         interface.
     Returns: A dictionary representation of asset.
     """
@@ -40,7 +40,7 @@ def from_dict(d):
     This function is reverse of lakshmi.assets.to_dict function.
 
     Args:
-        d: A dictionary representating an asset type.
+        d: A dictionary representing an asset type.
 
     Returns: An object of class implementing lakshmi.assets.Asset interface
     corresponding to d.
@@ -285,7 +285,7 @@ class TaxLot:
         Args:
             d: A dictionary representing TaxLot (usually output of to_dict)
 
-        Returns: An initialied TaxLot object corresponding to d.
+        Returns: An initialized TaxLot object corresponding to d.
 
         Raises: AssertionError if d can't be parsed properly.
         """
@@ -876,7 +876,7 @@ def _today_date():
 class IBonds(_TreasuryBonds):
     """Class representing a collection of I Bonds."""
     class _InterestRates(Cacheable):
-        """Class representing cachable interest rates."""
+        """Class representing cacheable interest rates."""
         def __init__(self):
             self._interest_rates = ibonds.InterestRates()
 
@@ -918,10 +918,10 @@ class IBonds(_TreasuryBonds):
 
     # Override
     def list_bonds(self):
-        """Retuns all bonds as a table.
+        """Returns all bonds as a table.
 
         Returns: a lakshmi.table.Table object containing all the bonds in this
-        asset. The colums correspond to issue date, denomination, fixed rate
+        asset. The columns correspond to issue date, denomination, fixed rate
         (as percentage), composite rate (as percentage) and the current market
         value of all the bonds.
         """

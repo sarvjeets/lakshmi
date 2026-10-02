@@ -136,7 +136,7 @@ class LakContext:
         self.portfolio.save(self.portfolio_filename)
 
     def init_performance(self, checkpoint):
-        """Intitializes performance object with single checkpoint."""
+        """Initializes performance object with single checkpoint."""
         assert not self.performance
         self.performance = lakshmi.performance.Performance(
             lakshmi.performance.Timeline([checkpoint]))
@@ -241,7 +241,7 @@ def _get_todays_checkpoint(portfolio):
               envvar='LAK_CONFIG', show_envvar=True,
               help='The configuration file.')
 @click.option('--debug', is_flag=True,
-              help='If set, prints stack track when an exception is raised.')
+              help='If set, prints stack trace when an exception is raised.')
 def lak(refresh, config, debug):
     """lak is a simple command line tool inspired by Bogleheads philosophy.
     Detailed user guide is available at:
@@ -557,7 +557,7 @@ def asset(asset, account):
 
 @info.command()
 @click.option('--begin', '-b', metavar='DATE',
-              help='Begining date from which to start computing performance '
+              help='Beginning date from which to start computing performance '
               'stats (Format: YYYY/MM/DD). If not provided, defaults to the '
               'earliest date for which a checkpoint exists.')
 @click.option('--end', '-e', metavar='DATE',
@@ -596,7 +596,7 @@ _HELP_MSG_PREFIX = ('\n\n# # Lines starting with "#" are ignored and an '
 
 
 def edit_and_parse(edit_dict, parse_fn, filename):
-    """Helper funtion to edit parts of portfolio.
+    """Helper function to edit parts of portfolio.
 
     This function is used to add/edit parts of the portfolio. It converts
     a dictionary representation of the object into a YAML file that the
@@ -605,11 +605,11 @@ def edit_and_parse(edit_dict, parse_fn, filename):
 
     Arguments:
         edit_dict: Dictionary representing an object that is being
-        editted. This is usually the output of to_dict() of an object.
+        edited. This is usually the output of to_dict() of an object.
         parse_fn: The function used to parse the resulting dict generated
         by parsing the yaml file.
         filename: The file containing a template YAML file for the object
-        being editted (inside lakshmi/data directory). If edit_dict is
+        being edited (inside lakshmi/data directory). If edit_dict is
         empty, this file is presented to the user so that the user can make
         changes inline. If edit_dict is set, this file is added as a
         comment at the end of the edit_dict representation as a helpful
@@ -725,7 +725,7 @@ def asset(asset, account):
 @click.option('--date', '-d', metavar='DATE', required=True,
               help='Date of the checkpoint to edit.')
 def checkpoint(date):
-    """Edit a protfolio's checkpoint."""
+    """Edit a portfolio's checkpoint."""
     timeline = lakctx.get_performance().get_timeline()
     orig_cp = timeline.get_checkpoint(date, interpolate=True)
     edited_cp = edit_and_parse(
@@ -781,7 +781,7 @@ def asset(asset_type, account):
               help='If set, edit the checkpoint before saving it.')
 def checkpoint(edit):
     """Checkpoint the current portfolio value. This creates a new checkpoint
-    for today with the current portofolio value (and no cash-flows). To add
+    for today with the current portfolio value (and no cash-flows). To add
     cashflows to this checkpoint, please use the --edit flag."""
     checkpoint = _get_todays_checkpoint(lakctx.get_portfolio())
     if edit:
@@ -807,7 +807,7 @@ def delete():
 
 
 # A generic prompt to use for all delete commands.
-_PROMPT_STR = 'This operation is not reversable. Are you sure?'
+_PROMPT_STR = 'This operation is not reversible. Are you sure?'
 
 
 @delete.command()
@@ -912,7 +912,7 @@ def rebalance(max_abs_percentage, max_relative_percentage):
               'specified by their short names.')
 @click.option('--rebalance', '-r', is_flag=True,
               help='If not set (the default), money is either only added '
-              '(in case the acccount has any unallocated cash) or only '
+              '(in case the account has any unallocated cash) or only '
               'removed (in case the account has negative unallocated cash) '
               'from the assets. If set, money is both added and removed (as '
               'needed) from the assets to minimize the relative difference '

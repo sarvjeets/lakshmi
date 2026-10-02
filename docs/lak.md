@@ -51,14 +51,14 @@ This tool is built for US investors and prints portfolio values in dollars.
 
 ### Portfolio
 `lak` stores all the information about accounts, assets, etc. in a portfolio
-file. By default, this portfolio is saved in **`~/porfolio.yaml`**. The
+file. By default, this portfolio is saved in **`~/portfolio.yaml`**. The
 [portfolio file syntax](#portfolio-file-syntax) section explains the syntax
 of this file. Backing up this file periodically is strongly recommended.
 
 ### Performance
 The performance related data (checkpoints of the portfolio values, etc.) is
 stored in a performance file. By default, this data is stored in
-**`~/.perfomance.yaml`**. `lak list performance` and `lak info performance`
+**`~/.performance.yaml`**. `lak list performance` and `lak info performance`
 commands use this file to compute historical performance stats.
 
 This file is created the first time `lak add checkpoint` is called. Entries
@@ -66,7 +66,7 @@ in this file can be added/modified or deleted via the `lak edit checkpoint` and
 `lak delete checkpoint` commands.
 
 It is recommended to save portfolio checkpoints periodically (every month or
-quarter, or everytime money is added or removed from the portfolio) so that
+quarter, or every time money is added or removed from the portfolio) so that
 the performance of the portfolio can be tracked. The tool interpolates the
 value of the portfolio between saved checkpoints whenever needed.
 
@@ -117,7 +117,7 @@ cache:
 ```
 
 By default `lak` assumes that the config file is located at `~/.lakrc`, but
-this location can be overriden by a flag or an environment variable. For
+this location can be overridden by a flag or an environment variable. For
 example:
 
 ```
@@ -153,8 +153,10 @@ For example, the
 
 ```
 lakrc := { < 'portfolio': portfolio_filename >,
+           < 'performance': performance_filename >,
            < 'cache': cache_directory > }
 portfolio_filename := String
+performance_filename := String
 cache_directory := < String >
 ```
 
@@ -555,7 +557,7 @@ Options:
                      data. For large portfolios, this would be extremely slow.
   -c, --config PATH  The configuration file.  [env var: LAK_CONFIG; default:
                      ~/.lakrc]
-  --debug            If set, prints stack track when an exception is raised.
+  --debug            If set, prints stack trace when an exception is raised.
   --help             Show this message and exit.
 
 Commands:
@@ -643,7 +645,7 @@ Options:
 $ lak add asset --help
 Usage: lak add asset [OPTIONS]
 
-  Edit assets in the portfolio.
+  Add a new asset to the portfolio.
 
 Options:
   -p, --asset-type [ManualAsset|TickerAsset|VanguardFund|IBonds|EEBonds]
@@ -666,7 +668,7 @@ $ lak add checkpoint --help
 Usage: lak add checkpoint [OPTIONS]
 
   Checkpoint the current portfolio value. This creates a new checkpoint for
-  today with the current portofolio value (and no cash-flows). To add
+  today with the current portfolio value (and no cash-flows). To add
   cashflows to this checkpoint, please use the --edit flag.
 
 Options:
@@ -709,7 +711,7 @@ used to compute the Internal rate of return
 of the portfolio.
 
 The saved checkpoints can listed via `lak list checkpoints` command.
-`lak delete chekpoint` and `lak edit checkpoint` can be used to delete or
+`lak delete checkpoint` and `lak edit checkpoint` can be used to delete or
 edit an already saved checkpoint.
 
 ### lak list
@@ -742,8 +744,9 @@ Commands:
   whatifs      Prints hypothetical what ifs for assets and accounts.
 ```
 
-`lak list` command requires a sub-command: `assets`, `total`, `aa`,
-`al` or `whatifs`, which are explained in the following sections.
+`lak list` command requires a sub-command: `assets`, `accounts`, `lots`,
+`total`, `aa`, `al`, `whatifs`, `checkpoints` or `performance`, which are
+explained in the following sections.
 
 The `lak list` commands can be chained. For example, to print all assets
 and the total value of the portfolio:
@@ -807,7 +810,7 @@ internet and cached for a year. The current value of the asset
 is fetched from the internet (except for `ManualAsset`) and cached for a
 day.
 
-The short name and quality of the asset can also be printed:
+The short name and quantity of the asset can also be printed:
 
 ```
 $ lak list assets -s -q
@@ -1222,7 +1225,7 @@ Date          Quantity    Cost    Gain    Gain%
 
 If the portfolio has saved checkpoints (created via the `lak add checkpoint`
 command), `lak info performance` can be used to print
-detailed stats about the perfolio's performance for different time periods:
+detailed stats about the portfolio's performance for different time periods:
 
 ```
 $ lak info performance --help
@@ -1231,7 +1234,7 @@ Usage: lak info performance [OPTIONS]
   Print detailed stats about portfolio's performance.
 
 Options:
-  -b, --begin DATE  Begining date from which to start computing performance
+  -b, --begin DATE  Beginning date from which to start computing performance
                     stats (Format: YYYY/MM/DD). If not provided, defaults to
                     the earliest possible date.
   -e, --end DATE    Ending date at which to stop computing performance stats
@@ -1426,7 +1429,7 @@ Options:
                              allocated any cash. This is a comma separated
                              list of assets specified by their short names.
   -r, --rebalance            If not set (the default), money is either only
-                             added (in case the acccount has any unallocated
+                             added (in case the account has any unallocated
                              cash) or only removed (in case the account has
                              negative unallocated cash) from the assets. If
                              set, money is both added and removed (as needed)
@@ -1486,7 +1489,7 @@ $ lak whatif -r
 ```
 
 We can also use the same command to see how to rebalance within an account.
-Let's asssume we wanted to rebalance the portfolio by only selling & buying
+Let's assume we wanted to rebalance the portfolio by only selling & buying
 assets in the Schwab account. (This is a made up example. In most cases,
 one would want to avoid rebalancing in a taxable account. A better account to
 rebalance would be a 401(K) or Roth as there are no tax consequences for
@@ -1588,7 +1591,7 @@ Commands:
   account     Edit an account in the portfolio.
   asset       Edit an asset in the portfolio.
   assetclass  Edit the Asset classes and the desired asset allocation.
-  checkpoint  Edit a protfolio's checkpoint.
+  checkpoint  Edit a portfolio's checkpoint.
 ```
 
 For example, to edit the Schwab taxable account:

@@ -7,6 +7,12 @@ repos:
   - id: check-yaml
   - id: end-of-file-fixer
   - id: trailing-whitespace
+# codespell
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.3
+  hooks:
+  - id: codespell
+    additional_dependencies: [tomli]  # Reads [tool.codespell] on Python < 3.11
 # isort
 - repo: https://github.com/asottile/seed-isort-config
   rev: v2.2.0

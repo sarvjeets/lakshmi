@@ -176,7 +176,7 @@ in `lak` + environment variable support for specifying the `.lakrc` file.
 - Changelog (this file).
 - Contributing guidelines and development instructions for Lakshmi.
 ### Changed
-- Dependabot is disbled for this project.
+- Dependabot is disabled for this project.
 - Optimized away unnecessary calls when force refreshing the cached values
 (`lak -r` flag).
 ### Fixed

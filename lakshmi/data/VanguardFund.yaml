@@ -1,5 +1,5 @@
 # This asset is used to track Vanguard funds that don't have a
-# ticker symbol associalted with them. The vakue of this asset
+# ticker symbol associated with them. The value of this asset
 # is automatically updated by pulling the current price from
 # the vanguard website. An example is 'Vanguard Institutional
 # Total Bond Market Index Trust'.
