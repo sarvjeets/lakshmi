@@ -44,7 +44,7 @@ def get_file_age(file):
     Args:
         file: A PosixPath object representing a file.
 
-    Returns: An int represeting the age in days.
+    Returns: An int representing the age in days.
     """
     return (datetime.today()
             - datetime.fromtimestamp(file.stat().st_mtime)).days
@@ -274,7 +274,7 @@ class _Prefetch:
 
         # Reset the map, so it can be optionally used again with add() method.
         self.cache_key_to_funcs = {}
-        # Restore cache miss funcion.
+        # Restore cache miss function.
         set_cache_miss_func(cache_miss_func)
 
 

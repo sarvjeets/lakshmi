@@ -44,15 +44,17 @@ class Table():
             coltypes: The type of columns, if not provided the columns are
             assumed to be strings.
         """
-        assert numcols >= 0
+        assert numcols >= 0, 'Number of columns cannot be negative'
         self._numcols = numcols
 
         if headers:
-            assert len(headers) == numcols
+            assert len(headers) == numcols, (
+                'Number of headers must match number of columns')
         self._headers = headers
 
         if coltypes:
-            assert len(coltypes) == numcols
+            assert len(coltypes) == numcols, (
+                'Number of column types must match number of columns')
             assert set(coltypes).issubset(
                 Table.coltype2func.keys()), 'Bad column type in coltypes'
             self._coltypes = coltypes
@@ -67,7 +69,8 @@ class Table():
         Args:
             row: A list of column entries representing a row.
         """
-        assert len(row) <= self._numcols
+        assert len(row) <= self._numcols, (
+            'Row has more elements than number of columns')
         self._rows.append(row)
         return self
 
@@ -77,7 +80,8 @@ class Table():
         Args:
             rows: A list (rows) of list (columns) of cell entries.
         """
-        assert max(map(len, rows)) <= self._numcols
+        assert max(map(len, rows)) <= self._numcols, (
+            'One of the row has more elements than number of columns')
         self._rows = rows
 
     def headers(self):

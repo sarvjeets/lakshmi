@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lakshmi"
+dynamic = ["version", "readme"]
+authors = [
+    { name = "Sarvjeet Singh", email = "sarvjeet@gmail.com" },
+]
+description = "Investing library and command-line interface inspired by the Bogleheads philosophy"
+license = "MIT"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "click~=8.0",
+    "curl_cffi~=0.10",
+    "ibonds>=1.0.2,<2.0",
+    "numpy>=1.22,<3.0",
+    "pyxirr~=0.6",
+    "PyYAML>=5.4,<7.0",
+    "requests~=2.25",
+    "tabulate~=0.8",
+    "yfinance>=0.2.38,<2.0",
+]
+
+[project.scripts]
+lak = "lakshmi.lak:lak"
+
+[project.urls]
+Homepage = "https://github.com/sarvjeets/lakshmi"
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "flake8",
+    "isort",
+]
+publish = [
+    "twine",
+    "build",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "lakshmi.constants.VERSION" }
+readme = { file = "README.md", content-type = "text/markdown" }
+# README.md uses absolute links so PyPI renders them correctly. The old setup.py
+# transformed relative links (](./  →  ](https://sarvjeets.github.io/lakshmi/)
+# and lak.md → lak.html) at build time; pyproject.toml has no equivalent hook.
+# If relative links in source are ever preferred again, the cleanest Option 1
+# approach is a thin custom build backend (build-backend-path = ["."]):
+#
+#   # _build_backend.py
+#   from setuptools.build_meta import *
+#   from setuptools.build_meta import build_wheel as _build_wheel
+#   import pathlib
+#
+#   def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
+#       p = pathlib.Path("README.md")
+#       src = p.read_text()
+#       p.write_text(src.replace("](./", "](https://sarvjeets.github.io/lakshmi/")
+#                      .replace("lak.md", "lak.html"))
+#       try:
+#           return _build_wheel(wheel_directory, config_settings, metadata_directory)
+#       finally:
+#           p.write_text(src)  # restore so the working tree stays clean
+
+[tool.codespell]
+skip = "uv.lock,*.png"
+# anull: part of the OpenSSL cipher string '!aNULL' in lakshmi/assets.py.
+ignore-words-list = "anull"

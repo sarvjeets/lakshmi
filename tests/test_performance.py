@@ -227,6 +227,15 @@ class PerformanceTest(unittest.TestCase):
             ['3 Months', '6 Months', '1 Year'], perf._get_periods()[1])
         self.assertEqual(4, len(perf.summary_table().list()))
 
+    def test_summary_table_5years(self):
+        checkpoints = [
+            Checkpoint('2021/1/1', 100),
+            Checkpoint('2026/2/1', 210)]
+        perf = Performance(Timeline(checkpoints))
+        self.assertEqual(
+            ['1 Year', '3 Years', '5 Years'], perf._get_periods()[1])
+        self.assertEqual(4, len(perf.summary_table().list()))
+
     def test_performance_get_info(self):
         checkpoints = [
             Checkpoint('2020/1/1', 1000),

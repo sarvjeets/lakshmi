@@ -5,8 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## [Unreleased]
+
+## [v3.1.0] - 2026-10-05
+### Added
+- Ability to optionally print number of shares in the `lak list lots` command.
+- 5 year view of performance in `lak list performance` command.
+
+### Changed
+- Migrated packaging from setup.py + requirements.txt to pyproject.toml + uv
+
+## Fixed
+- A tons of typos in documentation with Claude's help.
 
 ## [v3.0.3] - 2026-05-07
 ### Fixed
@@ -170,7 +180,7 @@ in `lak` + environment variable support for specifying the `.lakrc` file.
 - Changelog (this file).
 - Contributing guidelines and development instructions for Lakshmi.
 ### Changed
-- Dependabot is disbled for this project.
+- Dependabot is disabled for this project.
 - Optimized away unnecessary calls when force refreshing the cached values
 (`lak -r` flag).
 ### Fixed

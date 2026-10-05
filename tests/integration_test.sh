@@ -49,7 +49,7 @@ HERE
 export LAK_CONFIG=$TMP_DIR/lakrc
 
 # Default values for files is OK, just touch the file to fool lak into
-# believing that the user editted the file.
+# believing that the user edited the file.
 export EDITOR=touch
 
 echo "Testing binary: `command -v lak`"

@@ -101,7 +101,7 @@ class BandRebalance:
 
     def __init__(self, max_abs_percent=0.05, max_relative_percent=0.25):
         """Constructor to set the bands. An asset class is considered outside
-        the rebalance bands if the differnt between the desired and actual
+        the rebalance bands if the different between the desired and actual
         ratio of that asset class exceeds the lessor of max absolute or max
         relative percentage.
 
@@ -155,15 +155,15 @@ class _Solver:
 
     I tried using scipy optimize instead of this custom solver and it was
     extremely flaky for this purpose (even after scaling/conditioning the
-    inputs well). So finally, I came up theis heuristic algo which I 'feel'
+    inputs well). So finally, I came up this heuristic algo which I 'feel'
     works, but I haven't proved it formally.  This class can be further
     optimized/fixed, but for now it serves its purpose.  -- sarvjeets
 
     Notation:
-    - f_i: Money in asset i orginally.
+    - f_i: Money in asset i originally.
     - x_i: New money to be added to asset i (what we are solving for).
     - A_j: Money in asset class j.
-    - C_j: Money in asset class j before adding new money (implementd as
+    - C_j: Money in asset class j before adding new money (implemented as
     self.money)
     - d_j: Desired ratio of asset class j (implemented as self.desired_ratio).
     - a_{ij}: Ratio of asset i in asset class j (implemented as
@@ -365,8 +365,9 @@ class _Solver:
     def bound_at_zero(self, x, deltas, equal_gradient_assets, zeroed_assets):
         """Ensure that none of the solution exceeds the available money in
         assets. If that happens, it zeros out the asset, removes the asset
-        from the set of assets that are being optmized (equal_gradient_assets).
-        It additinally adds the funds to zeroed_assets.
+        from the set of assets that are being optimized
+        (equal_gradient_assets). It additionally adds the funds to
+        zeroed_assets.
 
         Args:
             x: The current solution.
@@ -540,7 +541,7 @@ class Allocate:
             - There is no cash to allocation and rebalance is False.
             - An asset class's desired allocation ratio is zero.
             - No assets are present in the Account after taking out the
-            exlcuded assets.
+            excluded assets.
             - Cash to withdraw is more than the total value of assets in the
             portfolio.
             - For some reason, we can't minimize the difference between
