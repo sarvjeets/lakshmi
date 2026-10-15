@@ -66,8 +66,8 @@ _MISS_FUNC_STR = 'miss_func'
 # caching is disabled. Default: _DEFAULT_DIR
 # _FORCE_STR:
 # If set to True, new values are re-generated once even if a cached one is
-# available. This is meant for data that is cached for < month (stock prices
-# and Treasury Bond value). Values that are cached for > 40 days ignore this
+# available. This is meant for data that is cached for < 40 days (stock prices
+# and Treasury Bond value). Values that are cached for >= 40 days ignore this
 # flag. Default: False
 # _FORCED_FILES_STR:
 # A set of files which are already refreshed once due to _ctx[_FORCE_STR]
