@@ -20,7 +20,7 @@ def format_money(x):
 def format_money_delta(x):
     """Formats input (money delta) into a string.
 
-    For example, if x=-23.249m the output is '-$23.25'.
+    For example, if x=-23.249, the output is '-$23.25'.
 
     Args:
         x: Float (positive or negative) representing dollars.
