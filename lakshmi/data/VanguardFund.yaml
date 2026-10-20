@@ -21,3 +21,7 @@ Tax Lots:
 - Date: 2021/04/28
   Quantity: 2,121.11
   Unit Cost: 110
+
+# Optionally, the expense ratio of this asset in percentage. If not specified,
+# the expense ratio is pulled from the internet (Vanguard website).
+# Expense Ratio: 0.03

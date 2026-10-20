@@ -64,16 +64,21 @@ class Asset(ABC):
     Every asset type in lakshmi must inherit from this class.
     """
 
-    def __init__(self, class2ratio):
+    def __init__(self, class2ratio, expense_ratio=None):
         """
         Args:
           class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
+          expense_ratio: Optionally, the expense ratio of this asset.
 
         Raises: AssertionError if ratio is not in (0, 1] or if the sum of
         ratio across all class_name is not equal to 1.
         """
         self._delta = 0
         self.class2ratio = class2ratio
+        if expense_ratio:
+            assert (expense_ratio >= 0) and (expense_ratio < 100), (
+                f'Invalid expense ratio: {expense_ratio}')
+        self._expense_ratio = expense_ratio
 
         total = 0
         for ratio in class2ratio.values():
@@ -84,6 +89,10 @@ class Asset(ABC):
         assert abs(total - 1.0) < 1e-6, (
             'Total allocation to classes must be 100% (actual = '
             f'{total * 100}%)')
+
+    def expense_ratio(self):
+        """Returns the expense ratio."""
+        return self._expense_ratio
 
     def to_dict(self):
         """Encodes this object into a dictionary.
@@ -96,9 +105,12 @@ class Asset(ABC):
 
         Returns: A dictionary object representing self.
         """
+        ret_val = dict()
         if self._delta != 0:
-            return {'What if': self._delta}
-        return dict()
+            ret_val['What if'] = self._delta
+        if self._expense_ratio:
+            ret_val['Expense ratio'] = self._expense_ratio
+        return ret_val
 
     def from_dict(self, d):
         """Reverse of to_dict.
@@ -115,6 +127,7 @@ class Asset(ABC):
         Returns: An object initialized with fields present in d.
         """
         self.what_if(d.pop('What if', 0))
+        self._expense_ratio = d.pop('Expense ratio', None)
         return self
 
     def to_table(self):
@@ -142,6 +155,10 @@ class Asset(ABC):
         else:
             table.add_row(
                 ['Value:', f'{utils.format_money(self.adjusted_value())}'])
+
+        if self.expense_ratio():
+            table.add_row(
+                ['Expense ratio:', f'{self.expense_ratio()}%'])
 
         return table
 
@@ -200,19 +217,20 @@ class Asset(ABC):
 class ManualAsset(Asset):
     """This is a special catch-all asset type that represents an asset whose
     value is manually specified and is not updated automatically."""
-    def __init__(self, name, value, class2ratio):
+    def __init__(self, name, value, class2ratio, expense_ratio=None):
         """
         Args:
             name: Full name of this asset (also is used as short name).
             value: The current value (in dollars, float) of this asset.
             class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
+            expense_ratio: The expense ratio for this asset.
 
         Raises: AssertionError if value is negative.
         """
         assert value >= 0, 'Value of an asset can not be negative.'
         self._name = name
         self._value = value
-        super().__init__(class2ratio)
+        super().__init__(class2ratio, expense_ratio)
 
     def to_dict(self):
         """Returns a dict representing this object."""
@@ -305,15 +323,16 @@ class TradedAsset(Asset):
     This asset is assumed to have 'shares' and per unit price and can
     optionally have tax lots."""
 
-    def __init__(self, shares, class2ratio):
+    def __init__(self, shares, class2ratio, expense_ratio=None):
         """
         Args:
             shares: Number of shares of this asset.
             class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
+            expense_ratio: Optionally, an expense ratio for this asset.
         """
         self._shares = shares
         self._tax_lots = None
-        super().__init__(class2ratio)
+        super().__init__(class2ratio, expense_ratio)
 
     def to_dict(self):
         """Converts this asset into a dictionary."""
@@ -443,17 +462,19 @@ class NotFoundError(Exception):
 class TickerAsset(TradedAsset, Cacheable):
     """An asset class represented by a Ticker whose price can be pulled."""
 
-    def __init__(self, ticker, shares, class2ratio):
+    def __init__(self, ticker, shares, class2ratio, expense_ratio=None):
         """
         Args:
             ticker: Ticker of this asset (string),
             shares: Total number of shares.
             class2ratio: Dict of class_name -> ratio, where 0 < ratio <= 1.0
+            expense_ratio: Optionally an expense ratio for this ticker. If not
+            specified (None), the expense ratio is pulled from yfinance.
         """
         self._ticker = ticker
         session = curl_cffi.requests.Session(impersonate="chrome")
         self.yticker = yfinance.Ticker(ticker, session=session)
-        super().__init__(shares, class2ratio)
+        super().__init__(shares, class2ratio, expense_ratio)
 
     def to_dict(self):
         """Returns a dict representing this object."""
@@ -528,6 +549,24 @@ class TickerAsset(TradedAsset, Cacheable):
     def short_name(self):
         """Returns the short name (ticker) of this object."""
         return self._ticker
+
+    @cache(30)
+    def _fetch_expense_ratio(self):
+        """Fetch expense ratio from yfinance."""
+        return self.yticker.info.get('netExpenseRatio')
+
+    # Override
+    def expense_ratio(self):
+        """Returns the expense ratio from yfinance, unless one is already
+        specified by the user.
+
+        We don't cache this function to make sure the changes user make to the
+        expense ratio are reflected immediately instead of getting cached.
+        """
+        if super().expense_ratio() is not None:
+            return super().expense_ratio()
+        else:
+            return self._fetch_expense_ratio()
 
     @cache(1)
     def price(self):
@@ -643,6 +682,18 @@ class VanguardFund(TradedAsset, Cacheable):
         """Unique key used for caching return values."""
         return str(self._fund_id)
 
+    def _fetch_profile_json(self):
+        """Internal function to fetch the json of fund profile information."""
+        s = requests.Session()
+        s.mount('https://api.vanguard.com', VanguardFund._DESAdapter())
+        req = s.get(
+            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
+            '/profile.json',
+            headers={'Referer': 'https://vanguard.com/'},
+            verify=False)
+        req.raise_for_status()  # Raise if error
+        return req.json()
+
     @cache(365)  # Name changes are very rare.
     def name(self):
         """Returns full name of this asset.
@@ -654,15 +705,25 @@ class VanguardFund(TradedAsset, Cacheable):
 
         Raises: AssertionError if the name cannot be fatched.
         """
-        s = requests.Session()
-        s.mount('https://api.vanguard.com', VanguardFund._DESAdapter())
-        req = s.get(
-            f'https://api.vanguard.com/rs/ire/01/pe/fund/{self._fund_id}'
-            '/profile.json',
-            headers={'Referer': 'https://vanguard.com/'},
-            verify=False)
-        req.raise_for_status()  # Raise if error
-        return req.json()['fundProfile']['longName']
+        return self._fetch_profile_json()['fundProfile']['longName']
+
+    @cache(30)
+    def _fetch_expense_ratio(self):
+        """Fetch expense ratio from yfinance."""
+        return float(self._fetch_profile_json()['fundProfile']['expenseRatio'])
+
+    # Override
+    def expense_ratio(self):
+        """Returns the expense ratio from vanguard, unless one is already
+        specified by the user.
+
+        We don't cache this function to make sure the changes user make to the
+        expense ratio are reflected immediately instead of getting cached.
+        """
+        if super().expense_ratio() is not None:
+            return super().expense_ratio()
+        else:
+            return self._fetch_expense_ratio()
 
     def short_name(self):
         """Returns the short name (fund id, string) of this object."""
@@ -856,6 +917,10 @@ class _TreasuryBonds(Asset):
     def name(self):
         """Returns the name of this asset (either 'I Bonds' or 'EE Bonds')."""
         return f'{self._series} Bonds'
+
+    # Override
+    def expense_ratio(self):
+        return 0.0  # I/EE bonds don't have an expense ratio.
 
     def short_name(self):
         """Returns short name (same as name)."""
