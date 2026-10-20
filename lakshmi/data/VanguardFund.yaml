@@ -24,4 +24,4 @@ Tax Lots:
 
 # Optionally, the expense ratio of this asset in percentage. If not specified,
 # the expense ratio is pulled from the internet (Vanguard website).
-# Expense Ratio: 0.03
+# Expense ratio: 0.03
