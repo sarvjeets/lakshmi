@@ -272,7 +272,10 @@ def list(format):
 
 
 @list.command()
-def total():
+@click.option('--expense-ratio', '-e', is_flag=True,
+              help='If set, prints information about expense ratio of the '
+              'portfolio as well.')
+def total(expense_ratio):
     """Prints the total value of the portfolio."""
     lakctx.optional_separator()
     lakctx.warn_for_what_ifs()
@@ -280,9 +283,22 @@ def total():
 
     with Spinner():
         portfolio.prefetch()
-        output = Table(2, coltypes=['str', 'dollars']).add_row(
-            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt)
-    click.echo(output)
+        total = portfolio.total_value()
+        output = Table(2, coltypes=['str', 'str']).add_row(
+            ['Total Assets', lakshmi.utils.format_money(total)])
+        if expense_ratio:
+            weighted_er, er_present = portfolio.weighted_expense_ratio()
+            output.add_row(
+                ['Weighted expense ratio', f'{round(weighted_er, 2)}%'])
+            output.add_row(
+                ['Estimated annual cost',
+                 lakshmi.utils.format_money(er_present * weighted_er / 100)])
+            if (total - er_present) >= 1e-2:
+                output.add_row(
+                    ['Assets with no ER',
+                     f'{round(100 - 100 * er_present / total)}%'])
+
+    click.echo(output.string(lakctx.tablefmt))
 
 
 @list.command()

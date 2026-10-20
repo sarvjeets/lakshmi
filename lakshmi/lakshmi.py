@@ -662,6 +662,29 @@ class Portfolio:
         return sum([account.total(include_whatifs)
                    for account in self.accounts()])
 
+    def weighted_expense_ratio(self):
+        """Returns the dollar weighted expense ratio and total dollars for
+        which the expense ratio is known. For the purposes of this calculation
+        the adjusted value (which includes whatifs) is used. TODO(sarvjeets):
+        Consider adding include_whatifs if needed.
+
+        Returns:
+            A tuple of weighted ER and sum of dollars (of assets) that have an
+            ER.
+        """
+        sum_weighted_er = 0
+        total = 0
+        for account in self.accounts():
+            for asset in account.assets():
+                er = asset.expense_ratio()
+                if er is not None:
+                    sum_weighted_er += er * asset.adjusted_value()
+                    total += asset.adjusted_value()
+        if total:
+            return (sum_weighted_er / total, total)
+        else:
+            return (0.0, 0.0)
+
     def list_accounts(self, group_by_type=False):
         """Returns all the accounts and their values.
 
