@@ -76,7 +76,7 @@ class Asset(ABC):
         self._delta = 0
         self.class2ratio = class2ratio
         if expense_ratio:
-            assert (expense_ratio >= 0) and (expense_ratio < 100), (
+            assert (expense_ratio >= 0) and (expense_ratio <= 20), (
                 f'Invalid expense ratio: {expense_ratio}')
         self._expense_ratio = expense_ratio
 
@@ -108,7 +108,7 @@ class Asset(ABC):
         ret_val = dict()
         if self._delta != 0:
             ret_val['What if'] = self._delta
-        if self._expense_ratio:
+        if self._expense_ratio is not None:
             ret_val['Expense ratio'] = self._expense_ratio
         return ret_val
 
@@ -127,7 +127,10 @@ class Asset(ABC):
         Returns: An object initialized with fields present in d.
         """
         self.what_if(d.pop('What if', 0))
-        self._expense_ratio = d.pop('Expense ratio', None)
+        er = d.pop('Expense ratio', None)
+        if er:
+            assert (er >= 0) and (er <= 20), f'Invalid expense ratio: {er}'
+        self._expense_ratio = er
         return self
 
     def to_table(self):
@@ -156,7 +159,7 @@ class Asset(ABC):
             table.add_row(
                 ['Value:', f'{utils.format_money(self.adjusted_value())}'])
 
-        if self.expense_ratio():
+        if self.expense_ratio() is not None:
             table.add_row(
                 ['Expense ratio:', f'{self.expense_ratio()}%'])
 
