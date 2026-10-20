@@ -51,7 +51,7 @@ class TableTest(unittest.TestCase):
 
         self.assertListEqual(headers, t.headers())
         self.assertListEqual(
-            ['left', 'right', 'right', 'right', 'right', 'decimal', 'decimal'],
+            ['left', 'right', 'right', 'right', 'right', 'decimal', 'left'],
             t.col_align())
 
         self.assertListEqual(rows, t.list())
