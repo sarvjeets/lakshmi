@@ -780,16 +780,21 @@ This command prints all the assets in the portfolio in a table format.
 
 ```
 $ lak list assets --help
+
 Usage: lak list assets [OPTIONS]
 
   Prints all assets in the portfolio and their current values.
 
 Options:
-  -s, --short-name  Print the short name of the assets as well (e.g. Ticker
-                    for assets that have it).
-  -q, --quantity    Print the quantity of the asset (e.g. quantity/shares
-                    for assets that have it).
-  --help            Show this message and exit.
+  --long-name / --no-long-name  Print the long name of the asset.  [default:
+                                long-name]
+  -s, --short-name              Print the short name of the assets as well
+                                (e.g. Ticker for assets that have it).
+  -q, --quantity                Print the quantity/shares of the asset as
+                                well.
+  -e, --expense-ratio           Print expense ratios of the assets that have
+                                it.
+  --help                        Show this message and exit.
 ```
 
 For the portfolio file created previously:

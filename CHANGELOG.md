@@ -6,6 +6,11 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Ability to add expense ratios to assets. Expense ratios for tickers and
+vanguard funds are automatically pulled from internet.
+- `lak info asset` will additionally print expense ratio for the asset.
+- Option in `lak list assets` to print expense ratios.
 
 ## [v3.1.0] - 2026-10-05
 ### Added

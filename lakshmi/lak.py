@@ -343,7 +343,9 @@ def aa(compact, asset_class):
               'for assets that have it).')
 @click.option('--quantity', '-q', is_flag=True,
               help='Print the quantity/shares of the asset as well.')
-def assets(long_name, short_name, quantity):
+@click.option('--expense-ratio', '-e', is_flag=True,
+              help='Print expense ratios of the assets that have it.')
+def assets(long_name, short_name, quantity, expense_ratio):
     """Prints all assets in the portfolio and their current values."""
     if not (long_name or short_name):
         raise click.ClickException(
@@ -357,7 +359,8 @@ def assets(long_name, short_name, quantity):
         output = portfolio.list_assets(
             long_name=long_name,
             short_name=short_name,
-            quantity=quantity).string(lakctx.tablefmt)
+            quantity=quantity,
+            expense_ratio=expense_ratio).string(lakctx.tablefmt)
     click.echo(output)
 
 
