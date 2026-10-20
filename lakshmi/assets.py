@@ -709,8 +709,9 @@ class VanguardFund(TradedAsset, Cacheable):
 
     @cache(30)
     def _fetch_expense_ratio(self):
-        """Fetch expense ratio from yfinance."""
-        return float(self._fetch_profile_json()['fundProfile']['expenseRatio'])
+        """Fetch expense ratio from vanguard."""
+        ret = self._fetch_profile_json()['fundProfile'].get('expenseRatio')
+        return float(ret) if ret else None
 
     # Override
     def expense_ratio(self):
