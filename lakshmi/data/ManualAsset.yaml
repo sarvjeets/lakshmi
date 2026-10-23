@@ -14,4 +14,4 @@ Asset Mapping:
   Bonds: 1.0
 
 # (Optional), The expense ratio of this asset in percentage.
-Expense ratio: 0.03
+# Expense ratio: 0.03
