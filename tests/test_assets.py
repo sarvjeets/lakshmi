@@ -48,6 +48,20 @@ class AssetsTest(unittest.TestCase):
         self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
         self.assertEqual(0.01, manual_asset.expense_ratio())
 
+    def test_dict_manual_asset_with_zero_expense(self):
+        manual_asset = assets.ManualAsset('Cash', 100.5,
+                                          {'Fixed Income': 1.0},
+                                          0.0)
+        manual_asset = assets.from_dict(assets.to_dict(manual_asset))
+        self.assertEqual('Cash', manual_asset.name())
+        self.assertAlmostEqual(100.5, manual_asset.adjusted_value())
+        self.assertEqual({'Fixed Income': 1.0}, manual_asset.class2ratio)
+        self.assertEqual(0.0, manual_asset.expense_ratio())
+
+    def test_dict_manual_asset_with_bad_expense(self):
+        self.assertRaises(AssertionError, assets.ManualAsset,
+                          'Cash', 100.5, {'Fixed Income': 1.0}, 80)
+
     def test_manual_asset_to_table_without_expense(self):
         manual_asset = assets.ManualAsset('Cash', 100.5, {'Fixed Income': 1.0})
         expected = [['Name:', 'Cash'],
@@ -347,6 +361,97 @@ class AssetsTest(unittest.TestCase):
                          vti.name())
         self.assertAlmostEqual(375.54, vti.price(), places=2)
         self.assertEqual(0.03, vti.expense_ratio())
+
+    @patch('yfinance.Ticker')
+    def test_ticker_with_full_yfinance_response_no_ER(self, MockTicker):
+        ticker = MagicMock()
+        ticker.info = {
+            'phone': '800-523-1036',
+            'longBusinessSummary': 'The fund manager (sniped)',
+            'companyOfficers': [], 'executiveTeam': [], 'maxAge': 86400,
+            'priceHint': 2, 'previousClose': 374.07, 'open': 376.17,
+            'dayLow': 375.175, 'dayHigh': 377.48,
+            'regularMarketPreviousClose': 374.07, 'regularMarketOpen': 376.17,
+            'regularMarketDayLow': 375.175, 'regularMarketDayHigh': 377.48,
+            'trailingPE': 24.116028, 'volume': 2826667,
+            'regularMarketVolume': 2826667, 'averageVolume': 3009314,
+            'averageVolume10days': 2825990, 'averageDailyVolume10Day': 2825990,
+            'bid': 375.49, 'ask': 376.24, 'bidSize': 40, 'askSize': 320,
+            'yield': 0.0106, 'totalAssets': 2322096979968,
+            'fiftyTwoWeekLow': 310.4, 'fiftyTwoWeekHigh': 385.12,
+            'allTimeHigh': 385.12, 'allTimeLow': 29.76, 'fulldayPrice': 376.0,
+            'fulldayChange': 1.9299927, 'fulldayChangePercent': 0.51594424,
+            'fiftyDayAverage': 378.4294, 'twoHundredDayAverage': 357.5395,
+            'trailingAnnualDividendRate': 2.802,
+            'trailingAnnualDividendYield': 0.0074905767, 'navPrice': 374.06,
+            'currency': 'USD', 'tradeable': False, 'category': 'Large Blend',
+            'ytdReturn': 12.58111, 'beta3Year': 1.03, 'fundFamily': 'Vanguard',
+            'fundInceptionDate': 868233600,
+            'legalType': 'Exchange Traded Fund',
+            'threeYearAverageReturn': 0.21628611,
+            'fiveYearAverageReturn': 0.1169208, 'quoteType': 'ETF',
+            'symbol': 'VTI', 'language': 'en-US', 'region': 'US',
+            'typeDisp': 'ETF', 'quoteSourceName': 'Nasdaq Real Time Price',
+            'triggerable': True, 'customPriceAlertConfidence': 'HIGH',
+            'postMarketPrice': 376.0, 'postMarketChange': 0.45999146,
+            'regularMarketChange': 1.47,
+            'regularMarketChangePercent': 0.392975,
+            'regularMarketPrice': 375.54,
+            'regularMarketDayRange': '375.175 - 377.48',
+            'fullExchangeName': 'NYSEArca', 'financialCurrency': 'USD',
+            'averageDailyVolume3Month': 3009314,
+            'fiftyTwoWeekLowChange': 65.140015,
+            'fiftyTwoWeekLowChangePercent': 0.2098583,
+            'fiftyTwoWeekRange': '310.4 - 385.12',
+            'fiftyTwoWeekHighChange': -9.579987,
+            'fiftyTwoWeekHighChangePercent': -0.02487533,
+            'fiftyTwoWeekChangePercent': 13.029158,
+            'dividendYield': 1.06, 'trailingThreeMonthReturns': 1.35936,
+            'trailingThreeMonthNavReturns': 1.35936,
+            'netAssets': 2322096980000.0,
+            'epsTrailingTwelveMonths': 15.572217,
+            'sharesOutstanding': 743262976, 'bookValue': 139.506,
+            'fiftyDayAverageChange': -2.8894043,
+            'fiftyDayAverageChangePercent': -0.007635253,
+            'twoHundredDayAverageChange': 18.000519,
+            'twoHundredDayAverageChangePercent': 0.05034554,
+            'priceToBook': 2.6919274,
+            'sourceInterval': 15, 'exchangeDataDelayedBy': 0,
+            'marketState': 'POST', 'corporateActions': [],
+            'postMarketTime': 1792452484, 'regularMarketTime': 1792440000,
+            'exchange': 'PCX', 'messageBoardId': 'finmb_6184536',
+            'exchangeTimezoneName': 'America/New_York',
+            'exchangeTimezoneShortName': 'EDT',
+            'gmtOffSetMilliseconds': -14400000, 'market': 'us_market',
+            'esgPopulated': False, 'cryptoTradeable': False,
+            'hasPrePostMarketData': True,
+            'firstTradeDateMilliseconds': 992611800000,
+            'postMarketChangePercent': 0.122488,
+            'shortName': 'Vanguard Morningstar Total Stoc',
+            'longName': 'Vanguard Morningstar Total Stock Market ETF',
+            'displayName': 'Morningstar Total Stock Mkt ETF',
+            'trailingPegRatio': None}
+        ticker.fast_info = {
+            'currency': 'USD', 'dayHigh': 377.4800109863281,
+            'dayLow': 375.17498779296875, 'exchange': 'PCX',
+            'fiftyDayAverage': 378.4293994140625,
+            'lastPrice': 375.5400085449219, 'lastVolume': 2826667,
+            'marketCap': None, 'open': 376.1700134277344,
+            'previousClose': 373.49, 'quoteType': 'ETF',
+            'regularMarketPreviousClose': 374.07000732421875,
+            'shares': None, 'tenDayAverageVolume': 2825990,
+            'threeMonthAverageVolume': 3011555,
+            'timezone': 'America/New_York',
+            'twoHundredDayAverage': 357.5394985961914,
+            'yearChange': 0.1302915652718365,
+            'yearHigh': 385.1199951171875, 'yearLow': 310.3999938964844}
+        MockTicker.return_value = ticker
+
+        vti = assets.TickerAsset('VTI', 100.0, {'All': 1.0})
+        self.assertEqual('Vanguard Morningstar Total Stock Market ETF',
+                         vti.name())
+        self.assertAlmostEqual(375.54, vti.price(), places=2)
+        self.assertEqual(None, vti.expense_ratio())
 
     @patch('requests.Session.get')
     def test_vanguard_funds_name(self, mock_get):

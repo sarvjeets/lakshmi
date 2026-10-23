@@ -30,7 +30,7 @@ class MockLakContext(lak.LakContext):
             .add_subclass(0.5, AssetClass('Stocks'))
             .add_subclass(0.5, AssetClass('Bonds'))).add_account(
             Account('Schwab', 'Taxable').add_asset(
-                ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
+                ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}, 0.1)))
 
         self.performance = Performance(Timeline([
             Checkpoint('2021/1/1', 100),
@@ -125,6 +125,16 @@ class LakTest(unittest.TestCase):
         result = run_lak('list -f plain total')
         self.assertEqual(0, result.exit_code)
         self.assertIn('Total Assets  $100.00', result.output)
+        self.assertNotIn('\n\n', result.output)
+        self.assertFalse(lak.lakctx.saved_portfolio)
+
+    def test_list_total_with_er(self):
+        result = run_lak('list -f plain total -e')
+        self.assertEqual(0, result.exit_code)
+        self.assertIn('Total Assets', result.output)
+        self.assertIn('Weighted expense ratio', result.output)
+        self.assertIn('Estimated annual cost', result.output)
+        self.assertNotIn('Assets with no ER', result.output)
         self.assertNotIn('\n\n', result.output)
         self.assertFalse(lak.lakctx.saved_portfolio)
 
@@ -498,7 +508,7 @@ class LakTest(unittest.TestCase):
         self.assertEqual('Tasty Asset', list(account.assets())[0].name())
 
         mock_parse.assert_called_with(
-            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}).to_dict(),
+            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}, 0.1).to_dict(),
             unittest.mock.ANY,
             'ManualAsset.yaml')
 
