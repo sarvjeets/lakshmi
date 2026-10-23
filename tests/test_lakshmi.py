@@ -16,7 +16,7 @@ class LakshmiTest(unittest.TestCase):
     def test_empty_portfolio(self):
         portfolio = Portfolio(AssetClass('E'))
         self.assertAlmostEqual(0, portfolio.total_value())
-        self.assertEqual((0, 0), portfolio.weighted_expense_ratio())
+        self.assertEqual((None, 0), portfolio.weighted_expense_ratio())
         self.assertListEqual([], portfolio.list_assets().list())
         self.assertListEqual([], portfolio.asset_location().list())
         self.assertListEqual([], portfolio.asset_allocation_tree().list())

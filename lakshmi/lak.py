@@ -287,17 +287,19 @@ def total(expense_ratio):
         output = Table(2, coltypes=['str', 'str_right']).add_row(
             ['Total Assets', lakshmi.utils.format_money(total)])
         if expense_ratio:
-            weighted_er, er_present = portfolio.weighted_expense_ratio()
-            output.add_row(
-                ['Weighted expense ratio',
-                 lakshmi.utils.format_expense_ratio(weighted_er)])
-            output.add_row(
-                ['Estimated annual cost',
-                 lakshmi.utils.format_money(er_present * weighted_er / 100)])
-            if (total - er_present) >= 1e-2:
+            weighted_er, known_value = portfolio.weighted_expense_ratio()
+            if weighted_er is not None:
+                output.add_row(
+                    ['Weighted expense ratio',
+                     lakshmi.utils.format_expense_ratio(weighted_er)])
+                output.add_row(
+                    ['Estimated annual cost',
+                     lakshmi.utils.format_money(known_value * weighted_er
+                                                / 100)])
+            if (total - known_value) >= 1e-2:
                 output.add_row(
                     ['Assets with no ER',
-                     f'{round(100 - 100 * er_present / total, 1)}%'])
+                     f'{round(100 - 100 * known_value / total, 1)}%'])
 
     click.echo(output.string(lakctx.tablefmt))
 
