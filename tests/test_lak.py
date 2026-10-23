@@ -138,6 +138,14 @@ class LakTest(unittest.TestCase):
         self.assertNotIn('\n\n', result.output)
         self.assertFalse(lak.lakctx.saved_portfolio)
 
+    def test_list_total_with_er_missing_for_some(self):
+        lak.lakctx.get_portfolio().get_account('Schwab').add_asset(
+            ManualAsset('No ER', 100.0, {'Stocks': 1.0}))
+        result = run_lak('list -f plain total -e')
+        self.assertEqual(0, result.exit_code)
+        self.assertIn('Assets with no ER', result.output)
+        self.assertIn('50.0%', result.output)  # $100 of $200 has no ER
+
     def test_list_with_chaining(self):
         result = run_lak('list al total')
         self.assertEqual(0, result.exit_code)

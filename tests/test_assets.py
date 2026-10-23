@@ -487,6 +487,18 @@ class AssetsTest(unittest.TestCase):
             headers={'Referer': 'https://vanguard.com/'}, verify=False)
 
     @patch('requests.Session.get')
+    def test_vanguard_funds_no_expense(self, mock_get):
+        mock_res = MagicMock()
+        with open(self.data_dir / 'profile.json') as data_file:
+            profile = json.load(data_file)
+        del profile['fundProfile']['expenseRatio']
+        mock_res.json.return_value = profile
+        mock_get.return_value = mock_res
+
+        fund = assets.VanguardFund(7555, 10, {'All': 1.0})
+        self.assertIsNone(fund.expense_ratio())
+
+    @patch('requests.Session.get')
     def test_vanguard_funds_value(self, mock_get):
         mock_res = MagicMock()
 
@@ -549,6 +561,7 @@ class AssetsTest(unittest.TestCase):
 
         self.assertEqual('I Bonds', ibond_asset.name())
         self.assertEqual('I Bonds', ibond_asset.short_name())
+        self.assertEqual(0.0, ibond_asset.expense_ratio())
 
         mock_today.return_value = datetime.date(2020, 11, 2)
         self.assertListEqual(
@@ -603,6 +616,7 @@ class AssetsTest(unittest.TestCase):
 
         self.assertEqual('EE Bonds', eebonds.name())
         self.assertEqual('EE Bonds', eebonds.short_name())
+        self.assertEqual(0.0, eebonds.expense_ratio())
         self.assertAlmostEqual(10008.0, eebonds.value())
         self.assertListEqual(
             [['03/2020', '$10,000.00', '0.10%', '$10,008.00']],
