@@ -29,7 +29,7 @@ def format_money_delta(x):
 
 
 def format_expense_ratio(expense_ratio):
-    """Formats expense ration into a string.
+    """Formats expense ratio into a string.
 
     Args:
         expense_ratio: A float representing the actual percentage of expense
