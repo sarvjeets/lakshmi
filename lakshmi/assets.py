@@ -161,7 +161,8 @@ class Asset(ABC):
 
         if self.expense_ratio() is not None:
             table.add_row(
-                ['Expense ratio:', f'{self.expense_ratio()}%'])
+                ['Expense ratio:',
+                 utils.format_expense_ratio(self.expense_ratio())])
 
         return table
 

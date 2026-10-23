@@ -46,18 +46,18 @@ class TableTest(unittest.TestCase):
                 'expense'])
 
         rows = [['r1', 3, 4.1, 0.5, 0.5, 1, 0.03],
-                ['r6', 8, -9.2, 0.1, 0.5557, 2.345, 0.1]]
+                ['r6', 8, -9.2, 0.1, 0.5557, 2.345, None]]
         t.set_rows(rows)
 
         self.assertListEqual(headers, t.headers())
         self.assertListEqual(
-            ['left', 'right', 'right', 'right', 'right', 'decimal', 'left'],
+            ['left', 'right', 'right', 'right', 'right', 'decimal', 'right'],
             t.col_align())
 
         self.assertListEqual(rows, t.list())
         self.assertListEqual(
             [['r1', '$3.00', '+$4.10', '50%', '50.0%', '1.0', '0.03%'],
-             ['r6', '$8.00', '-$9.20', '10%', '55.6%', '2.345', '0.1%']],
+             ['r6', '$8.00', '-$9.20', '10%', '55.6%', '2.345', '']],
             t.str_list())
         self.assertGreater(len(t.string()), 0)
 

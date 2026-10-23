@@ -28,6 +28,16 @@ def format_money_delta(x):
     return '{}${:,.2f}'.format('-' if x < 0 else '+', abs(x))
 
 
+def format_expense_ratio(expense_ratio):
+    """Formats expense ration into a string.
+
+    Args:
+        expense_ratio: A float representing the actual percentage of expense
+        ratio (i.e. an ER of 0.01% is represented as 0.01).
+    """
+    return f'{round(expense_ratio, 3)}%'
+
+
 def validate_date(date_text):
     """Validates if the date is in the YYYY/MM/DD format.
 

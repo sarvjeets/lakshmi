@@ -20,11 +20,12 @@ class Table():
     # 'float': Float.
     coltype2func = {
         'str': lambda x: x,
+        'str_right': lambda x: x,
         'dollars': lambda x: utils.format_money(x),
         'delta_dollars': lambda x: utils.format_money_delta(x),
         'percentage': lambda x: f'{round(100 * x)}%',
         'percentage_1': lambda x: f'{round(100 * x, 1)}%',
-        'expense': lambda x: f'{x}%' if x is not None else '',
+        'expense': lambda x: utils.format_expense_ratio(x),
         'float': lambda x: str(float(x)),
     }
 
@@ -32,11 +33,12 @@ class Table():
     # self explanatory. 'float' is aligned on the decimal point.
     coltype2align = {
         'str': 'left',
+        'str_right': 'right',
         'dollars': 'right',
         'delta_dollars': 'right',
         'percentage': 'right',
         'percentage_1': 'right',
-        'expense': 'left',
+        'expense': 'right',
         'float': 'decimal',
     }
 
