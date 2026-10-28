@@ -16,6 +16,7 @@ class LakshmiTest(unittest.TestCase):
     def test_empty_portfolio(self):
         portfolio = Portfolio(AssetClass('E'))
         self.assertAlmostEqual(0, portfolio.total_value())
+        self.assertEqual((None, 0), portfolio.weighted_expense_ratio())
         self.assertListEqual([], portfolio.list_assets().list())
         self.assertListEqual([], portfolio.asset_location().list())
         self.assertListEqual([], portfolio.asset_allocation_tree().list())
@@ -436,14 +437,17 @@ class LakshmiTest(unittest.TestCase):
         (portfolio
          .add_account(
              Account('Account 1', 'Taxable')
-             .add_asset(ManualAsset('Asset 1', 100.0, asset_class_map))
-             .add_asset(ManualAsset('Asset 2', 200.0, asset_class_map)))
+             .add_asset(ManualAsset('Asset 1', 100.0, asset_class_map, 0.1))
+             .add_asset(ManualAsset('Asset 2', 200.0, asset_class_map, 0.2)))
          .add_account(
              Account('Account 2', 'Roth IRA')
-             .add_asset(ManualAsset('Asset 1', 300.0, asset_class_map))
+             .add_asset(ManualAsset('Asset 1', 300.0, asset_class_map, 0.3))
              .add_asset(ManualAsset('Asset 2', 400.0, asset_class_map))))
 
         self.assertAlmostEqual(1000.0, portfolio.total_value())
+        (weighted_er, total) = portfolio.weighted_expense_ratio()
+        self.assertAlmostEqual(0.23, weighted_er, 2)
+        self.assertAlmostEqual(600, total)
         self.assertEqual(
             'Account 1',
             portfolio.get_account('Account 1').name())

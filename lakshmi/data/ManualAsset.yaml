@@ -12,3 +12,6 @@ Value: 1,000
 # `lak list aa` command)
 Asset Mapping:
   Bonds: 1.0
+
+# (Optional), The expense ratio of this asset in percentage.
+# Expense ratio: 0.03

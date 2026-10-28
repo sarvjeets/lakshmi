@@ -272,7 +272,10 @@ def list(format):
 
 
 @list.command()
-def total():
+@click.option('--expense-ratio', '-e', is_flag=True,
+              help='If set, prints information about expense ratio of the '
+              'portfolio as well.')
+def total(expense_ratio):
     """Prints the total value of the portfolio."""
     lakctx.optional_separator()
     lakctx.warn_for_what_ifs()
@@ -280,9 +283,25 @@ def total():
 
     with Spinner():
         portfolio.prefetch()
-        output = Table(2, coltypes=['str', 'dollars']).add_row(
-            ['Total Assets', portfolio.total_value()]).string(lakctx.tablefmt)
-    click.echo(output)
+        total = portfolio.total_value()
+        output = Table(2, coltypes=['str', 'str_right']).add_row(
+            ['Total Assets', lakshmi.utils.format_money(total)])
+        if expense_ratio:
+            weighted_er, known_value = portfolio.weighted_expense_ratio()
+            if weighted_er is not None:
+                output.add_row(
+                    ['Weighted expense ratio',
+                     lakshmi.utils.format_expense_ratio(weighted_er)])
+                output.add_row(
+                    ['Estimated annual cost',
+                     lakshmi.utils.format_money(known_value * weighted_er
+                                                / 100)])
+            if (total - known_value) >= 1e-2:
+                output.add_row(
+                    ['Assets with no ER',
+                     f'{round(100 - 100 * known_value / total, 1)}%'])
+
+    click.echo(output.string(lakctx.tablefmt))
 
 
 @list.command()
@@ -343,7 +362,9 @@ def aa(compact, asset_class):
               'for assets that have it).')
 @click.option('--quantity', '-q', is_flag=True,
               help='Print the quantity/shares of the asset as well.')
-def assets(long_name, short_name, quantity):
+@click.option('--expense-ratio', '-e', is_flag=True,
+              help='Print expense ratios of the assets that have it.')
+def assets(long_name, short_name, quantity, expense_ratio):
     """Prints all assets in the portfolio and their current values."""
     if not (long_name or short_name):
         raise click.ClickException(
@@ -357,7 +378,8 @@ def assets(long_name, short_name, quantity):
         output = portfolio.list_assets(
             long_name=long_name,
             short_name=short_name,
-            quantity=quantity).string(lakctx.tablefmt)
+            quantity=quantity,
+            expense_ratio=expense_ratio).string(lakctx.tablefmt)
     click.echo(output)
 
 
