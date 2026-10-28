@@ -187,9 +187,13 @@ asset := { 'ManualAsset' : manual_asset |
 
 manual_asset := { 'Name' : String,
                   'Value' : dollars,
-                  'Asset Mapping' : asset_mapping }
+                  'Asset Mapping' : asset_mapping,
+                  < 'Expense ratio' : percentage > }
 
 dollars := Float
+
+# The expense ratio in percent, e.g. 0.03 represents an expense ratio of 0.03%.
+percentage := Float
 
 # The floats (ratios) should add up to 1.0
 asset_mapping := { asset_class_name : Float,
@@ -199,7 +203,8 @@ asset_mapping := { asset_class_name : Float,
 ticker_asset := { 'Ticker' : String,
                   'Shares' : Float,
                   'Asset Mapping' : asset_mapping,
-                  < 'Tax Lots' : tax_lots > }
+                  < 'Tax Lots' : tax_lots >,
+                  < 'Expense ratio' : percentage > }
 
 tax_lots := [ { 'Date' : date,
                'Quantity' : Float,
@@ -210,7 +215,8 @@ date := String
 vanguard_fund_asset := { 'Fund Id' : Integer,
                          'Shares' : Float,
                          'Asset Mapping' : asset_mapping,
-                         < 'Tax Lots' : tax_lots > }
+                         < 'Tax Lots' : tax_lots >,
+                         < 'Expense ratio' : percentage > }
 
 ibond_asset := { 'Asset Mapping' : asset_mapping,
                  'Bonds' : [ treasury_bond ] }
@@ -239,17 +245,22 @@ etc. Some assets are pre-defined in `lak` and more types of assets can be
 added by modifying the `lakshmi.assets` module. Each asset needs to specify
 how it maps to the asset classes defined earlier. An asset can map to multiple
 asset classes, and the sum of percentages across the asset classes
-should add up to 100%.
+should add up to 100%. An asset can also have an expense ratio (in percent,
+e.g. 0.03 means 0.03%), which is printed by `lak list assets -e` and
+`lak info asset`, and is used to compute the weighted expense ratio of the
+portfolio in `lak list total -e`.
   * **Manual Asset** is the simplest asset. As the name suggests, this asset
   is tracked manually. The value of this asset needs to be specified and is
-  not automatically updated.
+  not automatically updated. Its expense ratio can optionally be specified
+  as well (it is never looked up automatically).
   [Example Manual Asset section](../lakshmi/data/ManualAsset.yaml).
   * **Ticker Asset** is any asset that has a ticker symbol (e.g. 'VTI',
   'GOOG', etc.). The value of these assets are automatically pulled from the
   internet and kept up-to date. Tax lots can also be specified and tracked
   for these assets. This is useful for taxable accounts and
   `lak analyze tlh` can notify when/if these tax lots can be
-  tax loss harvested.
+  tax loss harvested. The expense ratio is pulled from the internet
+  (Yahoo Finance) unless one is specified, which then takes precedence.
   [Example Ticker Asset section](../lakshmi/data/TickerAsset.yaml)
   * **Vanguard Fund** are funds that don't have a ticker symbol associated
   with them. Most Vanguard funds do have ticker symbols associated with
@@ -258,12 +269,17 @@ should add up to 100%.
   (e.g. 'Vanguard Institutional
   Total Bond Market Index Trust' which has a numeric id, 7555, but not a
   ticker symbol). These funds can also contain tax lot information.
+  The expense ratio is pulled from the Vanguard website unless one is
+  specified, which then takes precedence. Vanguard does not publish an
+  expense ratio for every fund (some trusts have none), so specify it
+  here if it is missing.
   [Example Vanguard Fund section](../lakshmi/data/VanguardFund.yaml)
   * **I Bonds** and **EE Bonds** are bought and sold electronically at
   [Treasury Direct](https://www.treasurydirect.gov/) or can be purchased
   in paper format via tax refund. This asset tracks value of multiple
   I Bonds or EE Bonds by pulling the current value from the Treasury Direct
-  website. If you have a lot of bonds, this could be very slow.
+  website. If you have a lot of bonds, this could be very slow. These
+  assets have no fees and are treated as having an expense ratio of 0.
   [Example I Bonds section](../lakshmi/data/IBonds.yaml).
   [Example EE Bonds section](../lakshmi/data/EEBonds.yaml).
 
@@ -445,9 +461,14 @@ Tax Lots:
 - Date: 2020/03/23
   Quantity: 123
   Unit Cost: 50.39
+
+# Optionally, the expense ratio of this asset in percentage. If not specified,
+# the expense ratio is pulled from the internet (Yahoo Finance).
+# Expense ratio: 0.03
 ```
 
-Modify the above file to add details for VTI instead:
+Modify the above file to add details for VTI instead (there is no need to
+specify the expense ratio as it is pulled from the internet for tickers):
 
 ```yaml
 Ticker: VTI
@@ -827,6 +848,23 @@ Roth IRA         VXUS             1  Vanguard Total International Stock Index Fu
 Vanguard 401(k)  VBMFX           20  Vanguard Total Bond Market Index Fund Investor Shares     $226.80
 ```
 
+The expense ratio of the assets can also be printed:
+
+```
+$ lak list assets -e
+Account          Asset                                                       Expense Ratio    Value
+---------------  --------------------------------------------------------  ---------------  -------
+Schwab Taxable   Vanguard Total Stock Market Index Fund ETF Shares                   0.03%  $228.87
+Schwab Taxable   Vanguard Total International Stock Index Fund ETF Shares            0.05%   $65.46
+Roth IRA         Vanguard Total International Stock Index Fund ETF Shares            0.05%   $65.46
+Vanguard 401(k)  Vanguard Total Bond Market Index Fund Investor Shares               0.15%  $227.60
+```
+
+The expense ratio is left blank for assets that don't have a known expense
+ratio. For `TickerAsset` and `VanguardFund`, it is fetched from the internet
+(and cached for 30 days) unless it is specified in the portfolio file. For
+`ManualAsset`, it is the value specified in the portfolio file (if any).
+
 ### lak list accounts
 This command can be used to print the sum total of value grouped by account
 or account types:
@@ -896,7 +934,9 @@ Usage: lak list total [OPTIONS]
   Prints the total value of the portfolio.
 
 Options:
-  --help  Show this message and exit.
+  -e, --expense-ratio  If set, prints information about expense ratio of the
+                       portfolio as well.
+  --help               Show this message and exit.
 ```
 
 For the portfolio file created previously:
@@ -907,6 +947,36 @@ $ lak list total
 Total Assets  $587.39
 ------------  -------
 ```
+
+With `-e`, `lak list total` also prints the dollar-weighted expense ratio of
+the portfolio and the estimated yearly cost of these expenses:
+
+```
+$ lak list total -e
+----------------------  -------
+Total Assets            $587.39
+Weighted expense ratio   0.081%
+Estimated annual cost     $0.48
+----------------------  -------
+```
+
+Only assets with a known expense ratio are included in the weighted expense
+ratio and the estimated cost. If some assets don't have one (e.g. a
+`ManualAsset` without an expense ratio), a row showing the percentage of the
+portfolio that was excluded is added:
+
+```
+$ lak list total -e
+----------------------  -------
+Total Assets            $687.39
+Weighted expense ratio   0.081%
+Estimated annual cost     $0.48
+Assets with no ER         14.5%
+----------------------  -------
+```
+
+The expense ratio is computed using the adjusted value of the assets, so
+[what ifs](#lak-whatif) are taken into account.
 
 #### lak list aa
 
@@ -1193,6 +1263,7 @@ Ticker:               VTI
 Name:                 Vanguard Total Stock Market Index Fund ETF Shares
 Asset Class Mapping:  US  100%
 Value:                $230.00
+Expense ratio:        0.03%
 Price:                $230.00
 
 Tax lots:
@@ -1206,6 +1277,7 @@ Ticker:               VTI
 Name:                 Vanguard Total Stock Market Index Fund ETF Shares
 Asset Class Mapping:  US  100%
 Value:                $230.00
+Expense ratio:        0.03%
 Price:                $230.00
 
 Tax lots:
@@ -1220,6 +1292,7 @@ Ticker:               VXUS
 Name:                 Vanguard Total International Stock Index Fund ETF Shares
 Asset Class Mapping:  Intl  100%
 Value:                $65.93
+Expense ratio:        0.05%
 Price:                $65.93
 
 Tax lots:
@@ -1271,6 +1344,7 @@ Ticker:               VTI
 Name:                 Vanguard Total Stock Market Index Fund ETF Shares
 Asset Class Mapping:  US  100%
 Value:                $230.00
+Expense ratio:        0.03%
 Price:                $230.00
 
 Tax lots:
@@ -1282,6 +1356,7 @@ Ticker:               VBMFX
 Name:                 Vanguard Total Bond Market Index Fund Investor Shares
 Asset Class Mapping:  Bonds  100%
 Value:                $226.80
+Expense ratio:        0.15%
 Price:                $11.34
 ```
 
