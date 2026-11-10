@@ -642,6 +642,39 @@ class LakTest(unittest.TestCase):
         self.assertTrue(lak.lakctx.saved_portfolio)
         self.assertEqual(0, run_lak('whatif -r').exit_code)
 
+    def test_lak_context_missing_config_file(self):
+        with self.assertRaises(click.ClickException) as ctx:
+            lak.LakContext('/nonexistent-lakrc-definitely-missing')
+        self.assertIn('Config file not found', str(ctx.exception))
+
+    def test_lak_context_empty_config_file(self):
+        import os
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+                'w', suffix='.lakrc', delete=False) as f:
+            path = f.name
+        try:
+            lakctx = lak.LakContext(path)
+            self.assertEqual(
+                str(Path(lak.LakContext.DEFAULT_PORTFOLIO).expanduser()),
+                lakctx.portfolio_filename)
+        finally:
+            os.unlink(path)
+
+    def test_lak_context_malformed_config_file(self):
+        import os
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+                'w', suffix='.lakrc', delete=False) as f:
+            f.write('- just\n- a\n- list\n')
+            path = f.name
+        try:
+            with self.assertRaises(click.ClickException) as ctx:
+                lak.LakContext(path)
+            self.assertIn('Invalid config file', str(ctx.exception))
+        finally:
+            os.unlink(path)
+
 
 if __name__ == '__main__':
     unittest.main()

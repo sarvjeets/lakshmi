@@ -36,9 +36,15 @@ class LakContext:
             return {}
 
         # Explicitly specified file should exist.
-        assert lakrcfile.exists(), f'Config file not found: {lakrc}'
+        if not lakrcfile.exists():
+            raise click.ClickException(f'Config file not found: {lakrc}')
 
         config = yaml.load(lakrcfile.read_text(), Loader=yaml.SafeLoader)
+        # An empty config file means no config.
+        if config is None:
+            return {}
+        if not isinstance(config, dict):
+            raise click.ClickException(f'Invalid config file: {lakrc}')
         return config
 
     def __init__(self, lakrc):
