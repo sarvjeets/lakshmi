@@ -18,6 +18,9 @@ printed.
 - `lak info asset` will additionally print expense ratio for the asset.
 - Option in `lak list assets` to print expense ratios.
 
+### Fixed
+- Report missing or invalid config files cleanly. Thanks `Qrytics Pilot`.
+
 ## [v3.1.0] - 2026-10-05
 ### Added
 - Ability to optionally print number of shares in the `lak list lots` command.
