@@ -6,6 +6,8 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v3.2.0] - 2026-11-21
 ### Added
 - Ability to optionally specify an expense ratio (in percent) for assets in the
 portfolio file (`Expense ratio`). For tickers and vanguard funds, the expense
