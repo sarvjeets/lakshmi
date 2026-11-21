@@ -20,12 +20,22 @@ def format_money(x):
 def format_money_delta(x):
     """Formats input (money delta) into a string.
 
-    For example, if x=-23.249m the output is '-$23.25'.
+    For example, if x=-23.249, the output is '-$23.25'.
 
     Args:
         x: Float (positive or negative) representing dollars.
     """
     return '{}${:,.2f}'.format('-' if x < 0 else '+', abs(x))
+
+
+def format_expense_ratio(expense_ratio):
+    """Formats expense ratio into a string.
+
+    Args:
+        expense_ratio: A float representing the actual percentage of expense
+        ratio (i.e. an ER of 0.01% is represented as 0.01).
+    """
+    return f'{round(expense_ratio, 3)}%'
 
 
 def validate_date(date_text):

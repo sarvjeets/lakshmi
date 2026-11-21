@@ -32,9 +32,9 @@ class TableTest(unittest.TestCase):
         self.assertListEqual([['1', '2']], t.str_list())
 
     def test_headers_and_diff_coltypes(self):
-        headers = ['1', '2', '3', '4', '5', '6']
+        headers = ['1', '2', '3', '4', '5', '6', '7']
         t = Table(
-            6,
+            7,
             headers=headers,
             coltypes=[
                 'str',
@@ -42,21 +42,22 @@ class TableTest(unittest.TestCase):
                 'delta_dollars',
                 'percentage',
                 'percentage_1',
-                'float'])
+                'float',
+                'expense'])
 
-        rows = [['r1', 3, 4.1, 0.5, 0.5, 1],
-                ['r6', 8, -9.2, 0.1, 0.5557, 2.345]]
+        rows = [['r1', 3, 4.1, 0.5, 0.5, 1, 0.03],
+                ['r6', 8, -9.2, 0.1, 0.5557, 2.345, None]]
         t.set_rows(rows)
 
         self.assertListEqual(headers, t.headers())
         self.assertListEqual(
-            ['left', 'right', 'right', 'right', 'right', 'decimal'],
+            ['left', 'right', 'right', 'right', 'right', 'decimal', 'right'],
             t.col_align())
 
         self.assertListEqual(rows, t.list())
         self.assertListEqual(
-            [['r1', '$3.00', '+$4.10', '50%', '50.0%', '1.0'],
-             ['r6', '$8.00', '-$9.20', '10%', '55.6%', '2.345']],
+            [['r1', '$3.00', '+$4.10', '50%', '50.0%', '1.0', '0.03%'],
+             ['r6', '$8.00', '-$9.20', '10%', '55.6%', '2.345', '']],
             t.str_list())
         self.assertGreater(len(t.string()), 0)
 

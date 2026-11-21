@@ -31,6 +31,9 @@ hypothetical trades, and get suggestions for where to put new contributions
 (or take withdrawals from) to move back toward your target allocation.
 * **💡 Tax Awareness:** Tax-lot tracking, tax-loss harvesting candidates, and
 native support for Treasury I/EE Bonds and Vanguard funds without tickers.
+* **💰 Know Your Costs:** Expense ratios are pulled automatically (or entered
+by you, e.g. for 401(k) funds), and `lak list total -e` shows your portfolio's
+dollar-weighted expense ratio and what it costs you per year.
 * **📈 Performance Tracking:** Dollar-weighted returns (IRR) computed from
 periodic portfolio checkpoints, with contributions and withdrawals recorded as
 cash flows.
@@ -122,6 +125,8 @@ without tickers,
 and
 [I Bonds](https://www.treasurydirect.gov/indiv/research/indepth/ibonds/res_ibonds.htm).
 - Track tax lots for assets.
+- See each asset's expense ratio, and the portfolio's dollar-weighted expense
+ratio and estimated annual cost.
 - Track portfolio performance
 ([IRR](https://www.investopedia.com/terms/i/irr.asp)) and cash flows over time.
 
@@ -131,6 +136,11 @@ and
 are in dollars.
 - **Prices come from Yahoo Finance** (via `yfinance`) and Treasury/Vanguard
 data. If a source is down or rate limits you, `lak` can't refresh that asset.
+- **Expense ratios may be missing.** They come from Yahoo Finance and Vanguard,
+which don't have one for every asset (e.g. some Vanguard trusts and 401(k)
+funds). You can specify one in the portfolio file. Assets without one are left
+out of the weighted expense ratio, and `lak list total -e` shows how much of
+your portfolio that is.
 - **Tax-loss harvesting is a starting point, not tax advice.** It assumes
 specific-lot identification and does not yet check for
 [wash sales](https://www.bogleheads.org/wiki/Wash_sale), including purchases
@@ -148,6 +158,7 @@ every command in detail.
 | --- | --- |
 | See assets, totals, allocation and location | `lak list assets total aa al` |
 | See tax lots and gains | `lak list lots` |
+| See expense ratios and the portfolio's annual cost | `lak list assets -e total -e` |
 | Try a hypothetical trade | `lak whatif asset -a VTI -50 asset -a VXUS -t Taxable 50` |
 | Decide where new money goes | `lak whatif account -t Taxable 100` then `lak analyze allocate -t Taxable` |
 | Check if rebalancing is needed | `lak analyze rebalance` |
@@ -201,7 +212,7 @@ def main():
     print(Table(2, coltypes=['str', 'dollars'])
           .add_row(['Total Assets', portfolio.total_value()]).string())
     print('\n' + portfolio.asset_allocation(['US', 'Intl', 'Bonds']).string())
-    print('\n' + portfolio.assets().string() + '\n')
+    print('\n' + portfolio.list_assets().string() + '\n')
     print(portfolio.asset_location().string())
 
 

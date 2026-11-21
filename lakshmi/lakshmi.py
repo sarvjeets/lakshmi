@@ -662,6 +662,28 @@ class Portfolio:
         return sum([account.total(include_whatifs)
                    for account in self.accounts()])
 
+    def weighted_expense_ratio(self):
+        """Returns the dollar weighted expense ratio and total dollars for
+        which the expense ratio is known. For the purposes of this calculation
+        the adjusted value (which includes whatifs) is used.
+
+        Returns:
+            A tuple of weighted ER and sum of dollars (of assets) that have an
+            ER.
+        """
+        sum_weighted_er = 0
+        total = 0
+        for account in self.accounts():
+            for asset in account.assets():
+                er = asset.expense_ratio()
+                if er is not None:
+                    sum_weighted_er += er * asset.adjusted_value()
+                    total += asset.adjusted_value()
+        if total:
+            return (sum_weighted_er / total, total)
+        else:
+            return (None, 0.0)
+
     def list_accounts(self, group_by_type=False):
         """Returns all the accounts and their values.
 
@@ -707,7 +729,8 @@ class Portfolio:
                               + ([value / total] if total else []))
             return table
 
-    def list_assets(self, short_name=False, quantity=False, long_name=True):
+    def list_assets(self, short_name=False, quantity=False, long_name=True,
+                    expense_ratio=False):
         """Returns all the assets.
 
         Args:
@@ -715,29 +738,35 @@ class Portfolio:
             quantity: If set, returns the shares/quantity of the asset for
             the assets that support it.
             long_name: If not set, the name of the asset is not returned.
+            expense_ratio: If set, returns the expense ratio of assets that
+            have it.
 
         Returns: A table.Table object representing all the assets.
         The columns correspond to Account name, short name (optional),
         quantity (optional), asset name and value.
         """
         table = Table(
-            2 + short_name + quantity + long_name,
+            2 + short_name + quantity + long_name + expense_ratio,
             headers=(['Account']
                      + (['Name'] if short_name else [])
                      + (['Quantity'] if quantity else [])
                      + (['Asset'] if long_name else [])
+                     + (['Expense Ratio'] if expense_ratio else [])
                      + ['Value']),
             coltypes=(['str']
                       + (['str'] if short_name else [])
                       + (['float'] if quantity else [])
                       + (['str'] if long_name else [])
+                      + (['expense'] if expense_ratio else [])
                       + ['dollars']))
         for account in self.accounts():
             for asset in account.assets():
-                row = ([account.name()]
-                       + ([asset.short_name()] if short_name else [])
-                       + ([asset.name()] if long_name else [])
-                       + [asset.adjusted_value()])
+                row = (
+                    [account.name()]
+                    + ([asset.short_name()] if short_name else [])
+                    + ([asset.name()] if long_name else [])
+                    + ([asset.expense_ratio()] if expense_ratio else [])
+                    + [asset.adjusted_value()])
                 if quantity:
                     row.insert(1 + short_name, asset.shares()
                                if hasattr(asset, 'shares') else None)

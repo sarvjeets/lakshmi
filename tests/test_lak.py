@@ -30,7 +30,7 @@ class MockLakContext(lak.LakContext):
             .add_subclass(0.5, AssetClass('Stocks'))
             .add_subclass(0.5, AssetClass('Bonds'))).add_account(
             Account('Schwab', 'Taxable').add_asset(
-                ManualAsset('Test Asset', 100.0, {'Stocks': 1.0})))
+                ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}, 0.1)))
 
         self.performance = Performance(Timeline([
             Checkpoint('2021/1/1', 100),
@@ -127,6 +127,24 @@ class LakTest(unittest.TestCase):
         self.assertIn('Total Assets  $100.00', result.output)
         self.assertNotIn('\n\n', result.output)
         self.assertFalse(lak.lakctx.saved_portfolio)
+
+    def test_list_total_with_er(self):
+        result = run_lak('list -f plain total -e')
+        self.assertEqual(0, result.exit_code)
+        self.assertIn('Total Assets', result.output)
+        self.assertIn('Weighted expense ratio', result.output)
+        self.assertIn('Estimated annual cost', result.output)
+        self.assertNotIn('Assets with no ER', result.output)
+        self.assertNotIn('\n\n', result.output)
+        self.assertFalse(lak.lakctx.saved_portfolio)
+
+    def test_list_total_with_er_missing_for_some(self):
+        lak.lakctx.get_portfolio().get_account('Schwab').add_asset(
+            ManualAsset('No ER', 100.0, {'Stocks': 1.0}))
+        result = run_lak('list -f plain total -e')
+        self.assertEqual(0, result.exit_code)
+        self.assertIn('Assets with no ER', result.output)
+        self.assertIn('50.0%', result.output)  # $100 of $200 has no ER
 
     def test_list_with_chaining(self):
         result = run_lak('list al total')
@@ -498,7 +516,7 @@ class LakTest(unittest.TestCase):
         self.assertEqual('Tasty Asset', list(account.assets())[0].name())
 
         mock_parse.assert_called_with(
-            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}).to_dict(),
+            ManualAsset('Test Asset', 100.0, {'Stocks': 1.0}, 0.1).to_dict(),
             unittest.mock.ANY,
             'ManualAsset.yaml')
 
@@ -623,6 +641,39 @@ class LakTest(unittest.TestCase):
         self.assertIn('+$100.00', result.output)
         self.assertTrue(lak.lakctx.saved_portfolio)
         self.assertEqual(0, run_lak('whatif -r').exit_code)
+
+    def test_lak_context_missing_config_file(self):
+        with self.assertRaises(click.ClickException) as ctx:
+            lak.LakContext('/nonexistent-lakrc-definitely-missing')
+        self.assertIn('Config file not found', str(ctx.exception))
+
+    def test_lak_context_empty_config_file(self):
+        import os
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+                'w', suffix='.lakrc', delete=False) as f:
+            path = f.name
+        try:
+            lakctx = lak.LakContext(path)
+            self.assertEqual(
+                str(Path(lak.LakContext.DEFAULT_PORTFOLIO).expanduser()),
+                lakctx.portfolio_filename)
+        finally:
+            os.unlink(path)
+
+    def test_lak_context_malformed_config_file(self):
+        import os
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+                'w', suffix='.lakrc', delete=False) as f:
+            f.write('- just\n- a\n- list\n')
+            path = f.name
+        try:
+            with self.assertRaises(click.ClickException) as ctx:
+                lak.LakContext(path)
+            self.assertIn('Invalid config file', str(ctx.exception))
+        finally:
+            os.unlink(path)
 
 
 if __name__ == '__main__':

@@ -14,14 +14,18 @@ class Table():
     # 'dollars': Column is a float which represents a dollar value.
     # 'delta_dollars': Column represents a positive or negative dollar
     # difference.
-    # 'percentage': A float representing a percentage.
+    # 'percentage': A float representing a percentage. e.g. 0.91 = 90%
+    # 'percentage_1': A float representing a percentage (rounded to 1 digit).
+    # 'expense': A float representing an expense ratio.
     # 'float': Float.
     coltype2func = {
         'str': lambda x: x,
+        'str_right': lambda x: x,
         'dollars': lambda x: utils.format_money(x),
         'delta_dollars': lambda x: utils.format_money_delta(x),
         'percentage': lambda x: f'{round(100 * x)}%',
         'percentage_1': lambda x: f'{round(100 * x, 1)}%',
+        'expense': lambda x: utils.format_expense_ratio(x),
         'float': lambda x: str(float(x)),
     }
 
@@ -29,10 +33,12 @@ class Table():
     # self explanatory. 'float' is aligned on the decimal point.
     coltype2align = {
         'str': 'left',
+        'str_right': 'right',
         'dollars': 'right',
         'delta_dollars': 'right',
         'percentage': 'right',
         'percentage_1': 'right',
+        'expense': 'right',
         'float': 'decimal',
     }
 

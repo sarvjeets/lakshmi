@@ -7,6 +7,22 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [v3.2.0] - 2026-11-21
+### Added
+- Ability to optionally specify an expense ratio (in percent) for assets in the
+portfolio file (`Expense ratio`). For tickers and vanguard funds, the expense
+ratio is automatically pulled from the internet unless one is specified. I Bonds
+and EE Bonds have an expense ratio of 0.
+- Option (`-e`) in `lak list total` to print the dollar-weighted expense ratio
+and the estimated annual cost of the portfolio. Assets with an unknown expense
+ratio are excluded, and the percentage of the portfolio that is excluded is
+printed.
+- `lak info asset` will additionally print expense ratio for the asset.
+- Option in `lak list assets` to print expense ratios.
+
+### Fixed
+- Report missing or invalid config files cleanly. Thanks `Qrytics Pilot`.
+
 ## [v3.1.0] - 2026-10-05
 ### Added
 - Ability to optionally print number of shares in the `lak list lots` command.
@@ -15,7 +31,7 @@ and this project adheres to
 ### Changed
 - Migrated packaging from setup.py + requirements.txt to pyproject.toml + uv
 
-## Fixed
+### Fixed
 - A tons of typos in documentation with Claude's help.
 
 ## [v3.0.3] - 2026-05-07
